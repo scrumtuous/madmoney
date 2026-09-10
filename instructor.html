@@ -416,7 +416,9 @@
         SCORE_RESET: "SCORE_RESET",
         LEADERBOARD: "LEADERBOARD",
         GAME_FINISHED: "GAME_FINISHED",
-        INSTRUCTOR_PRESENT: "INSTRUCTOR_PRESENT"
+        INSTRUCTOR_PRESENT: "INSTRUCTOR_PRESENT",
+        DOUBLE_DOWN_NEXT: "DOUBLE_DOWN_NEXT",
+        DOUBLE_DOWN_SET: "DOUBLE_DOWN_SET"
       };
 
       const OPTION_COLORS = ["red", "green", "blue", "purple", "orange", "pink"];
@@ -810,13 +812,15 @@
               joinedAt: nowTs(),
               lastSeenAt: nowTs(),
               removed: false,
-              currentSubmission: null
+              currentSubmission: null,
+              doubleDownNext: false
             };
             this.activeGame.players[playerId] = p;
           } else {
             p.name = playerName;
             p.lastSeenAt = nowTs();
             if (p.removed) return { ok: false, reason: "Removed" };
+            if (typeof p.doubleDownNext !== "boolean") p.doubleDownNext = false;
           }
 
           this.saveGame();
@@ -836,8 +840,24 @@
           const p = this.activeGame.players[playerId];
           if (!p || p.removed) return false;
           p.score = 0;
+          p.doubleDownNext = false;
           this.saveGame();
           return true;
+        }
+
+        setDoubleDownNext(playerId) {
+          if (!this.activeGame) return { ok: false, reason: "No active game" };
+          const p = this.activeGame.players[playerId];
+          if (!p || p.removed) return { ok: false, reason: "Unknown player" };
+          if (this.activeGame.phase !== PHASES.ANSWER_REVEAL && this.activeGame.phase !== PHASES.LEADERBOARD && this.activeGame.phase !== PHASES.LOBBY) {
+            return { ok: false, reason: "Invalid phase" };
+          }
+          const nextIndex = this.activeGame.questionIndex + 1;
+          if (nextIndex >= this.activeGame.questions.length) return { ok: false, reason: "No next question" };
+          p.doubleDownNext = true;
+          p.lastSeenAt = nowTs();
+          this.saveGame();
+          return { ok: true, playerId: p.id, armedForQuestionIndex: nextIndex };
         }
 
         getQuestion(index) {
@@ -924,22 +944,33 @@
             const sub = submissions[p.id] || null;
             let correct = false;
             let earned = 0;
+            const usedDoubleDown = !!p.doubleDownNext;
             if (sub) {
               const selectedSet = new Set(sub.selectedOptionIds);
               const exactMatch = selectedSet.size === correctSet.size && [...selectedSet].every((id) => correctSet.has(id));
               correct = exactMatch;
-              if (correct) earned = calculateScore(question.pointValue, this.activeGame.questionEndsAt, sub.submittedAt);
-              p.score += earned;
+              if (correct) {
+                earned = calculateScore(question.pointValue, this.activeGame.questionEndsAt, sub.submittedAt);
+                if (usedDoubleDown) earned = earned * 2;
+              } else if (usedDoubleDown) {
+                earned = -question.pointValue * 5;
+              }
               sub.selectedOptionIds.forEach((id) => {
                 const stat = optionStats.find((x) => x.id === id);
                 if (stat) stat.count += 1;
               });
+            } else if (usedDoubleDown) {
+              earned = -question.pointValue * 5;
             }
+
+            p.score += earned;
+            p.doubleDownNext = false;
             playerOutcomes[p.id] = {
               playerId: p.id,
               correct,
               earnedPoints: earned,
-              totalScore: p.score
+              totalScore: p.score,
+              usedDoubleDown
             };
           });
 
@@ -1044,7 +1075,8 @@
               score: player ? player.score : 0,
               rank: rankObj ? rankObj.rank : null,
               hasSubmitted,
-              removed: !!(player && player.removed)
+              removed: !!(player && player.removed),
+              doubleDownArmed: !!(player && player.doubleDownNext)
             },
             leaderboard: board.slice(0, 10)
           };
@@ -1535,6 +1567,9 @@
             case MSG.ANSWER_SUBMITTED:
               this.handleAnswerSubmitted(msg);
               break;
+            case MSG.DOUBLE_DOWN_NEXT:
+              this.handleDoubleDown(msg);
+              break;
             default:
               break;
           }
@@ -1592,6 +1627,20 @@
           });
 
           this.game.saveGame();
+        }
+
+        handleDoubleDown(msg) {
+          if (!this.game.activeGame) return;
+          const payload = msg.payload || {};
+          const playerId = String(payload.playerId || "");
+          if (!playerId) return;
+          const result = this.game.setDoubleDownNext(playerId);
+          if (!result.ok) return;
+          this.send(MSG.DOUBLE_DOWN_SET, this.game.activeGame.gameId, "instructor-main", {
+            playerId: result.playerId,
+            armedForQuestionIndex: result.armedForQuestionIndex,
+            active: true
+          });
         }
 
         handleCreateQuiz() {

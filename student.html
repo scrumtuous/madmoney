@@ -227,6 +227,79 @@
       filter: grayscale(0.12);
     }
 
+    .ans-btn.reveal-wrong {
+      background: linear-gradient(145deg, #54545d, #3f3f46) !important;
+      filter: grayscale(0.25);
+      opacity: 0.66;
+    }
+
+    .ans-btn.reveal-correct {
+      border: 2px solid rgba(255, 246, 194, 0.95);
+      box-shadow: 0 0 0 4px rgba(255, 235, 150, 0.2), 0 0 30px rgba(255, 214, 122, 0.55);
+      animation: correct-throb 950ms ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ans-btn.reveal-correct:hover,
+    .ans-btn.reveal-correct:focus-visible {
+      transform: scale(1.03) rotate(-0.4deg);
+      filter: brightness(1.12) saturate(1.15);
+      box-shadow: 0 0 0 6px rgba(255, 232, 144, 0.24), 0 0 40px rgba(255, 214, 122, 0.8);
+    }
+
+    @keyframes correct-throb {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.018); }
+    }
+
+    .answer-reveal-blast {
+      animation: reveal-blast 700ms cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    @keyframes reveal-blast {
+      0% { transform: scale(0.94); opacity: 0; }
+      60% { transform: scale(1.02); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .confetti-wrap {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 8px;
+      height: 14px;
+      opacity: 0.95;
+      animation: confetti-fall 900ms ease-out forwards;
+      border-radius: 2px;
+    }
+
+    @keyframes confetti-fall {
+      from { transform: translateY(-8px) rotate(0deg); opacity: 1; }
+      to { transform: translateY(88px) rotate(320deg); opacity: 0; }
+    }
+
+    .double-down-banner {
+      border-radius: 12px;
+      border: 1px solid rgba(255, 194, 145, 0.8);
+      background: rgba(130, 73, 37, 0.28);
+      color: #ffe8c5;
+      font-weight: 800;
+      padding: 0.58rem 0.72rem;
+      margin-bottom: 0.8rem;
+      animation: danger-throb 920ms ease-in-out infinite;
+    }
+
+    @keyframes danger-throb {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 194, 145, 0.28); }
+      50% { box-shadow: 0 0 0 8px rgba(255, 194, 145, 0); }
+    }
+
     @keyframes select-glow {
       0% { box-shadow: 0 0 0 0 rgba(247, 221, 233, 0.45); }
       100% { box-shadow: 0 0 0 9px rgba(247, 221, 233, 0); }
@@ -365,7 +438,9 @@
         SCORE_RESET: "SCORE_RESET",
         LEADERBOARD: "LEADERBOARD",
         GAME_FINISHED: "GAME_FINISHED",
-        INSTRUCTOR_PRESENT: "INSTRUCTOR_PRESENT"
+        INSTRUCTOR_PRESENT: "INSTRUCTOR_PRESENT",
+        DOUBLE_DOWN_NEXT: "DOUBLE_DOWN_NEXT",
+        DOUBLE_DOWN_SET: "DOUBLE_DOWN_SET"
       };
 
       function nowTs() { return Date.now(); }
@@ -538,6 +613,7 @@
             + "<section class='glass p-3 text-center'>"
             + "<div class='title-font fs-3 mb-1'>Waiting for the instructor...</div>"
             + "<div class='small-note'>" + text + "</div>"
+            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Game</button></div>"
             + "</section>";
         }
 
@@ -546,6 +622,7 @@
             + "<section class='glass p-3 text-center shake'>"
             + "<div class='title-font fs-3 mb-1'>You have been removed from this game.</div>"
             + "<div class='small-note'>Ask the instructor if you should rejoin with a new entry.</div>"
+            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Game</button></div>"
             + "</section>";
         }
 
@@ -559,6 +636,7 @@
             + "<div class='fs-2 fw-bold'>" + formatScore(model.playerScore) + "</div>"
             + "</div>"
             + "<div class='small-note mt-3'>Hold tight. The next question is coming soon.</div>"
+            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Game</button></div>"
             + "</section>";
         }
 
@@ -577,10 +655,12 @@
             + "</div>"
             + "<div id='timerView' class='timer " + timerClass + " mb-3'>" + formatTime(rem) + "</div>"
             + "<div class='fw-bold mb-2'>" + safeText(q.query) + "</div>"
+            + "<div id='doubleDownBanner'></div>"
             + "<div id='multiHint' class='small-note mb-2'></div>"
             + "<div id='optionsGrid' class='options-grid mb-2'></div>"
             + "<div id='questionStatus' class='small-note mb-2' aria-live='polite'></div>"
-            + "<div id='submitWrap'></div>";
+            + "<div id='submitWrap'></div>"
+            + "<div class='mt-3 text-center'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Game</button></div>";
           this.app.appendChild(wrap);
 
           const grid = document.getElementById("optionsGrid");
@@ -607,6 +687,13 @@
 
           if (submitted) {
             document.getElementById("questionStatus").innerHTML = "<div class='lock-state'><i class='lni lni-lock-alt me-1'></i>Answer locked in! Waiting for everyone else...</div>";
+          }
+
+          if (model.doubleDownActive) {
+            const dd = document.getElementById("doubleDownBanner");
+            if (dd) {
+              dd.innerHTML = "<div class='double-down-banner'><i class='lni lni-bolt me-1'></i>Double Down Active: right answer earns 2x, wrong answer costs 5x points.</div>";
+            }
           }
 
           if (multi) {
@@ -645,7 +732,7 @@
 
           this.app.innerHTML = "";
           const wrap = document.createElement("section");
-          wrap.className = "glass p-3 " + (correct ? "celebrate" : "shake");
+          wrap.className = "glass p-3 answer-reveal-blast " + (correct ? "celebrate" : "shake");
 
           const heading = document.createElement("div");
           heading.className = "title-font fs-2 mb-1";
@@ -654,7 +741,7 @@
 
           const delta = document.createElement("div");
           delta.className = "fs-4 fw-bold mb-2";
-          delta.textContent = "+" + formatScore(earned) + " points";
+          delta.textContent = (earned >= 0 ? "+" : "") + formatScore(earned) + " points";
           wrap.appendChild(delta);
 
           const scoreBox = document.createElement("div");
@@ -671,16 +758,30 @@
           corr.textContent = "Correct answer: " + labels.join(", ");
           wrap.appendChild(corr);
 
-          const opts = document.createElement("div");
-          opts.className = "mb-2";
+          const query = document.createElement("div");
+          query.className = "fw-bold mb-2";
+          query.textContent = model.question.query || "";
+          wrap.appendChild(query);
+
+          const grid = document.createElement("div");
+          grid.className = "options-grid mb-3";
           (model.question.options || []).forEach((o) => {
-            const row = document.createElement("div");
-            row.className = "small-note";
-            const hit = (rv.correctOptionIds || []).includes(o.id) ? "✓" : "•";
-            row.textContent = hit + " " + o.letter + " - " + o.text;
-            opts.appendChild(row);
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "ans-btn c-" + o.color + " focus-ring";
+            btn.innerHTML = "<span class='letter'>" + o.letter + "</span><span>" + safeText(o.text) + "</span>";
+            const isCorrect = (rv.correctOptionIds || []).includes(o.id);
+            if (isCorrect) {
+              btn.classList.add("reveal-correct");
+              btn.addEventListener("mouseenter", () => this.spawnConfetti(btn));
+              btn.addEventListener("focus", () => this.spawnConfetti(btn));
+            } else {
+              btn.classList.add("reveal-wrong");
+            }
+            btn.disabled = true;
+            grid.appendChild(btn);
           });
-          wrap.appendChild(opts);
+          wrap.appendChild(grid);
 
           const answerHtml = typeof rv.answerHtml === "string" ? rv.answerHtml : "";
           if (answerHtml) {
@@ -698,8 +799,47 @@
             wrap.appendChild(tip);
           }
 
+          const ddWrap = document.createElement("div");
+          ddWrap.className = "mt-3 d-grid gap-2";
+          const ddBtn = document.createElement("button");
+          ddBtn.id = "doubleDownBtn";
+          ddBtn.className = "btn moon-btn btn-lg focus-ring";
+          ddBtn.textContent = model.doubleDownArmed ? "Double Down Armed For Next Question" : "Double Down On Next Question";
+          ddBtn.disabled = !!model.doubleDownArmed || !model.hasNextQuestion;
+          ddWrap.appendChild(ddBtn);
+
+          const joinBtn = document.createElement("button");
+          joinBtn.id = "joinAnotherGameBtn";
+          joinBtn.className = "btn outline-moon focus-ring";
+          joinBtn.textContent = "Join Another Game";
+          ddWrap.appendChild(joinBtn);
+          wrap.appendChild(ddWrap);
+
           this.app.appendChild(wrap);
+          const ddAction = document.getElementById("doubleDownBtn");
+          if (ddAction) ddAction.addEventListener("click", () => model.onDoubleDown());
           this.animateCount("countingScore", model.playerScoreBeforeReveal || 0, model.playerScore || 0, 850);
+        }
+
+        spawnConfetti(target) {
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          if (reduce) return;
+          const wrap = document.createElement("div");
+          wrap.className = "confetti-wrap";
+          const colors = ["#ffd86b", "#ff8bb3", "#a2f2c0", "#d9c2ff", "#9bd1ff"];
+          for (let i = 0; i < 18; i += 1) {
+            const c = document.createElement("span");
+            c.className = "confetti";
+            c.style.left = Math.floor(Math.random() * 100) + "%";
+            c.style.top = Math.floor(Math.random() * 25) + "%";
+            c.style.background = colors[i % colors.length];
+            c.style.animationDelay = (Math.random() * 140) + "ms";
+            wrap.appendChild(c);
+          }
+          target.appendChild(wrap);
+          setTimeout(() => {
+            if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+          }, 980);
         }
 
         renderLeaderboard(model) {
@@ -724,6 +864,12 @@
             list.appendChild(div);
           });
           wrap.appendChild(list);
+
+          const joinBtn = document.createElement("button");
+          joinBtn.id = "joinAnotherGameBtn";
+          joinBtn.className = "btn outline-moon focus-ring mt-2";
+          joinBtn.textContent = "Join Another Game";
+          wrap.appendChild(joinBtn);
 
           this.app.appendChild(wrap);
         }
@@ -775,7 +921,8 @@
             hasSubmitted: false,
             selectedIds: [],
             playerRemoved: false,
-            playerScoreBeforeReveal: 0
+            playerScoreBeforeReveal: 0,
+            doubleDownArmed: false
           });
 
           this.joinTimeoutHandle = null;
@@ -899,6 +1046,7 @@
 
         onMessage(msg) {
           if (msg.senderRole !== "instructor") return;
+          if (!this.identity.gameId) return;
           if (this.identity.gameId && msg.gameId !== this.identity.gameId) return;
 
           this.lastInstructorSeenAt = nowTs();
@@ -939,6 +1087,9 @@
               break;
             case MSG.INSTRUCTOR_PRESENT:
               break;
+            case MSG.DOUBLE_DOWN_SET:
+              this.handleDoubleDownSet(msg.payload);
+              break;
             default:
               break;
           }
@@ -967,6 +1118,7 @@
             this.game.rank = snapshot.player.rank || null;
             this.game.hasSubmitted = !!snapshot.player.hasSubmitted;
             this.game.playerRemoved = !!snapshot.player.removed;
+            this.game.doubleDownArmed = !!snapshot.player.doubleDownArmed;
           }
 
           if (snapshot.question) {
@@ -990,6 +1142,7 @@
           this.game.hasSubmitted = false;
           this.game.selectedIds = [];
           this.game.playerScoreBeforeReveal = this.game.playerScore;
+          this.game.doubleDownArmed = false;
         }
 
         handleSubmissionAck(payload) {
@@ -1012,7 +1165,13 @@
           this.game.playerScoreBeforeReveal = this.game.playerScore;
           if (this.game.reveal && this.game.reveal.playerOutcomes && this.game.reveal.playerOutcomes[this.identity.playerId]) {
             this.game.playerScore = this.game.reveal.playerOutcomes[this.identity.playerId].totalScore;
+            this.game.doubleDownArmed = false;
           }
+        }
+
+        handleDoubleDownSet(payload) {
+          if (!payload || payload.playerId !== this.identity.playerId) return;
+          this.game.doubleDownArmed = !!payload.active;
         }
 
         handleLeaderboard(payload) {
@@ -1104,6 +1263,35 @@
           this.submitAnswer(selected);
         }
 
+        onDoubleDown() {
+          if (this.game.doubleDownArmed) return;
+          if (!this.identity.gameId) return;
+          this.send(MSG.DOUBLE_DOWN_NEXT, this.identity.gameId, {
+            playerId: this.identity.playerId
+          });
+        }
+
+        joinAnotherGame() {
+          if (this.joinTimeoutHandle) {
+            clearTimeout(this.joinTimeoutHandle);
+            this.joinTimeoutHandle = null;
+          }
+          this.identity.gameId = "";
+          this.game.gameId = "";
+          this.game.phase = PHASES.LOBBY;
+          this.game.question = null;
+          this.game.reveal = null;
+          this.game.leaderboard = [];
+          this.game.rank = null;
+          this.game.hasSubmitted = false;
+          this.game.selectedIds = [];
+          this.game.playerRemoved = false;
+          this.game.doubleDownArmed = false;
+          this.joinDraft.gameId = "";
+          this.persist();
+          this.render();
+        }
+
         submitAnswer(selectedIds) {
           if (this.game.hasSubmitted) return;
           const unique = Array.from(new Set(selectedIds)).sort();
@@ -1127,6 +1315,7 @@
         render(joinMsg) {
           if (this.game.playerRemoved) {
             this.ui.renderRemoved();
+            this.bindJoinAnotherGameButton();
             return;
           }
 
@@ -1140,12 +1329,14 @@
 
           if (this.currentConnState !== "connected" && this.game.phase !== PHASES.QUESTION) {
             this.ui.renderWaiting("Your connection was interrupted. Reconnecting...");
+            this.bindJoinAnotherGameButton();
             return;
           }
 
           switch (this.game.phase) {
             case PHASES.LOBBY:
               this.ui.renderLobby(this.game);
+              this.bindJoinAnotherGameButton();
               break;
             case PHASES.QUESTION:
               if (!this.game.question) {
@@ -1158,11 +1349,13 @@
                 selectedIds: this.game.selectedIds,
                 playerScore: this.game.playerScore,
                 playerId: this.identity.playerId,
-                isMulti: this.isLikelyMultiSelect()
+                isMulti: this.isLikelyMultiSelect(),
+                doubleDownActive: this.game.doubleDownArmed
               }, {
                 onOptionClick: this.onOptionClick.bind(this),
                 onSubmitMulti: this.onSubmitMulti.bind(this)
               });
+              this.bindJoinAnotherGameButton();
               break;
             case PHASES.ANSWER_REVEAL:
               if (!this.game.question || !this.game.reveal) {
@@ -1174,16 +1367,28 @@
                 question: this.game.question,
                 playerId: this.identity.playerId,
                 playerScore: this.game.playerScore,
-                playerScoreBeforeReveal: this.game.playerScoreBeforeReveal
+                playerScoreBeforeReveal: this.game.playerScoreBeforeReveal,
+                doubleDownArmed: this.game.doubleDownArmed,
+                hasNextQuestion: this.game.question && this.game.question.questionNumber < this.game.question.questionCount,
+                onDoubleDown: this.onDoubleDown.bind(this)
               });
+              this.bindJoinAnotherGameButton();
               break;
             case PHASES.LEADERBOARD:
             case PHASES.FINISHED:
               this.ui.renderLeaderboard(this.game);
+              this.bindJoinAnotherGameButton();
               break;
             default:
               this.ui.renderWaiting("Waiting for the instructor...");
+              this.bindJoinAnotherGameButton();
           }
+        }
+
+        bindJoinAnotherGameButton() {
+          const btn = document.getElementById("joinAnotherGameBtn");
+          if (!btn) return;
+          btn.addEventListener("click", () => this.joinAnotherGame(), { once: true });
         }
 
         startTicker() {
@@ -1192,6 +1397,7 @@
               this.ui.refreshTimer(this.game.question);
               if (nowTs() > this.game.question.endsAt + 1200 && !this.game.reveal) {
                 this.ui.renderWaiting("Question closed. Waiting for answer reveal...");
+                this.bindJoinAnotherGameButton();
               }
             }
           }, 300);
