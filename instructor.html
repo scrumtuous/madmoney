@@ -1297,8 +1297,8 @@
             html += "<div id='timerPill' class='timer-pill " + timerCls + "'>" + formatTime(remaining) + "</div>";
             html += "</div>";
             html += "<div class='mb-2'>" + escapeHtml(q.query) + "</div>";
-            html += "<div class='small-note mb-2'>" + submittedCount + " / " + totalPlayers + " players answered</div>";
-            html += "<div class='progress mb-2' role='progressbar' aria-label='Answered players progress'><div class='progress-bar' style='width:" + (totalPlayers ? Math.round((submittedCount / totalPlayers) * 100) : 0) + "%'></div></div>";
+            html += "<div id='submissionCountLine' class='small-note mb-2'>" + submittedCount + " / " + totalPlayers + " players answered</div>";
+            html += "<div class='progress mb-2' role='progressbar' aria-label='Answered players progress'><div id='submissionProgress' class='progress-bar' style='width:" + (totalPlayers ? Math.round((submittedCount / totalPlayers) * 100) : 0) + "%'></div></div>";
             html += "<div class='row g-2 mb-2'>";
             q.options.forEach((o) => {
               html += "<div class='col-12 col-md-6'><div class='q-option'><strong>" + o.letter + "</strong> - " + escapeHtml(o.text) + "</div></div>";
@@ -1404,6 +1404,30 @@
             this.el.debugStats.appendChild(div);
           });
         }
+
+        refreshQuestionLive(game) {
+          if (!game || game.phase !== PHASES.QUESTION) return;
+          const timerEl = document.getElementById("timerPill");
+          if (timerEl) {
+            const remaining = game.questionEndsAt - nowTs();
+            timerEl.textContent = formatTime(remaining);
+            timerEl.classList.remove("warn", "danger");
+            if (remaining <= 10000) timerEl.classList.add("danger");
+            else if (remaining <= 30000) timerEl.classList.add("warn");
+          }
+
+          const submittedCount = Object.keys(game.submissions[String(game.questionIndex)] || {}).length;
+          const totalPlayers = Object.values(game.players || {}).filter((p) => !p.removed).length;
+          const countEl = document.getElementById("submissionCountLine");
+          if (countEl) {
+            countEl.textContent = submittedCount + " / " + totalPlayers + " players answered";
+          }
+
+          const barEl = document.getElementById("submissionProgress");
+          if (barEl) {
+            barEl.style.width = (totalPlayers ? Math.round((submittedCount / totalPlayers) * 100) : 0) + "%";
+          }
+        }
       }
 
       function buildStudentJoinUrl(gameId) {
@@ -1423,6 +1447,10 @@
           this.tickInterval = null;
           this.heartbeat = null;
           this.actionLock = false;
+          this.importDraft = {
+            title: "",
+            json: ""
+          };
         }
 
         init() {
@@ -1448,6 +1476,12 @@
           e.demoQuizBtn.addEventListener("click", () => this.loadDemoQuiz());
           e.resumeBtn.addEventListener("click", () => this.resumeGame());
           e.discardBtn.addEventListener("click", () => this.discardGame());
+          e.quizTitleInput.addEventListener("input", () => {
+            this.importDraft.title = e.quizTitleInput.value;
+          });
+          e.quizJsonInput.addEventListener("input", () => {
+            this.importDraft.json = e.quizJsonInput.value;
+          });
         }
 
         startTicker() {
@@ -1455,8 +1489,10 @@
             if (!this.game.activeGame) return;
             if (this.game.activeGame.phase === PHASES.QUESTION && nowTs() >= this.game.activeGame.questionEndsAt) {
               this.forceEndQuestion();
+              return;
             }
-            this.renderAll();
+            this.ui.refreshQuestionLive(this.game.activeGame);
+            this.renderDebug();
           }, 400);
         }
 
@@ -1586,6 +1622,9 @@
 
           this.quizLibrary.createQuiz(title, parsed);
           this.ui.el.quizTitleInput.value = "";
+          this.ui.el.quizJsonInput.value = "";
+          this.importDraft.title = "";
+          this.importDraft.json = "";
           this.ui.showImportStatus("Quiz created and saved.", false);
           this.renderQuizLibrary();
         }
@@ -1619,6 +1658,8 @@
           ];
           this.ui.el.quizTitleInput.value = "Demo Moonlit Quiz";
           this.ui.el.quizJsonInput.value = JSON.stringify(demo, null, 2);
+          this.importDraft.title = this.ui.el.quizTitleInput.value;
+          this.importDraft.json = this.ui.el.quizJsonInput.value;
           this.ui.showImportStatus("Demo quiz loaded into the editor.", false);
         }
 

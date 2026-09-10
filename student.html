@@ -528,6 +528,8 @@
           gid.value = prefillGameId || "";
           nm.value = savedName || "";
           if (stateMsg) document.getElementById("joinMsg").textContent = stateMsg;
+          gid.addEventListener("input", () => handlers.onJoinInputChange(gid.value, nm.value));
+          nm.addEventListener("input", () => handlers.onJoinInputChange(gid.value, nm.value));
           document.getElementById("joinBtn").addEventListener("click", () => handlers.onJoin(gid.value, nm.value));
         }
 
@@ -780,6 +782,10 @@
           this.lastInstructorSeenAt = 0;
           this.currentConnState = "disconnected";
           this.tickTimer = null;
+          this.joinDraft = {
+            gameId: "",
+            playerName: ""
+          };
         }
 
         init() {
@@ -794,12 +800,19 @@
 
           const qGame = readQueryGame();
           if (qGame) this.game.gameId = qGame;
+          this.joinDraft.gameId = this.game.gameId || this.identity.gameId || "";
+          this.joinDraft.playerName = this.identity.playerName || "";
 
           this.socket.connect();
           this.spawnFloaters();
           this.startTicker();
           this.tryAutoRejoin();
           this.render();
+        }
+
+        onJoinInputChange(gameIdRaw, nameRaw) {
+          this.joinDraft.gameId = String(gameIdRaw || "").toUpperCase().slice(0, 12);
+          this.joinDraft.playerName = String(nameRaw || "").slice(0, 30);
         }
 
         onSocketState(state) {
@@ -856,6 +869,8 @@
 
           this.identity.playerName = playerName;
           this.identity.gameId = gameId;
+          this.joinDraft.gameId = gameId;
+          this.joinDraft.playerName = playerName;
           this.game.gameId = gameId;
           this.game.playerRemoved = false;
           this.game.phase = PHASES.LOBBY;
@@ -1116,7 +1131,10 @@
           }
 
           if (!this.identity.playerName || !this.identity.gameId) {
-            this.ui.renderJoin(this.game.gameId || readQueryGame(), this.identity.playerName || "", { onJoin: this.onJoin.bind(this) }, joinMsg || "");
+            this.ui.renderJoin(this.joinDraft.gameId || this.game.gameId || readQueryGame(), this.joinDraft.playerName || this.identity.playerName || "", {
+              onJoin: this.onJoin.bind(this),
+              onJoinInputChange: this.onJoinInputChange.bind(this)
+            }, joinMsg || "");
             return;
           }
 
