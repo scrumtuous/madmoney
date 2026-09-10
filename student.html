@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<!-- student.html: Player interface for joining, answering, and following the live gothic multiplayer quiz game. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Moonlit Quiz Player</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+  <style>
+    :root {
+      --night: #0f0b16;
+      --plum-dark: #21142b;
+      --plum-mid: #3a2148;
+      --rose: #d392b2;
+      --lavender: #c8afd9;
+      --pink: #f7dde9;
+      --silver: #d2d5e0;
+      --danger: #ff6b88;
+      --ok: #56d79f;
+      --warn: #ff9d74;
+      --card: rgba(29, 18, 38, 0.82);
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.42);
+      --radius: 20px;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--pink);
+      font-family: "Nunito", sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(211, 146, 178, 0.28), transparent 28%),
+        radial-gradient(circle at 82% 24%, rgba(200, 175, 217, 0.23), transparent 30%),
+        radial-gradient(circle at 50% 78%, rgba(211, 146, 178, 0.15), transparent 36%),
+        linear-gradient(165deg, var(--night), var(--plum-dark) 44%, var(--plum-mid));
+      overflow-x: hidden;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0.9rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .title-font {
+      font-family: "Cormorant Garamond", serif;
+      letter-spacing: 0.06em;
+    }
+
+    .glass {
+      background: var(--card);
+      border: 1px solid rgba(247, 221, 233, 0.24);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .small-note { color: rgba(247, 221, 233, 0.82); }
+
+    .conn-badge {
+      border-radius: 999px;
+      border: 1px solid rgba(210, 213, 224, 0.3);
+      padding: 0.3rem 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #888;
+    }
+
+    .dot.connected { background: var(--ok); box-shadow: 0 0 12px rgba(86, 215, 159, 0.65); }
+    .dot.reconnecting { background: var(--warn); box-shadow: 0 0 12px rgba(255, 157, 116, 0.65); }
+    .dot.disconnected { background: var(--danger); box-shadow: 0 0 12px rgba(255, 107, 136, 0.65); }
+
+    .moon-btn {
+      border-radius: 14px;
+      border: 1px solid rgba(247, 221, 233, 0.35);
+      color: var(--pink);
+      background: linear-gradient(140deg, rgba(163, 96, 132, 0.45), rgba(92, 61, 124, 0.42));
+      font-weight: 800;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .moon-btn:hover,
+    .moon-btn:focus-visible {
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 9px 20px rgba(211, 146, 178, 0.33);
+    }
+
+    .moon-btn:disabled {
+      opacity: 0.5;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .outline-moon {
+      border-radius: 14px;
+      border: 1px solid rgba(247, 221, 233, 0.35);
+      color: var(--pink);
+      background: transparent;
+      font-weight: 700;
+    }
+
+    .join-input,
+    .join-input:focus {
+      border-radius: 12px;
+      background: rgba(8, 6, 12, 0.65);
+      color: #fff;
+      border-color: rgba(247, 221, 233, 0.35);
+      box-shadow: 0 0 0 0.12rem rgba(211, 146, 178, 0.2);
+    }
+
+    .score-box {
+      border-radius: 14px;
+      border: 1px solid rgba(247, 221, 233, 0.3);
+      background: rgba(0, 0, 0, 0.36);
+      padding: 0.7rem;
+      text-align: center;
+    }
+
+    .timer {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(2.1rem, 7vw, 3.5rem);
+      text-align: center;
+      line-height: 1;
+      border: 1px solid rgba(247, 221, 233, 0.45);
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.42);
+      padding: 0.45rem 0.9rem;
+      min-width: 180px;
+      margin: 0 auto;
+      animation: pulse-soft 1300ms ease-in-out infinite;
+    }
+
+    .timer.warn {
+      border-color: rgba(255, 157, 116, 0.6);
+      color: #ffd4c2;
+    }
+
+    .timer.danger {
+      border-color: rgba(255, 107, 136, 0.75);
+      color: #ffdbe5;
+      animation: pulse-hot 760ms ease-in-out infinite;
+    }
+
+    @keyframes pulse-soft {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    @keyframes pulse-hot {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+
+    @media (min-width: 768px) {
+      .options-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .ans-btn {
+      text-align: left;
+      border: none;
+      border-radius: 16px;
+      min-height: 88px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      width: 100%;
+      padding: 0.8rem;
+      font-weight: 700;
+      transition: transform 130ms ease, box-shadow 130ms ease, filter 130ms ease;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ans-btn .letter {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.18);
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .ans-btn:hover,
+    .ans-btn:focus-visible {
+      transform: translateY(-1px) scale(1.01);
+      filter: brightness(1.06);
+    }
+
+    .ans-btn.selected {
+      outline: 3px solid rgba(247, 221, 233, 0.88);
+      box-shadow: 0 0 0 4px rgba(247, 221, 233, 0.22), 0 14px 28px rgba(0, 0, 0, 0.45);
+      animation: select-glow 680ms ease;
+    }
+
+    .ans-btn.locked {
+      opacity: 0.64;
+      transform: none;
+      filter: grayscale(0.12);
+    }
+
+    @keyframes select-glow {
+      0% { box-shadow: 0 0 0 0 rgba(247, 221, 233, 0.45); }
+      100% { box-shadow: 0 0 0 9px rgba(247, 221, 233, 0); }
+    }
+
+    .c-red { background: linear-gradient(145deg, #cc384f, #a12545); }
+    .c-green { background: linear-gradient(145deg, #2aa467, #1f8450); }
+    .c-blue { background: linear-gradient(145deg, #3377e2, #2b52b9); }
+    .c-purple { background: linear-gradient(145deg, #8451cf, #6943af); }
+    .c-orange { background: linear-gradient(145deg, #ea7f2b, #ca5e18); }
+    .c-pink { background: linear-gradient(145deg, #d14b8d, #a53672); }
+
+    .lock-state {
+      border-radius: 12px;
+      border: 1px solid rgba(86, 215, 159, 0.5);
+      background: rgba(36, 99, 72, 0.2);
+      padding: 0.65rem;
+      font-weight: 700;
+      animation: pop-msg 280ms ease;
+    }
+
+    @keyframes pop-msg {
+      from { opacity: 0; transform: translateY(6px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .shake {
+      animation: wrong-shake 420ms ease;
+    }
+
+    @keyframes wrong-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      50% { transform: translateX(7px); }
+      75% { transform: translateX(-4px); }
+    }
+
+    .celebrate {
+      animation: win-pop 520ms ease;
+    }
+
+    @keyframes win-pop {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .rank-row {
+      border-radius: 12px;
+      border: 1px solid rgba(247, 221, 233, 0.2);
+      background: rgba(47, 30, 60, 0.75);
+      padding: 0.58rem 0.72rem;
+      margin-bottom: 0.45rem;
+      animation: rise 280ms ease both;
+    }
+
+    @keyframes rise {
+      from { transform: translateY(6px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .floater {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0.22;
+      z-index: 0;
+      animation: floaty linear infinite;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), rgba(255,255,255,0));
+    }
+
+    @keyframes floaty {
+      from { transform: translateY(12vh) translateX(0); }
+      to { transform: translateY(-120vh) translateX(25px); }
+    }
+
+    .focus-ring:focus-visible {
+      outline: 2px solid #ffe6ef;
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="floatLayer"></div>
+  <div class="shell">
+    <header class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+      <div>
+        <div class="title-font fs-2">Moonlit Quiz Player</div>
+        <div class="small-note">Gothic spark, quick taps, big points.</div>
+      </div>
+      <div class="conn-badge"><span id="connDot" class="dot disconnected"></span><span id="connText">Connecting...</span></div>
+    </header>
+
+    <main id="app"></main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const socketUrl = "ws://10.23.131.137:8099/madmoney";
+      const STORAGE_KEYS = {
+        IDENTITY: "gothicQuiz.studentIdentity.v1",
+        GAME: "gothicQuiz.studentGame.v1"
+      };
+
+      const PHASES = {
+        LOBBY: "LOBBY",
+        QUESTION: "QUESTION",
+        ANSWER_REVEAL: "ANSWER_REVEAL",
+        LEADERBOARD: "LEADERBOARD",
+        FINISHED: "FINISHED"
+      };
+
+      const MSG = {
+        PLAYER_JOIN: "PLAYER_JOIN",
+        PLAYER_REJOIN: "PLAYER_REJOIN",
+        PLAYER_JOINED: "PLAYER_JOINED",
+        PLAYER_REMOVE: "PLAYER_REMOVE",
+        PLAYER_REMOVED: "PLAYER_REMOVED",
+        SYNC_REQUEST: "SYNC_REQUEST",
+        STATE_SNAPSHOT: "STATE_SNAPSHOT",
+        GAME_STARTED: "GAME_STARTED",
+        QUESTION_STARTED: "QUESTION_STARTED",
+        ANSWER_SUBMITTED: "ANSWER_SUBMITTED",
+        QUESTION_ENDED: "QUESTION_ENDED",
+        ANSWER_REVEALED: "ANSWER_REVEALED",
+        SCORE_UPDATED: "SCORE_UPDATED",
+        SCORE_RESET: "SCORE_RESET",
+        LEADERBOARD: "LEADERBOARD",
+        GAME_FINISHED: "GAME_FINISHED",
+        INSTRUCTOR_PRESENT: "INSTRUCTOR_PRESENT"
+      };
+
+      function nowTs() { return Date.now(); }
+      function generateMessageId() {
+        if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+        return "m-" + Math.random().toString(36).slice(2) + "-" + nowTs();
+      }
+      function formatScore(v) { return Number(v || 0).toLocaleString(); }
+      function formatTime(ms) {
+        const safe = Math.max(0, ms);
+        const sec = Math.floor(safe / 1000);
+        const mm = String(Math.floor(sec / 60)).padStart(2, "0");
+        const ss = String(sec % 60).padStart(2, "0");
+        return mm + ":" + ss;
+      }
+      function sanitizeName(name) {
+        return String(name || "").trim().replace(/\s+/g, " ").slice(0, 30);
+      }
+      function readQueryGame() {
+        const sp = new URLSearchParams(window.location.search);
+        return (sp.get("game") || "").trim().toUpperCase().slice(0, 12);
+      }
+
+      class LocalStore {
+        static readJson(key, fallback) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+          } catch (err) {
+            return fallback;
+          }
+        }
+        static writeJson(key, value) {
+          localStorage.setItem(key, JSON.stringify(value));
+        }
+      }
+
+      class SocketManager {
+        constructor(onMessage, onState) {
+          this.onMessage = onMessage;
+          this.onState = onState;
+          this.ws = null;
+          this.retries = 0;
+          this.manual = false;
+          this.seen = new Map();
+          this.status = "disconnected";
+        }
+
+        connect() {
+          this.manual = false;
+          this._open();
+          if (!this.pruneTimer) {
+            this.pruneTimer = setInterval(() => this.pruneSeen(), 9000);
+          }
+        }
+
+        _open() {
+          try {
+            this.ws = new WebSocket(socketUrl);
+          } catch (err) {
+            this.scheduleReconnect();
+            return;
+          }
+          this.onState("connecting");
+          this.ws.onopen = () => {
+            this.retries = 0;
+            this.onState("connected");
+          };
+          this.ws.onclose = () => {
+            if (this.manual) {
+              this.onState("disconnected");
+              return;
+            }
+            this.scheduleReconnect();
+          };
+          this.ws.onerror = () => {
+            this.onState("reconnecting");
+          };
+          this.ws.onmessage = (evt) => {
+            const msg = this.parse(evt.data);
+            if (!msg) return;
+            if (!this.validate(msg)) return;
+            if (this.isDup(msg.messageId)) return;
+            this.onMessage(msg);
+          };
+        }
+
+        scheduleReconnect() {
+          this.onState("reconnecting");
+          const delay = Math.min(10000, 900 * Math.pow(1.6, this.retries));
+          this.retries += 1;
+          setTimeout(() => {
+            if (!this.manual) this._open();
+          }, delay);
+        }
+
+        close() {
+          this.manual = true;
+          if (this.pruneTimer) clearInterval(this.pruneTimer);
+          if (this.ws) this.ws.close();
+        }
+
+        send(message) {
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
+          this.ws.send(JSON.stringify(message));
+          return true;
+        }
+
+        parse(raw) {
+          try { return JSON.parse(raw); } catch (err) { return null; }
+        }
+
+        validate(msg) {
+          return !!(msg && typeof msg.type === "string" && typeof msg.messageId === "string" && typeof msg.gameId === "string" && typeof msg.senderRole === "string");
+        }
+
+        isDup(id) {
+          if (!id) return false;
+          if (this.seen.has(id)) return true;
+          this.seen.set(id, nowTs());
+          if (this.seen.size > 1500) this.pruneSeen(true);
+          return false;
+        }
+
+        pruneSeen(force) {
+          const cutoff = nowTs() - 8 * 60 * 1000;
+          for (const [k, v] of this.seen.entries()) {
+            if (force || v < cutoff) this.seen.delete(k);
+          }
+        }
+      }
+
+      class StudentUI {
+        constructor() {
+          this.app = document.getElementById("app");
+          this.connDot = document.getElementById("connDot");
+          this.connText = document.getElementById("connText");
+        }
+
+        setConn(state) {
+          this.connDot.className = "dot " + (state === "connected" ? "connected" : state === "reconnecting" ? "reconnecting" : "disconnected");
+          this.connText.textContent = state === "connected" ? "Connected" : state === "reconnecting" ? "Reconnecting..." : "Disconnected";
+        }
+
+        renderJoin(prefillGameId, savedName, handlers, stateMsg) {
+          this.app.innerHTML = "";
+          const wrap = document.createElement("section");
+          wrap.className = "glass p-3";
+          wrap.innerHTML = ""
+            + "<div class='title-font fs-3 mb-1'>Join a Game</div>"
+            + "<div class='small-note mb-3'>Enter game code and your name.</div>"
+            + "<div class='mb-2'><label class='form-label'>Game ID</label><input id='joinGameId' class='form-control join-input' maxlength='12' /></div>"
+            + "<div class='mb-2'><label class='form-label'>Your Name</label><input id='joinName' class='form-control join-input' maxlength='30' /></div>"
+            + "<button id='joinBtn' class='btn moon-btn w-100 focus-ring'>Join Game</button>"
+            + "<div id='joinMsg' class='small-note mt-2' aria-live='polite'></div>";
+          this.app.appendChild(wrap);
+          const gid = document.getElementById("joinGameId");
+          const nm = document.getElementById("joinName");
+          gid.value = prefillGameId || "";
+          nm.value = savedName || "";
+          if (stateMsg) document.getElementById("joinMsg").textContent = stateMsg;
+          document.getElementById("joinBtn").addEventListener("click", () => handlers.onJoin(gid.value, nm.value));
+        }
+
+        renderWaiting(text) {
+          this.app.innerHTML = ""
+            + "<section class='glass p-3 text-center'>"
+            + "<div class='title-font fs-3 mb-1'>Waiting for the instructor...</div>"
+            + "<div class='small-note'>" + text + "</div>"
+            + "</section>";
+        }
+
+        renderRemoved() {
+          this.app.innerHTML = ""
+            + "<section class='glass p-3 text-center shake'>"
+            + "<div class='title-font fs-3 mb-1'>You have been removed from this game.</div>"
+            + "<div class='small-note'>Ask the instructor if you should rejoin with a new entry.</div>"
+            + "</section>";
+        }
+
+        renderLobby(model) {
+          this.app.innerHTML = ""
+            + "<section class='glass p-3 text-center celebrate'>"
+            + "<div class='title-font fs-2'>" + (model.quizTitle || "Moonlit Quiz") + "</div>"
+            + "<div class='small-note mb-2'>Game " + model.gameId + "</div>"
+            + "<div class='score-box'>"
+            + "<div class='small-note'>Your Score</div>"
+            + "<div class='fs-2 fw-bold'>" + formatScore(model.playerScore) + "</div>"
+            + "</div>"
+            + "<div class='small-note mt-3'>Hold tight. The next question is coming soon.</div>"
+            + "</section>";
+        }
+
+        renderQuestion(model, handlers) {
+          this.app.innerHTML = "";
+          const q = model.question;
+          const rem = Math.max(0, q.endsAt - nowTs());
+          const timerClass = rem <= 10000 ? "danger" : rem <= 30000 ? "warn" : "";
+
+          const wrap = document.createElement("section");
+          wrap.className = "glass p-3";
+          wrap.innerHTML = ""
+            + "<div class='d-flex justify-content-between align-items-start gap-2 flex-wrap mb-2'>"
+            + "<div><div class='title-font fs-3'>Question " + q.questionNumber + " of " + q.questionCount + "</div><div class='small-note'>Worth up to " + formatScore(q.pointValue) + " points</div></div>"
+            + "<div class='score-box'><div class='small-note'>Your Score</div><div id='scoreValue' class='fw-bold fs-5'>" + formatScore(model.playerScore) + "</div></div>"
+            + "</div>"
+            + "<div id='timerView' class='timer " + timerClass + " mb-3'>" + formatTime(rem) + "</div>"
+            + "<div class='fw-bold mb-2'>" + safeText(q.query) + "</div>"
+            + "<div id='multiHint' class='small-note mb-2"></div>"
+            + "<div id='optionsGrid' class='options-grid mb-2'></div>"
+            + "<div id='questionStatus' class='small-note mb-2' aria-live='polite'></div>"
+            + "<div id='submitWrap'></div>";
+          this.app.appendChild(wrap);
+
+          const grid = document.getElementById("optionsGrid");
+          const submitted = model.hasSubmitted;
+          const multi = model.isMulti;
+
+          if (multi) {
+            document.getElementById("multiHint").textContent = "Select all answers you think are correct, then click Submit Answer.";
+          }
+
+          q.options.forEach((opt) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "ans-btn c-" + opt.color + " focus-ring";
+            btn.setAttribute("data-opt-id", opt.id);
+            btn.setAttribute("aria-label", "Option " + opt.letter + ": " + opt.text);
+            btn.innerHTML = "<span class='letter'>" + opt.letter + "</span><span>" + safeText(opt.text) + "</span>";
+            if (submitted) btn.classList.add("locked");
+            if (model.selectedIds && model.selectedIds.includes(opt.id)) btn.classList.add("selected");
+            btn.disabled = submitted;
+            btn.addEventListener("click", () => handlers.onOptionClick(opt.id));
+            grid.appendChild(btn);
+          });
+
+          if (submitted) {
+            document.getElementById("questionStatus").innerHTML = "<div class='lock-state'><i class='lni lni-lock-alt me-1'></i>Answer locked in! Waiting for everyone else...</div>";
+          }
+
+          if (multi) {
+            const sw = document.getElementById("submitWrap");
+            const submit = document.createElement("button");
+            submit.type = "button";
+            submit.className = "btn moon-btn btn-lg w-100 focus-ring";
+            submit.textContent = submitted ? "Answer Locked" : "Submit Answer";
+            submit.disabled = submitted;
+            submit.addEventListener("click", handlers.onSubmitMulti);
+            sw.appendChild(submit);
+          }
+        }
+
+        refreshTimer(question) {
+          const timer = document.getElementById("timerView");
+          if (!timer || !question) return;
+          const rem = Math.max(0, question.endsAt - nowTs());
+          timer.textContent = formatTime(rem);
+          timer.classList.remove("warn", "danger");
+          if (rem <= 10000) timer.classList.add("danger");
+          else if (rem <= 30000) timer.classList.add("warn");
+        }
+
+        updateLockedBanner() {
+          const status = document.getElementById("questionStatus");
+          if (!status) return;
+          status.innerHTML = "<div class='lock-state'><i class='lni lni-lock-alt me-1'></i>Answer locked in! Waiting for everyone else...</div>";
+        }
+
+        renderReveal(model) {
+          const rv = model.reveal || {};
+          const outcome = rv.playerOutcomes ? rv.playerOutcomes[model.playerId] : null;
+          const earned = outcome ? outcome.earnedPoints : 0;
+          const correct = outcome ? outcome.correct : false;
+
+          this.app.innerHTML = "";
+          const wrap = document.createElement("section");
+          wrap.className = "glass p-3 " + (correct ? "celebrate" : "shake");
+
+          const heading = document.createElement("div");
+          heading.className = "title-font fs-2 mb-1";
+          heading.textContent = correct ? "Correct!" : "Not this time!";
+          wrap.appendChild(heading);
+
+          const delta = document.createElement("div");
+          delta.className = "fs-4 fw-bold mb-2";
+          delta.textContent = "+" + formatScore(earned) + " points";
+          wrap.appendChild(delta);
+
+          const scoreBox = document.createElement("div");
+          scoreBox.className = "score-box mb-3";
+          scoreBox.innerHTML = "<div class='small-note'>Your Score</div><div id='countingScore' class='fs-2 fw-bold'>" + formatScore(model.playerScoreBeforeReveal || 0) + "</div>";
+          wrap.appendChild(scoreBox);
+
+          const corr = document.createElement("div");
+          corr.className = "small-note mb-2";
+          const labels = (rv.correctOptionIds || []).map((id) => {
+            const opt = model.question.options.find((o) => o.id === id);
+            return opt ? opt.letter : id;
+          });
+          corr.textContent = "Correct answer: " + labels.join(", ");
+          wrap.appendChild(corr);
+
+          const opts = document.createElement("div");
+          opts.className = "mb-2";
+          (model.question.options || []).forEach((o) => {
+            const row = document.createElement("div");
+            row.className = "small-note";
+            const hit = (rv.correctOptionIds || []).includes(o.id) ? "✓" : "•";
+            row.textContent = hit + " " + o.letter + " - " + o.text;
+            opts.appendChild(row);
+          });
+          wrap.appendChild(opts);
+
+          const answerHtml = typeof rv.answerHtml === "string" ? rv.answerHtml : "";
+          if (answerHtml) {
+            const ansCard = document.createElement("div");
+            ansCard.className = "glass p-2 mb-2";
+            ansCard.innerHTML = "<div class='small-note'>Answer</div><div>" + answerHtml + "</div>";
+            wrap.appendChild(ansCard);
+          }
+
+          const tipHtml = typeof rv.tipHtml === "string" ? rv.tipHtml : "";
+          if (tipHtml) {
+            const tip = document.createElement("div");
+            tip.className = "glass p-2";
+            tip.innerHTML = "<div class='small-note'>Tip</div><div>" + tipHtml + "</div>";
+            wrap.appendChild(tip);
+          }
+
+          this.app.appendChild(wrap);
+          this.animateCount("countingScore", model.playerScoreBeforeReveal || 0, model.playerScore || 0, 850);
+        }
+
+        renderLeaderboard(model) {
+          this.app.innerHTML = "";
+          const wrap = document.createElement("section");
+          wrap.className = "glass p-3";
+          const title = document.createElement("div");
+          title.className = "title-font fs-2 mb-2";
+          title.textContent = model.phase === PHASES.FINISHED ? "Final Results" : "Leaderboard";
+          wrap.appendChild(title);
+
+          const me = document.createElement("div");
+          me.className = "score-box mb-3";
+          me.innerHTML = "<div class='small-note'>You're #" + (model.rank || "-") + "</div><div class='fs-2 fw-bold'>" + formatScore(model.playerScore) + " points</div>";
+          wrap.appendChild(me);
+
+          const list = document.createElement("div");
+          (model.leaderboard || []).forEach((row) => {
+            const div = document.createElement("div");
+            div.className = "rank-row d-flex justify-content-between align-items-center";
+            div.innerHTML = "<div>#" + row.rank + " " + safeText(row.playerName) + "</div><div>" + formatScore(row.score) + "</div>";
+            list.appendChild(div);
+          });
+          wrap.appendChild(list);
+
+          this.app.appendChild(wrap);
+        }
+
+        animateCount(id, from, to, duration) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          if (reduce) {
+            el.textContent = formatScore(to);
+            return;
+          }
+          const start = nowTs();
+          const diff = to - from;
+          const frame = () => {
+            const t = Math.min(1, (nowTs() - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            const val = Math.round(from + diff * eased);
+            el.textContent = formatScore(val);
+            if (t < 1) requestAnimationFrame(frame);
+          };
+          frame();
+        }
+      }
+
+      function safeText(v) {
+        return String(v == null ? "" : v)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      class StudentGameController {
+        constructor() {
+          this.ui = new StudentUI();
+          this.socket = new SocketManager(this.onMessage.bind(this), this.onSocketState.bind(this));
+          this.identity = LocalStore.readJson(STORAGE_KEYS.IDENTITY, null);
+          this.game = LocalStore.readJson(STORAGE_KEYS.GAME, {
+            gameId: "",
+            phase: PHASES.LOBBY,
+            question: null,
+            reveal: null,
+            leaderboard: [],
+            quizTitle: "",
+            playerScore: 0,
+            rank: null,
+            hasSubmitted: false,
+            selectedIds: [],
+            playerRemoved: false,
+            playerScoreBeforeReveal: 0
+          });
+
+          this.joinTimeoutHandle = null;
+          this.lastInstructorSeenAt = 0;
+          this.currentConnState = "disconnected";
+          this.tickTimer = null;
+        }
+
+        init() {
+          if (!this.identity || !this.identity.playerId) {
+            this.identity = {
+              playerId: (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ("p-" + Math.random().toString(36).slice(2)),
+              playerName: "",
+              gameId: ""
+            };
+            LocalStore.writeJson(STORAGE_KEYS.IDENTITY, this.identity);
+          }
+
+          const qGame = readQueryGame();
+          if (qGame) this.game.gameId = qGame;
+
+          this.socket.connect();
+          this.spawnFloaters();
+          this.startTicker();
+          this.tryAutoRejoin();
+          this.render();
+        }
+
+        onSocketState(state) {
+          this.currentConnState = state;
+          this.ui.setConn(state);
+          if (state === "connected" && this.game.gameId && this.identity.playerName) {
+            this.send(MSG.INSTRUCTOR_PRESENT, this.game.gameId, { probe: true });
+            this.sendRejoinAndSync();
+          }
+        }
+
+        send(type, gameId, payload) {
+          const msg = {
+            type,
+            gameId,
+            messageId: generateMessageId(),
+            timestamp: nowTs(),
+            senderRole: "student",
+            senderId: this.identity.playerId,
+            payload: payload || {}
+          };
+          this.socket.send(msg);
+        }
+
+        tryAutoRejoin() {
+          if (!this.identity || !this.identity.playerName || !this.identity.gameId) return;
+          if (this.game.playerRemoved) return;
+          this.game.gameId = this.identity.gameId;
+          this.sendRejoinAndSync();
+        }
+
+        sendRejoinAndSync() {
+          if (!this.identity.gameId) return;
+          this.send(MSG.PLAYER_REJOIN, this.identity.gameId, {
+            playerId: this.identity.playerId,
+            playerName: this.identity.playerName
+          });
+          this.send(MSG.SYNC_REQUEST, this.identity.gameId, {
+            playerId: this.identity.playerId
+          });
+        }
+
+        onJoin(gameIdRaw, nameRaw) {
+          const gameId = String(gameIdRaw || "").trim().toUpperCase();
+          const playerName = sanitizeName(nameRaw);
+          if (!gameId) {
+            this.render("Enter a game ID.");
+            return;
+          }
+          if (!playerName) {
+            this.render("Enter your name.");
+            return;
+          }
+
+          this.identity.playerName = playerName;
+          this.identity.gameId = gameId;
+          this.game.gameId = gameId;
+          this.game.playerRemoved = false;
+          this.game.phase = PHASES.LOBBY;
+          this.game.hasSubmitted = false;
+          this.game.selectedIds = [];
+          this.persist();
+
+          this.send(MSG.PLAYER_JOIN, gameId, {
+            playerId: this.identity.playerId,
+            playerName
+          });
+          this.send(MSG.SYNC_REQUEST, gameId, {
+            playerId: this.identity.playerId
+          });
+
+          if (this.joinTimeoutHandle) clearTimeout(this.joinTimeoutHandle);
+          this.joinTimeoutHandle = setTimeout(() => {
+            const stale = nowTs() - this.lastInstructorSeenAt > 4500;
+            if (stale && this.game.phase === PHASES.LOBBY) {
+              this.render("No active game responded to that code.");
+            }
+          }, 5200);
+
+          this.render("Trying to join game " + gameId + "...");
+        }
+
+        onMessage(msg) {
+          if (msg.senderRole !== "instructor") return;
+          if (this.identity.gameId && msg.gameId !== this.identity.gameId) return;
+
+          this.lastInstructorSeenAt = nowTs();
+
+          switch (msg.type) {
+            case MSG.PLAYER_JOINED:
+              this.handleJoined(msg.payload);
+              break;
+            case MSG.STATE_SNAPSHOT:
+              this.handleSnapshot(msg.payload);
+              break;
+            case MSG.QUESTION_STARTED:
+              this.handleQuestionStarted(msg.payload);
+              break;
+            case MSG.ANSWER_SUBMITTED:
+              this.handleSubmissionAck(msg.payload);
+              break;
+            case MSG.QUESTION_ENDED:
+              this.handleQuestionEnded(msg.payload);
+              break;
+            case MSG.ANSWER_REVEALED:
+              this.handleAnswerRevealed(msg.payload);
+              break;
+            case MSG.LEADERBOARD:
+              this.handleLeaderboard(msg.payload);
+              break;
+            case MSG.SCORE_UPDATED:
+              this.handleScoreUpdated(msg.payload);
+              break;
+            case MSG.SCORE_RESET:
+              this.handleScoreReset(msg.payload);
+              break;
+            case MSG.GAME_FINISHED:
+              this.handleGameFinished(msg.payload);
+              break;
+            case MSG.PLAYER_REMOVED:
+              this.handlePlayerRemoved(msg.payload);
+              break;
+            case MSG.INSTRUCTOR_PRESENT:
+              break;
+            default:
+              break;
+          }
+          this.persist();
+          this.render();
+        }
+
+        handleJoined(payload) {
+          if (!payload) return;
+          if (payload.playerId !== this.identity.playerId) return;
+          this.game.playerScore = Number(payload.score || this.game.playerScore || 0);
+        }
+
+        handleSnapshot(snapshot) {
+          if (!snapshot || snapshot.type !== MSG.STATE_SNAPSHOT) return;
+          if (snapshot.player && snapshot.player.id && snapshot.player.id !== this.identity.playerId) return;
+
+          this.game.gameId = snapshot.gameId || this.game.gameId;
+          this.identity.gameId = this.game.gameId;
+          this.game.phase = snapshot.phase || this.game.phase;
+          this.game.quizTitle = snapshot.quizTitle || this.game.quizTitle;
+          this.game.leaderboard = Array.isArray(snapshot.leaderboard) ? snapshot.leaderboard : this.game.leaderboard;
+
+          if (snapshot.player) {
+            this.game.playerScore = Number(snapshot.player.score || 0);
+            this.game.rank = snapshot.player.rank || null;
+            this.game.hasSubmitted = !!snapshot.player.hasSubmitted;
+            this.game.playerRemoved = !!snapshot.player.removed;
+          }
+
+          if (snapshot.question) {
+            this.game.question = snapshot.question;
+          }
+
+          if (snapshot.reveal) {
+            this.game.reveal = snapshot.reveal;
+          }
+
+          if (this.game.phase !== PHASES.QUESTION) {
+            this.game.selectedIds = [];
+          }
+        }
+
+        handleQuestionStarted(payload) {
+          if (!payload) return;
+          this.game.phase = PHASES.QUESTION;
+          this.game.question = payload;
+          this.game.reveal = null;
+          this.game.hasSubmitted = false;
+          this.game.selectedIds = [];
+          this.game.playerScoreBeforeReveal = this.game.playerScore;
+        }
+
+        handleSubmissionAck(payload) {
+          if (!payload || payload.playerId !== this.identity.playerId) return;
+          if (payload.accepted) {
+            this.game.hasSubmitted = true;
+            this.ui.updateLockedBanner();
+          }
+        }
+
+        handleQuestionEnded() {
+          if (this.game.phase === PHASES.QUESTION) {
+            this.game.phase = PHASES.ANSWER_REVEAL;
+          }
+        }
+
+        handleAnswerRevealed(payload) {
+          this.game.phase = PHASES.ANSWER_REVEAL;
+          this.game.reveal = payload ? payload.reveal : null;
+          this.game.playerScoreBeforeReveal = this.game.playerScore;
+          if (this.game.reveal && this.game.reveal.playerOutcomes && this.game.reveal.playerOutcomes[this.identity.playerId]) {
+            this.game.playerScore = this.game.reveal.playerOutcomes[this.identity.playerId].totalScore;
+          }
+        }
+
+        handleLeaderboard(payload) {
+          this.game.phase = PHASES.LEADERBOARD;
+          this.game.leaderboard = payload && Array.isArray(payload.leaderboard) ? payload.leaderboard : this.game.leaderboard;
+          const mine = this.game.leaderboard.find((x) => x.playerId === this.identity.playerId);
+          this.game.rank = mine ? mine.rank : this.game.rank;
+          if (mine) this.game.playerScore = mine.score;
+          this.game.hasSubmitted = false;
+          this.game.selectedIds = [];
+        }
+
+        handleScoreUpdated(payload) {
+          if (!payload || !Array.isArray(payload.leaderboard)) return;
+          this.game.leaderboard = payload.leaderboard;
+          const mine = payload.leaderboard.find((x) => x.playerId === this.identity.playerId);
+          if (mine) {
+            this.game.rank = mine.rank;
+            this.game.playerScore = mine.score;
+          }
+        }
+
+        handleScoreReset(payload) {
+          if (!payload || payload.playerId !== this.identity.playerId) return;
+          this.game.playerScore = 0;
+        }
+
+        handleGameFinished(payload) {
+          this.game.phase = PHASES.FINISHED;
+          if (payload && Array.isArray(payload.leaderboard)) {
+            this.game.leaderboard = payload.leaderboard;
+            const mine = payload.leaderboard.find((x) => x.playerId === this.identity.playerId);
+            if (mine) {
+              this.game.rank = mine.rank;
+              this.game.playerScore = mine.score;
+            }
+          }
+        }
+
+        handlePlayerRemoved(payload) {
+          if (!payload) return;
+          if (payload.playerId === this.identity.playerId) {
+            this.game.playerRemoved = true;
+          }
+        }
+
+        currentQuestionIsMulti() {
+          if (!this.game.reveal && this.game.question && this.game.question.options) {
+            if (this.game.reveal && Array.isArray(this.game.reveal.correctOptionIds)) {
+              return this.game.reveal.correctOptionIds.length > 1;
+            }
+            return this.game.question.options.length > 0 && this.game.question.options.some(function () { return true; });
+          }
+          if (this.game.reveal && Array.isArray(this.game.reveal.correctOptionIds)) {
+            return this.game.reveal.correctOptionIds.length > 1;
+          }
+          return false;
+        }
+
+        onOptionClick(optionId) {
+          if (this.game.phase !== PHASES.QUESTION || this.game.hasSubmitted || !this.game.question) return;
+          const question = this.game.question;
+          const valid = new Set((question.options || []).map((o) => o.id));
+          if (!valid.has(optionId)) return;
+
+          const isMulti = this.isLikelyMultiSelect();
+          if (!isMulti) {
+            this.game.selectedIds = [optionId];
+            this.submitAnswer([optionId]);
+            return;
+          }
+
+          const set = new Set(this.game.selectedIds || []);
+          if (set.has(optionId)) set.delete(optionId);
+          else set.add(optionId);
+          this.game.selectedIds = Array.from(set);
+          this.persist();
+          this.render();
+        }
+
+        isLikelyMultiSelect() {
+          return !!(this.game.question && this.game.question.isMultiSelect);
+        }
+
+        onSubmitMulti() {
+          if (this.game.phase !== PHASES.QUESTION || this.game.hasSubmitted) return;
+          const selected = this.game.selectedIds || [];
+          if (!selected.length) return;
+          this.submitAnswer(selected);
+        }
+
+        submitAnswer(selectedIds) {
+          if (this.game.hasSubmitted) return;
+          const unique = Array.from(new Set(selectedIds)).sort();
+          this.send(MSG.ANSWER_SUBMITTED, this.game.gameId, {
+            playerId: this.identity.playerId,
+            questionIndex: Number(this.game.question.questionIndex),
+            selectedOptionIds: unique,
+            submittedAt: nowTs()
+          });
+          this.game.hasSubmitted = true;
+          this.game.selectedIds = unique;
+          this.persist();
+          this.render();
+        }
+
+        persist() {
+          LocalStore.writeJson(STORAGE_KEYS.IDENTITY, this.identity);
+          LocalStore.writeJson(STORAGE_KEYS.GAME, this.game);
+        }
+
+        render(joinMsg) {
+          if (this.game.playerRemoved) {
+            this.ui.renderRemoved();
+            return;
+          }
+
+          if (!this.identity.playerName || !this.identity.gameId) {
+            this.ui.renderJoin(this.game.gameId || readQueryGame(), this.identity.playerName || "", { onJoin: this.onJoin.bind(this) }, joinMsg || "");
+            return;
+          }
+
+          if (this.currentConnState !== "connected" && this.game.phase !== PHASES.QUESTION) {
+            this.ui.renderWaiting("Your connection was interrupted. Reconnecting...");
+            return;
+          }
+
+          switch (this.game.phase) {
+            case PHASES.LOBBY:
+              this.ui.renderLobby(this.game);
+              break;
+            case PHASES.QUESTION:
+              if (!this.game.question) {
+                this.ui.renderWaiting("Waiting for the current question...");
+                break;
+              }
+              this.ui.renderQuestion({
+                question: this.game.question,
+                hasSubmitted: this.game.hasSubmitted,
+                selectedIds: this.game.selectedIds,
+                playerScore: this.game.playerScore,
+                playerId: this.identity.playerId,
+                isMulti: this.isLikelyMultiSelect()
+              }, {
+                onOptionClick: this.onOptionClick.bind(this),
+                onSubmitMulti: this.onSubmitMulti.bind(this)
+              });
+              break;
+            case PHASES.ANSWER_REVEAL:
+              if (!this.game.question || !this.game.reveal) {
+                this.ui.renderWaiting("Answer reveal incoming...");
+                break;
+              }
+              this.ui.renderReveal({
+                reveal: this.game.reveal,
+                question: this.game.question,
+                playerId: this.identity.playerId,
+                playerScore: this.game.playerScore,
+                playerScoreBeforeReveal: this.game.playerScoreBeforeReveal
+              });
+              break;
+            case PHASES.LEADERBOARD:
+            case PHASES.FINISHED:
+              this.ui.renderLeaderboard(this.game);
+              break;
+            default:
+              this.ui.renderWaiting("Waiting for the instructor...");
+          }
+        }
+
+        startTicker() {
+          this.tickTimer = setInterval(() => {
+            if (this.game.phase === PHASES.QUESTION && this.game.question) {
+              this.ui.refreshTimer(this.game.question);
+              if (nowTs() > this.game.question.endsAt + 1200 && !this.game.reveal) {
+                this.ui.renderWaiting("Question closed. Waiting for answer reveal...");
+              }
+            }
+          }, 300);
+        }
+
+        spawnFloaters() {
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          if (reduce) return;
+          const layer = document.getElementById("floatLayer");
+          for (let i = 0; i < 22; i += 1) {
+            const d = document.createElement("div");
+            d.className = "floater";
+            const size = 8 + Math.floor(Math.random() * 34);
+            d.style.width = size + "px";
+            d.style.height = size + "px";
+            d.style.left = Math.floor(Math.random() * 100) + "vw";
+            d.style.bottom = (-70 - Math.floor(Math.random() * 260)) + "px";
+            d.style.animationDuration = (17 + Math.random() * 16) + "s";
+            d.style.animationDelay = (-Math.random() * 12) + "s";
+            layer.appendChild(d);
+          }
+        }
+      }
+
+      const app = new StudentGameController();
+      app.init();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<!-- instructor.html: Authoritative host interface for the gothic multiplayer quiz game. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Moonlit Quiz Host</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #0f0d14;
+      --bg-1: #1a1221;
+      --bg-2: #271a31;
+      --plum: #5b3b61;
+      --mauve: #8f6a96;
+      --lavender: #ceb3dc;
+      --rose: #d28fa9;
+      --soft-pink: #f3d7e5;
+      --silver: #d5d4db;
+      --ok: #5ed8a2;
+      --warn: #ff9f7d;
+      --danger: #ff6b88;
+      --card-glass: rgba(27, 19, 35, 0.78);
+      --shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+      --radius: 18px;
+    }
+
+    body {
+      font-family: "Quicksand", sans-serif;
+      color: var(--soft-pink);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(210, 143, 169, 0.24), transparent 32%),
+        radial-gradient(circle at 85% 22%, rgba(143, 106, 150, 0.3), transparent 30%),
+        radial-gradient(circle at 50% 80%, rgba(206, 179, 220, 0.1), transparent 28%),
+        linear-gradient(150deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+      overflow-x: hidden;
+    }
+
+    .title-font {
+      font-family: "Cinzel", serif;
+      letter-spacing: 0.08em;
+    }
+
+    .shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.25rem;
+    }
+
+    .glass {
+      background: var(--card-glass);
+      border: 1px solid rgba(243, 215, 229, 0.18);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .header-ribbon {
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.9rem;
+      background: rgba(213, 212, 219, 0.12);
+      border: 1px solid rgba(213, 212, 219, 0.3);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #888;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
+    }
+
+    .status-dot.connected { background: var(--ok); box-shadow: 0 0 12px rgba(94, 216, 162, 0.7); }
+    .status-dot.reconnecting { background: var(--warn); box-shadow: 0 0 12px rgba(255, 159, 125, 0.7); }
+    .status-dot.disconnected { background: var(--danger); box-shadow: 0 0 12px rgba(255, 107, 136, 0.7); }
+
+    .section-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--lavender);
+      margin-bottom: 0.75rem;
+    }
+
+    .moon-btn {
+      border: 1px solid rgba(243, 215, 229, 0.3);
+      color: var(--soft-pink);
+      background: linear-gradient(140deg, rgba(143, 106, 150, 0.36), rgba(210, 143, 169, 0.28));
+      border-radius: 13px;
+      font-weight: 700;
+      transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+    }
+
+    .moon-btn:hover,
+    .moon-btn:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(210, 143, 169, 0.34);
+      filter: brightness(1.06);
+      color: #fff;
+    }
+
+    .moon-btn:disabled {
+      opacity: 0.55;
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .danger-btn {
+      border: 1px solid rgba(255, 107, 136, 0.45);
+      color: #ffd6e0;
+      background: rgba(112, 39, 58, 0.45);
+    }
+
+    .outline-moon {
+      border: 1px solid rgba(243, 215, 229, 0.35);
+      color: var(--soft-pink);
+      background: transparent;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .small-note { color: rgba(243, 215, 229, 0.78); font-size: 0.9rem; }
+
+    textarea.form-control,
+    input.form-control,
+    input.form-control:focus,
+    textarea.form-control:focus {
+      background: rgba(11, 8, 14, 0.65);
+      color: #fbeffa;
+      border-color: rgba(243, 215, 229, 0.35);
+      box-shadow: 0 0 0 0.15rem rgba(210, 143, 169, 0.15);
+    }
+
+    .player-card {
+      border: 1px solid rgba(206, 179, 220, 0.35);
+      border-radius: 14px;
+      background: rgba(37, 24, 46, 0.75);
+      padding: 0.8rem;
+      animation: pop-in 350ms ease both;
+    }
+
+    @keyframes pop-in {
+      from { transform: translateY(8px) scale(0.97); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .q-option {
+      border: 1px solid rgba(243, 215, 229, 0.35);
+      border-radius: 12px;
+      padding: 0.7rem;
+      background: rgba(34, 23, 42, 0.72);
+    }
+
+    .badge-phase {
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      background: rgba(210, 143, 169, 0.22);
+      border: 1px solid rgba(210, 143, 169, 0.42);
+    }
+
+    .timer-pill {
+      display: inline-flex;
+      align-items: center;
+      font-family: "Cinzel", serif;
+      font-size: 2rem;
+      line-height: 1;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(243, 215, 229, 0.44);
+      border-radius: 14px;
+      padding: 0.5rem 1rem;
+      min-width: 160px;
+      justify-content: center;
+    }
+
+    .timer-pill.warn {
+      color: #ffd3c2;
+      border-color: rgba(255, 159, 125, 0.6);
+      box-shadow: 0 0 14px rgba(255, 159, 125, 0.25);
+    }
+
+    .timer-pill.danger {
+      color: #ffd9e2;
+      border-color: rgba(255, 107, 136, 0.75);
+      box-shadow: 0 0 16px rgba(255, 107, 136, 0.3);
+      animation: timer-pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes timer-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .quiz-card {
+      border: 1px solid rgba(243, 215, 229, 0.2);
+      border-radius: 14px;
+      background: rgba(33, 22, 42, 0.76);
+      padding: 0.85rem;
+    }
+
+    .question-points-list {
+      max-height: 240px;
+      overflow: auto;
+      border: 1px solid rgba(243, 215, 229, 0.2);
+      border-radius: 12px;
+      padding: 0.7rem;
+      background: rgba(10, 8, 14, 0.4);
+    }
+
+    .rank-row {
+      border-radius: 12px;
+      background: rgba(41, 28, 51, 0.8);
+      border: 1px solid rgba(243, 215, 229, 0.22);
+      padding: 0.65rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .podium {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .podium-card {
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid rgba(243, 215, 229, 0.3);
+      padding: 0.7rem;
+      background: rgba(56, 37, 69, 0.7);
+    }
+
+    .podium-card.first { box-shadow: 0 0 18px rgba(255, 222, 140, 0.4); }
+    .podium-card.second { box-shadow: 0 0 12px rgba(214, 214, 225, 0.25); }
+    .podium-card.third { box-shadow: 0 0 12px rgba(214, 168, 148, 0.25); }
+
+    .spark {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      opacity: 0.18;
+      pointer-events: none;
+      background: var(--lavender);
+      animation: drift 20s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes drift {
+      0% { transform: translateY(0) translateX(0) scale(0.7); }
+      100% { transform: translateY(-120vh) translateX(30px) scale(1.25); }
+    }
+
+    .focus-ring:focus-visible {
+      outline: 2px solid #ffd6e0;
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="sparkLayer"></div>
+  <div class="shell">
+    <header class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div>
+        <div class="title-font fs-3">Moonlit Quiz Host</div>
+        <div class="small-note">A gothic party quiz stage for classrooms and teams.</div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span id="phaseBadge" class="badge-phase">LOBBY</span>
+        <span class="header-ribbon"><span id="socketDot" class="status-dot disconnected"></span><span id="socketText">Connecting...</span></span>
+      </div>
+    </header>
+
+    <div id="resumeBanner" class="glass p-3 mb-3 d-none">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <div class="fw-bold">An unfinished game was found.</div>
+          <div class="small-note" id="resumeMeta"></div>
+        </div>
+        <div class="d-flex gap-2">
+          <button id="resumeBtn" class="btn moon-btn focus-ring"><i class="lni lni-spinner-arrow me-1"></i>Resume Game</button>
+          <button id="discardBtn" class="btn danger-btn focus-ring"><i class="lni lni-trash-can me-1"></i>Discard Game</button>
+        </div>
+      </div>
+    </div>
+
+    <main class="row g-3">
+      <section class="col-12 col-lg-5">
+        <div class="glass p-3 mb-3">
+          <div class="section-title">Quiz Import</div>
+          <label class="form-label" for="quizTitleInput">Quiz Title</label>
+          <input id="quizTitleInput" class="form-control mb-2" maxlength="80" placeholder="Ex: AWS Fundamentals" />
+          <label class="form-label" for="quizJsonInput">Quiz JSON</label>
+          <textarea id="quizJsonInput" class="form-control mb-2" rows="10" spellcheck="false" placeholder='Paste JSON array of question objects...'></textarea>
+          <div class="d-flex flex-wrap gap-2">
+            <button id="createQuizBtn" class="btn moon-btn focus-ring">Create Quiz</button>
+            <button id="demoQuizBtn" class="btn outline-moon focus-ring">Load Demo Quiz</button>
+          </div>
+          <div id="importStatus" class="small-note mt-2" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="glass p-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="section-title mb-0">My Quizzes</div>
+            <small id="quizCount" class="small-note">0 saved</small>
+          </div>
+          <div id="quizLibrary" class="d-grid gap-2"></div>
+        </div>
+      </section>
+
+      <section class="col-12 col-lg-7">
+        <div class="glass p-3 mb-3">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+              <div class="section-title mb-1">Game Lobby</div>
+              <div class="small-note">Start a game from your library, share the code, and scan-to-join.</div>
+            </div>
+            <div class="text-end">
+              <div class="small-note">Game Code</div>
+              <div id="gameCodeText" class="title-font fs-3">------</div>
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-12 col-md-6">
+              <div class="glass p-2 h-100">
+                <div class="small-note mb-1">Scan to Join</div>
+                <div id="qrcode" class="d-flex justify-content-center align-items-center" style="min-height:140px"></div>
+                <div id="joinUrlText" class="small-note text-break mt-2"></div>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="glass p-2 h-100">
+                <div class="small-note">Players</div>
+                <div class="title-font fs-4" id="playerCountText">0 Players Joined</div>
+                <div class="small-note">Only one instructor is active. Students reconnect using the same player ID.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="phaseStage" class="glass p-3 mb-3">
+          <div class="section-title">Stage</div>
+          <div id="stageContent" class="small-note">Start or resume a game to begin.</div>
+        </div>
+
+        <div class="glass p-3 mb-3">
+          <div class="section-title">Players</div>
+          <div id="playerGrid" class="row g-2"></div>
+        </div>
+
+        <div class="glass p-3">
+          <button class="btn outline-moon focus-ring" type="button" data-bs-toggle="collapse" data-bs-target="#debugPanel" aria-expanded="false" aria-controls="debugPanel">
+            Toggle Debug Panel
+          </button>
+          <div id="debugPanel" class="collapse mt-2">
+            <div class="question-points-list">
+              <div id="debugStats" class="small-note"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const socketUrl = "ws://10.23.131.137:8099/madmoney";
+      const STORAGE_KEYS = {
+        QUIZZES: "gothicQuiz.quizzes.v1",
+        ACTIVE_GAME: "gothicQuiz.activeGame.v1",
+        SETTINGS: "gothicQuiz.instructorSettings.v1"
+      };
+
+      const PHASES = {
+        LOBBY: "LOBBY",
+        QUESTION: "QUESTION",
+        ANSWER_REVEAL: "ANSWER_REVEAL",
+        LEADERBOARD: "LEADERBOARD",
+        FINISHED: "FINISHED"
+      };
+
+      const MSG = {
+        PLAYER_JOIN: "PLAYER_JOIN",
+        PLAYER_REJOIN: "PLAYER_REJOIN",
+        PLAYER_JOINED: "PLAYER_JOINED",
+        PLAYER_REMOVE: "PLAYER_REMOVE",
+        PLAYER_REMOVED: "PLAYER_REMOVED",
+        SYNC_REQUEST: "SYNC_REQUEST",
+        STATE_SNAPSHOT: "STATE_SNAPSHOT",
+        GAME_STARTED: "GAME_STARTED",
+        QUESTION_STARTED: "QUESTION_STARTED",
+        ANSWER_SUBMITTED: "ANSWER_SUBMITTED",
+        QUESTION_ENDED: "QUESTION_ENDED",
+        ANSWER_REVEALED: "ANSWER_REVEALED",
+        SCORE_UPDATED: "SCORE_UPDATED",
+        SCORE_RESET: "SCORE_RESET",
+        LEADERBOARD: "LEADERBOARD",
+        GAME_FINISHED: "GAME_FINISHED",
+        INSTRUCTOR_PRESENT: "INSTRUCTOR_PRESENT"
+      };
+
+      const OPTION_COLORS = ["red", "green", "blue", "purple", "orange", "pink"];
+      const OPTION_COLOR_CLASS = {
+        red: "#dc3545",
+        green: "#2bb673",
+        blue: "#0d6efd",
+        purple: "#8f5ad4",
+        orange: "#fd7e14",
+        pink: "#d63384"
+      };
+
+      function nowTs() {
+        return Date.now();
+      }
+
+      function generateGameId() {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let out = "";
+        for (let i = 0; i < 6; i += 1) {
+          out += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return out;
+      }
+
+      function generateMessageId() {
+        if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+        return "m-" + Math.random().toString(36).slice(2) + "-" + nowTs();
+      }
+
+      function formatScore(score) {
+        return Number(score || 0).toLocaleString();
+      }
+
+      function formatTime(msRemaining) {
+        const safe = Math.max(0, msRemaining);
+        const totalSec = Math.floor(safe / 1000);
+        const m = String(Math.floor(totalSec / 60)).padStart(2, "0");
+        const s = String(totalSec % 60).padStart(2, "0");
+        return m + ":" + s;
+      }
+
+      function sanitizeName(name) {
+        const trimmed = String(name || "").trim().replace(/\s+/g, " ");
+        return trimmed.slice(0, 30);
+      }
+
+      function randomPoints() {
+        return Math.floor(Math.random() * (5000 - 100 + 1)) + 100;
+      }
+
+      function calculateScore(questionPoints, endsAt, submittedAt) {
+        const totalTime = 120000;
+        const timeRemaining = Math.max(0, endsAt - submittedAt);
+        const speedRatio = timeRemaining / totalTime;
+        return Math.round(questionPoints * (0.25 + 0.75 * speedRatio));
+      }
+
+      function escapeHtml(str) {
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      class LocalStore {
+        static readJson(key, fallback) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+          } catch (err) {
+            return fallback;
+          }
+        }
+
+        static writeJson(key, value) {
+          localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        static remove(key) {
+          localStorage.removeItem(key);
+        }
+      }
+
+      class SocketManager {
+        constructor(onMessage, onState) {
+          this.onMessage = onMessage;
+          this.onState = onState;
+          this.ws = null;
+          this.manuallyClosed = false;
+          this.retries = 0;
+          this.maxDelay = 10000;
+          this.seen = new Map();
+          this.flushSeenTimer = null;
+          this.lastMessageType = "-";
+        }
+
+        connect() {
+          this.manuallyClosed = false;
+          this._open();
+          this.flushSeenTimer = setInterval(() => this.pruneSeen(), 10000);
+        }
+
+        _open() {
+          try {
+            this.ws = new WebSocket(socketUrl);
+          } catch (err) {
+            this.scheduleReconnect();
+            return;
+          }
+
+          this.setState("connecting");
+
+          this.ws.onopen = () => {
+            this.retries = 0;
+            this.setState("connected");
+            this.onState("connected");
+          };
+
+          this.ws.onclose = () => {
+            if (this.manuallyClosed) {
+              this.setState("disconnected");
+              return;
+            }
+            this.scheduleReconnect();
+          };
+
+          this.ws.onerror = () => {
+            this.setState("reconnecting");
+          };
+
+          this.ws.onmessage = (evt) => {
+            const parsed = this.safeParse(evt.data);
+            if (!parsed) return;
+            if (!this.validateEnvelope(parsed)) return;
+            if (this.isDuplicate(parsed.messageId)) return;
+            this.lastMessageType = parsed.type;
+            this.onMessage(parsed);
+          };
+        }
+
+        setState(state) {
+          this.onState(state);
+        }
+
+        scheduleReconnect() {
+          this.setState("reconnecting");
+          const delay = Math.min(this.maxDelay, 800 * Math.pow(1.6, this.retries));
+          this.retries += 1;
+          setTimeout(() => {
+            if (!this.manuallyClosed) this._open();
+          }, delay);
+        }
+
+        close() {
+          this.manuallyClosed = true;
+          if (this.flushSeenTimer) {
+            clearInterval(this.flushSeenTimer);
+            this.flushSeenTimer = null;
+          }
+          if (this.ws) this.ws.close();
+        }
+
+        send(message) {
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
+          this.ws.send(JSON.stringify(message));
+          return true;
+        }
+
+        safeParse(data) {
+          try {
+            return JSON.parse(data);
+          } catch (err) {
+            return null;
+          }
+        }
+
+        validateEnvelope(msg) {
+          return !!(
+            msg &&
+            typeof msg.type === "string" &&
+            typeof msg.gameId === "string" &&
+            typeof msg.messageId === "string" &&
+            typeof msg.senderRole === "string" &&
+            typeof msg.timestamp === "number"
+          );
+        }
+
+        isDuplicate(id) {
+          if (!id) return false;
+          if (this.seen.has(id)) return true;
+          this.seen.set(id, nowTs());
+          if (this.seen.size > 1800) this.pruneSeen(true);
+          return false;
+        }
+
+        pruneSeen(force) {
+          const cutoff = nowTs() - 8 * 60 * 1000;
+          for (const [id, ts] of this.seen.entries()) {
+            if (force || ts < cutoff) this.seen.delete(id);
+          }
+        }
+      }
+
+      class QuizLibrary {
+        constructor() {
+          this.quizzes = LocalStore.readJson(STORAGE_KEYS.QUIZZES, []);
+        }
+
+        save() {
+          LocalStore.writeJson(STORAGE_KEYS.QUIZZES, this.quizzes);
+        }
+
+        list() {
+          return this.quizzes;
+        }
+
+        getById(id) {
+          return this.quizzes.find((q) => q.id === id) || null;
+        }
+
+        delete(id) {
+          this.quizzes = this.quizzes.filter((q) => q.id !== id);
+          this.save();
+        }
+
+        createQuiz(title, rawQuestions) {
+          const quizId = generateMessageId();
+          const questions = rawQuestions.map((item, qIndex) => {
+            const normalizedOpts = item.options.slice(0, 6).map((opt, idx) => ({
+              id: "q" + (qIndex + 1) + "-" + String.fromCharCode(97 + idx),
+              text: String(opt.text),
+              explanation: typeof opt.explanation === "string" ? opt.explanation : "",
+              correct: !!opt.correct,
+              letter: String.fromCharCode(65 + idx),
+              color: OPTION_COLORS[idx] || OPTION_COLORS[OPTION_COLORS.length - 1]
+            }));
+            return {
+              query: String(item.query),
+              type: "multiple-choice",
+              options: normalizedOpts,
+              answerHtml: typeof item.answer === "string" ? item.answer : "",
+              tipHtml: typeof item.tip === "string" ? item.tip : "",
+              pointValue: randomPoints()
+            };
+          });
+
+          const quiz = {
+            id: quizId,
+            title,
+            createdAt: nowTs(),
+            questions
+          };
+
+          this.quizzes.unshift(quiz);
+          this.save();
+          return quiz;
+        }
+
+        validateImportedArray(value) {
+          const errors = [];
+          if (!Array.isArray(value)) {
+            errors.push("Top-level JSON must be an array.");
+            return errors;
+          }
+          if (value.length === 0) errors.push("Quiz must include at least one question.");
+          value.forEach((q, idx) => {
+            const n = idx + 1;
+            if (!q || typeof q !== "object") {
+              errors.push("Question " + n + " must be an object.");
+              return;
+            }
+            if (!q.query || typeof q.query !== "string") {
+              errors.push("Question " + n + " is missing query text.");
+            }
+            if (!Array.isArray(q.options)) {
+              errors.push("Question " + n + " must contain an options array.");
+            } else {
+              if (q.options.length < 2) errors.push("Question " + n + " must have at least two options.");
+              q.options.forEach((opt, optIdx) => {
+                if (!opt || typeof opt !== "object") {
+                  errors.push("Question " + n + " option " + (optIdx + 1) + " must be an object.");
+                  return;
+                }
+                if (typeof opt.text !== "string" || !opt.text.trim()) {
+                  errors.push("Question " + n + " option " + (optIdx + 1) + " needs text.");
+                }
+                if (typeof opt.correct !== "boolean") {
+                  errors.push("Question " + n + " option " + (optIdx + 1) + " correct must be true/false.");
+                }
+              });
+              const correctCount = q.options.filter((o) => o && o.correct === true).length;
+              if (correctCount < 1) errors.push("Question " + n + " must include at least one correct answer.");
+            }
+          });
+          return errors;
+        }
+
+        setQuestionPoints(quizId, qIndex, points) {
+          const quiz = this.getById(quizId);
+          if (!quiz || !quiz.questions[qIndex]) return;
+          quiz.questions[qIndex].pointValue = points;
+          this.save();
+        }
+
+        randomizePoints(quizId) {
+          const quiz = this.getById(quizId);
+          if (!quiz) return;
+          quiz.questions.forEach((q) => {
+            q.pointValue = randomPoints();
+          });
+          this.save();
+        }
+      }
+
+      class GameController {
+        constructor(quizLibrary) {
+          this.quizLibrary = quizLibrary;
+          this.instructorId = "instructor-main";
+          this.activeGame = null;
+          this.lastSaveAt = 0;
+        }
+
+        hasActiveGame() {
+          return !!this.activeGame;
+        }
+
+        loadUnfinished() {
+          const saved = LocalStore.readJson(STORAGE_KEYS.ACTIVE_GAME, null);
+          if (!saved) return null;
+          if (saved.phase === PHASES.FINISHED) return null;
+          return saved;
+        }
+
+        restoreGame(savedGame) {
+          this.activeGame = savedGame;
+          this.ensureMaps();
+        }
+
+        startNewGame(quiz) {
+          this.activeGame = {
+            gameId: generateGameId(),
+            quizId: quiz.id,
+            quizTitle: quiz.title,
+            phase: PHASES.LOBBY,
+            questionIndex: -1,
+            questionStartedAt: null,
+            questionEndsAt: null,
+            questions: JSON.parse(JSON.stringify(quiz.questions)),
+            players: {},
+            submissions: {},
+            revealedAnswer: null,
+            updatedAt: nowTs()
+          };
+          this.saveGame();
+          return this.activeGame;
+        }
+
+        ensureMaps() {
+          if (!this.activeGame.players || typeof this.activeGame.players !== "object") this.activeGame.players = {};
+          if (!this.activeGame.submissions || typeof this.activeGame.submissions !== "object") this.activeGame.submissions = {};
+        }
+
+        saveGame() {
+          if (!this.activeGame) return;
+          this.activeGame.updatedAt = nowTs();
+          LocalStore.writeJson(STORAGE_KEYS.ACTIVE_GAME, this.activeGame);
+          this.lastSaveAt = this.activeGame.updatedAt;
+        }
+
+        clearGame() {
+          this.activeGame = null;
+          LocalStore.remove(STORAGE_KEYS.ACTIVE_GAME);
+        }
+
+        joinOrRejoinPlayer(payload) {
+          if (!this.activeGame) return { ok: false, reason: "No active game" };
+          const playerId = String(payload.playerId || "").trim();
+          const playerName = sanitizeName(payload.playerName);
+          if (!playerId || !playerName) return { ok: false, reason: "Invalid player" };
+
+          let p = this.activeGame.players[playerId];
+          if (!p) {
+            p = {
+              id: playerId,
+              name: playerName,
+              score: 0,
+              joinedAt: nowTs(),
+              lastSeenAt: nowTs(),
+              removed: false,
+              currentSubmission: null
+            };
+            this.activeGame.players[playerId] = p;
+          } else {
+            p.name = playerName;
+            p.lastSeenAt = nowTs();
+            if (p.removed) return { ok: false, reason: "Removed" };
+          }
+
+          this.saveGame();
+          return { ok: true, player: p };
+        }
+
+        removePlayer(playerId) {
+          const p = this.activeGame.players[playerId];
+          if (!p) return false;
+          p.removed = true;
+          p.lastSeenAt = nowTs();
+          this.saveGame();
+          return true;
+        }
+
+        resetScore(playerId) {
+          const p = this.activeGame.players[playerId];
+          if (!p || p.removed) return false;
+          p.score = 0;
+          this.saveGame();
+          return true;
+        }
+
+        getQuestion(index) {
+          if (!this.activeGame) return null;
+          return this.activeGame.questions[index] || null;
+        }
+
+        startQuestion() {
+          if (!this.activeGame) return null;
+          const nextIndex = this.activeGame.phase === PHASES.LOBBY ? this.activeGame.questionIndex + 1 : this.activeGame.questionIndex + 1;
+          if (nextIndex >= this.activeGame.questions.length) return null;
+
+          this.activeGame.questionIndex = nextIndex;
+          this.activeGame.phase = PHASES.QUESTION;
+          this.activeGame.questionStartedAt = nowTs();
+          this.activeGame.questionEndsAt = this.activeGame.questionStartedAt + 120000;
+          this.activeGame.revealedAnswer = null;
+          const key = String(nextIndex);
+          if (!this.activeGame.submissions[key]) this.activeGame.submissions[key] = {};
+          Object.values(this.activeGame.players).forEach((p) => {
+            p.currentSubmission = null;
+          });
+          this.saveGame();
+          return this.getQuestion(nextIndex);
+        }
+
+        isSubmissionOpen() {
+          return !!(this.activeGame && this.activeGame.phase === PHASES.QUESTION && nowTs() <= this.activeGame.questionEndsAt);
+        }
+
+        acceptSubmission(msg) {
+          if (!this.activeGame || this.activeGame.phase !== PHASES.QUESTION) return { ok: false, reason: "Not in question phase" };
+          if (!this.isSubmissionOpen()) return { ok: false, reason: "Question closed" };
+
+          const payload = msg.payload || {};
+          const playerId = String(payload.playerId || "");
+          const player = this.activeGame.players[playerId];
+          if (!player || player.removed) return { ok: false, reason: "Removed or unknown player" };
+
+          const qIndex = this.activeGame.questionIndex;
+          if (Number(payload.questionIndex) !== qIndex) return { ok: false, reason: "Wrong question index" };
+
+          const submittedAt = Number(payload.submittedAt || 0);
+          if (!submittedAt || submittedAt > this.activeGame.questionEndsAt + 500) return { ok: false, reason: "Invalid timestamp" };
+
+          const selected = Array.isArray(payload.selectedOptionIds) ? payload.selectedOptionIds.map(String) : [];
+          const q = this.getQuestion(qIndex);
+          const validIds = new Set(q.options.map((o) => o.id));
+          if (selected.length < 1) return { ok: false, reason: "No option selected" };
+          if (selected.some((id) => !validIds.has(id))) return { ok: false, reason: "Invalid option id" };
+
+          const key = String(qIndex);
+          const submissionMap = this.activeGame.submissions[key] || {};
+          if (submissionMap[playerId]) return { ok: false, reason: "Duplicate submission" };
+
+          const record = {
+            playerId,
+            questionIndex: qIndex,
+            selectedOptionIds: Array.from(new Set(selected)).sort(),
+            submittedAt
+          };
+
+          submissionMap[playerId] = record;
+          this.activeGame.submissions[key] = submissionMap;
+          player.currentSubmission = record;
+          player.lastSeenAt = nowTs();
+          this.saveGame();
+          return { ok: true, submission: record };
+        }
+
+        endQuestion() {
+          if (!this.activeGame || this.activeGame.phase !== PHASES.QUESTION) return null;
+          const qIndex = this.activeGame.questionIndex;
+          const question = this.getQuestion(qIndex);
+          const submissions = this.activeGame.submissions[String(qIndex)] || {};
+          const correctSet = new Set(question.options.filter((o) => o.correct).map((o) => o.id));
+          const isSingle = correctSet.size === 1;
+          const optionStats = question.options.map((o) => ({ id: o.id, letter: o.letter, text: o.text, count: 0, pct: 0 }));
+
+          const playerOutcomes = {};
+          const activePlayers = Object.values(this.activeGame.players).filter((p) => !p.removed);
+
+          activePlayers.forEach((p) => {
+            const sub = submissions[p.id] || null;
+            let correct = false;
+            let earned = 0;
+            if (sub) {
+              const selectedSet = new Set(sub.selectedOptionIds);
+              const exactMatch = selectedSet.size === correctSet.size && [...selectedSet].every((id) => correctSet.has(id));
+              correct = exactMatch;
+              if (correct) earned = calculateScore(question.pointValue, this.activeGame.questionEndsAt, sub.submittedAt);
+              p.score += earned;
+              sub.selectedOptionIds.forEach((id) => {
+                const stat = optionStats.find((x) => x.id === id);
+                if (stat) stat.count += 1;
+              });
+            }
+            playerOutcomes[p.id] = {
+              playerId: p.id,
+              correct,
+              earnedPoints: earned,
+              totalScore: p.score
+            };
+          });
+
+          const totalAnswers = Object.keys(submissions).length || 1;
+          optionStats.forEach((st) => {
+            st.pct = Math.round((st.count / totalAnswers) * 100);
+          });
+
+          const reveal = {
+            questionIndex: qIndex,
+            isSingleSelect: isSingle,
+            correctOptionIds: [...correctSet],
+            optionStats,
+            answerHtml: question.answerHtml || "",
+            tipHtml: question.tipHtml || "",
+            optionExplanations: question.options.map((o) => ({ id: o.id, explanation: o.explanation || "" })),
+            playerOutcomes
+          };
+
+          this.activeGame.phase = PHASES.ANSWER_REVEAL;
+          this.activeGame.revealedAnswer = reveal;
+          this.saveGame();
+          return reveal;
+        }
+
+        getLeaderboard() {
+          if (!this.activeGame) return [];
+          const sorted = Object.values(this.activeGame.players)
+            .filter((p) => !p.removed)
+            .slice()
+            .sort((a, b) => b.score - a.score || a.joinedAt - b.joinedAt)
+            .map((p, idx) => ({
+              rank: idx + 1,
+              playerId: p.id,
+              playerName: p.name,
+              score: p.score
+            }));
+          return sorted;
+        }
+
+        toLeaderboardPhase() {
+          if (!this.activeGame) return;
+          this.activeGame.phase = PHASES.LEADERBOARD;
+          this.saveGame();
+        }
+
+        finishGame() {
+          if (!this.activeGame) return;
+          this.activeGame.phase = PHASES.FINISHED;
+          this.saveGame();
+        }
+
+        nextStepAfterLeaderboard() {
+          if (!this.activeGame) return "none";
+          if (this.activeGame.questionIndex >= this.activeGame.questions.length - 1) return "finish";
+          return "next-question";
+        }
+
+        getPublicQuestionPayload(qIndex) {
+          const q = this.getQuestion(qIndex);
+          if (!q) return null;
+          const correctCount = q.options.filter((o) => o.correct).length;
+          return {
+            questionIndex: qIndex,
+            questionNumber: qIndex + 1,
+            questionCount: this.activeGame.questions.length,
+            query: q.query,
+            pointValue: q.pointValue,
+            isMultiSelect: correctCount > 1,
+            startedAt: this.activeGame.questionStartedAt,
+            endsAt: this.activeGame.questionEndsAt,
+            options: q.options.map((o) => ({
+              id: o.id,
+              letter: o.letter,
+              text: o.text,
+              color: o.color
+            }))
+          };
+        }
+
+        buildSnapshotForPlayer(playerId) {
+          if (!this.activeGame) return null;
+          const player = this.activeGame.players[playerId] || null;
+          const board = this.getLeaderboard();
+          const rankObj = board.find((r) => r.playerId === playerId);
+          const hasSubmitted = !!(
+            this.activeGame.phase === PHASES.QUESTION &&
+            this.activeGame.submissions[String(this.activeGame.questionIndex)] &&
+            this.activeGame.submissions[String(this.activeGame.questionIndex)][playerId]
+          );
+
+          const base = {
+            type: MSG.STATE_SNAPSHOT,
+            phase: this.activeGame.phase,
+            gameId: this.activeGame.gameId,
+            quizTitle: this.activeGame.quizTitle,
+            questionNumber: this.activeGame.questionIndex + 1,
+            questionCount: this.activeGame.questions.length,
+            player: {
+              id: playerId,
+              name: player ? player.name : "",
+              score: player ? player.score : 0,
+              rank: rankObj ? rankObj.rank : null,
+              hasSubmitted,
+              removed: !!(player && player.removed)
+            },
+            leaderboard: board.slice(0, 10)
+          };
+
+          if (this.activeGame.phase === PHASES.QUESTION) {
+            base.question = this.getPublicQuestionPayload(this.activeGame.questionIndex);
+          }
+
+          if (this.activeGame.phase === PHASES.ANSWER_REVEAL || this.activeGame.phase === PHASES.LEADERBOARD || this.activeGame.phase === PHASES.FINISHED) {
+            const q = this.getQuestion(this.activeGame.questionIndex);
+            const correctCount = q.options.filter((o) => o.correct).length;
+            base.question = {
+              questionIndex: this.activeGame.questionIndex,
+              questionNumber: this.activeGame.questionIndex + 1,
+              questionCount: this.activeGame.questions.length,
+              query: q.query,
+              pointValue: q.pointValue,
+              isMultiSelect: correctCount > 1,
+              options: q.options.map((o) => ({ id: o.id, letter: o.letter, text: o.text, color: o.color }))
+            };
+            base.reveal = this.activeGame.revealedAnswer;
+          }
+          return base;
+        }
+      }
+
+      class InstructorUI {
+        constructor() {
+          this.el = {
+            socketDot: document.getElementById("socketDot"),
+            socketText: document.getElementById("socketText"),
+            phaseBadge: document.getElementById("phaseBadge"),
+            gameCodeText: document.getElementById("gameCodeText"),
+            qrcode: document.getElementById("qrcode"),
+            joinUrlText: document.getElementById("joinUrlText"),
+            playerCountText: document.getElementById("playerCountText"),
+            playerGrid: document.getElementById("playerGrid"),
+            stageContent: document.getElementById("stageContent"),
+            debugStats: document.getElementById("debugStats"),
+            quizLibrary: document.getElementById("quizLibrary"),
+            quizCount: document.getElementById("quizCount"),
+            quizTitleInput: document.getElementById("quizTitleInput"),
+            quizJsonInput: document.getElementById("quizJsonInput"),
+            createQuizBtn: document.getElementById("createQuizBtn"),
+            demoQuizBtn: document.getElementById("demoQuizBtn"),
+            importStatus: document.getElementById("importStatus"),
+            resumeBanner: document.getElementById("resumeBanner"),
+            resumeMeta: document.getElementById("resumeMeta"),
+            resumeBtn: document.getElementById("resumeBtn"),
+            discardBtn: document.getElementById("discardBtn")
+          };
+        }
+
+        setSocketState(state) {
+          this.el.socketDot.className = "status-dot " + (state === "connected" ? "connected" : state === "reconnecting" ? "reconnecting" : "disconnected");
+          this.el.socketText.textContent = state === "connected" ? "WebSocket Connected" : state === "reconnecting" ? "Reconnecting..." : "Disconnected";
+        }
+
+        showImportStatus(text, isError) {
+          this.el.importStatus.textContent = text;
+          this.el.importStatus.style.color = isError ? "#ffd3d3" : "";
+        }
+
+        updateLobby(game) {
+          if (!game) {
+            this.el.gameCodeText.textContent = "------";
+            this.el.joinUrlText.textContent = "";
+            this.el.qrcode.innerHTML = "";
+            this.el.playerCountText.textContent = "0 Players Joined";
+            return;
+          }
+          this.el.gameCodeText.textContent = game.gameId;
+          const joinUrl = buildStudentJoinUrl(game.gameId);
+          this.el.joinUrlText.textContent = joinUrl;
+          this.renderQr(joinUrl);
+          const players = Object.values(game.players || {}).filter((p) => !p.removed);
+          this.el.playerCountText.textContent = players.length + " Players Joined";
+        }
+
+        renderQr(text) {
+          this.el.qrcode.innerHTML = "";
+          try {
+            new QRCode(this.el.qrcode, {
+              text,
+              width: 132,
+              height: 132,
+              colorDark: "#f8dff0",
+              colorLight: "#1c1326"
+            });
+          } catch (err) {
+            this.el.qrcode.textContent = "QR unavailable";
+          }
+        }
+
+        renderPlayers(game, handlers) {
+          this.el.playerGrid.innerHTML = "";
+          const players = Object.values(game ? game.players || {} : {}).filter((p) => !p.removed).sort((a, b) => b.score - a.score || a.joinedAt - b.joinedAt);
+          if (!players.length) {
+            this.el.playerGrid.innerHTML = "<div class='small-note'>No players yet. Share the code or QR.</div>";
+            return;
+          }
+
+          players.forEach((p) => {
+            const col = document.createElement("div");
+            col.className = "col-12 col-md-6";
+            const card = document.createElement("div");
+            card.className = "player-card";
+
+            const top = document.createElement("div");
+            top.className = "d-flex justify-content-between align-items-start gap-2";
+
+            const left = document.createElement("div");
+            const name = document.createElement("div");
+            name.className = "fw-bold";
+            name.textContent = p.name;
+            const status = document.createElement("div");
+            const secondsAgo = Math.max(0, Math.floor((nowTs() - (p.lastSeenAt || 0)) / 1000));
+            status.className = "small-note";
+            status.textContent = "Score " + formatScore(p.score) + "  •  Seen " + secondsAgo + "s ago";
+            left.appendChild(name);
+            left.appendChild(status);
+
+            const right = document.createElement("div");
+            right.className = "d-flex gap-1";
+            const resetBtn = document.createElement("button");
+            resetBtn.className = "btn btn-sm outline-moon focus-ring";
+            resetBtn.setAttribute("aria-label", "Reset score for " + p.name);
+            resetBtn.innerHTML = "<i class='lni lni-reload me-1'></i>Reset";
+            resetBtn.addEventListener("click", () => handlers.onReset(p.id));
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "btn btn-sm danger-btn focus-ring";
+            removeBtn.setAttribute("aria-label", "Remove " + p.name + " from game");
+            removeBtn.innerHTML = "<i class='lni lni-trash-can me-1'></i>Remove";
+            removeBtn.addEventListener("click", () => handlers.onRemove(p.id, p.name));
+            right.appendChild(resetBtn);
+            right.appendChild(removeBtn);
+
+            top.appendChild(left);
+            top.appendChild(right);
+            card.appendChild(top);
+            col.appendChild(card);
+            this.el.playerGrid.appendChild(col);
+          });
+        }
+
+        setPhase(phase) {
+          this.el.phaseBadge.textContent = phase;
+        }
+
+        renderQuizLibrary(quizzes, handlers) {
+          this.el.quizLibrary.innerHTML = "";
+          this.el.quizCount.textContent = quizzes.length + " saved";
+          if (!quizzes.length) {
+            this.el.quizLibrary.innerHTML = "<div class='small-note'>No quizzes saved yet.</div>";
+            return;
+          }
+
+          quizzes.forEach((quiz) => {
+            const wrap = document.createElement("div");
+            wrap.className = "quiz-card";
+            const header = document.createElement("div");
+            header.className = "d-flex justify-content-between align-items-start gap-2";
+            const left = document.createElement("div");
+            left.innerHTML = "<div class='fw-bold'>" + escapeHtml(quiz.title) + "</div><div class='small-note'>" + quiz.questions.length + " Questions</div>";
+            const right = document.createElement("div");
+            right.className = "d-flex gap-1";
+            const startBtn = document.createElement("button");
+            startBtn.className = "btn btn-sm moon-btn focus-ring";
+            startBtn.textContent = "Start";
+            startBtn.addEventListener("click", () => handlers.onStart(quiz.id));
+            const pointsBtn = document.createElement("button");
+            pointsBtn.className = "btn btn-sm outline-moon focus-ring";
+            pointsBtn.textContent = "Edit Points";
+            pointsBtn.addEventListener("click", () => {
+              body.classList.toggle("d-none");
+            });
+            const delBtn = document.createElement("button");
+            delBtn.className = "btn btn-sm danger-btn focus-ring";
+            delBtn.textContent = "Delete";
+            delBtn.addEventListener("click", () => handlers.onDelete(quiz.id, quiz.title));
+            right.appendChild(startBtn);
+            right.appendChild(pointsBtn);
+            right.appendChild(delBtn);
+            header.appendChild(left);
+            header.appendChild(right);
+
+            const body = document.createElement("div");
+            body.className = "question-points-list d-none mt-2";
+            quiz.questions.forEach((q, idx) => {
+              const row = document.createElement("div");
+              row.className = "d-flex justify-content-between align-items-center gap-2 mb-1";
+              const qTxt = document.createElement("small");
+              qTxt.className = "small-note";
+              qTxt.textContent = "Question " + (idx + 1);
+              const input = document.createElement("input");
+              input.type = "number";
+              input.className = "form-control form-control-sm";
+              input.min = "100";
+              input.max = "5000";
+              input.value = q.pointValue;
+              input.style.maxWidth = "130px";
+              input.addEventListener("change", () => handlers.onPointChange(quiz.id, idx, input.value));
+              row.appendChild(qTxt);
+              row.appendChild(input);
+              body.appendChild(row);
+            });
+
+            const randomizeBtn = document.createElement("button");
+            randomizeBtn.className = "btn btn-sm moon-btn mt-2 focus-ring";
+            randomizeBtn.textContent = "Randomize Points";
+            randomizeBtn.addEventListener("click", () => handlers.onRandomize(quiz.id));
+            body.appendChild(randomizeBtn);
+
+            wrap.appendChild(header);
+            wrap.appendChild(body);
+            this.el.quizLibrary.appendChild(wrap);
+          });
+        }
+
+        renderStage(game, leaderboard, handlers) {
+          if (!game) {
+            this.el.stageContent.innerHTML = "<div class='small-note'>Start or resume a game to begin.</div>";
+            return;
+          }
+
+          const phase = game.phase;
+          if (phase === PHASES.LOBBY) {
+            this.el.stageContent.innerHTML = "";
+            const block = document.createElement("div");
+            block.innerHTML = "<div class='fw-bold mb-2'>Lobby Open</div><div class='small-note mb-2'>Quiz: " + escapeHtml(game.quizTitle) + "</div>";
+            const startQBtn = document.createElement("button");
+            startQBtn.className = "btn moon-btn focus-ring";
+            startQBtn.textContent = "Start Question";
+            startQBtn.addEventListener("click", handlers.onStartQuestion);
+            block.appendChild(startQBtn);
+            this.el.stageContent.appendChild(block);
+            return;
+          }
+
+          if (phase === PHASES.QUESTION) {
+            const q = game.questions[game.questionIndex];
+            const submittedCount = Object.keys(game.submissions[String(game.questionIndex)] || {}).length;
+            const totalPlayers = Object.values(game.players).filter((p) => !p.removed).length;
+            const remaining = game.questionEndsAt - nowTs();
+            const timerCls = remaining <= 10000 ? "danger" : remaining <= 30000 ? "warn" : "";
+
+            let html = "";
+            html += "<div class='d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2'>";
+            html += "<div><div class='fw-bold'>Question " + (game.questionIndex + 1) + " of " + game.questions.length + "</div><div class='small-note'>Worth " + formatScore(q.pointValue) + " points</div></div>";
+            html += "<div id='timerPill' class='timer-pill " + timerCls + "'>" + formatTime(remaining) + "</div>";
+            html += "</div>";
+            html += "<div class='mb-2'>" + escapeHtml(q.query) + "</div>";
+            html += "<div class='small-note mb-2'>" + submittedCount + " / " + totalPlayers + " players answered</div>";
+            html += "<div class='progress mb-2' role='progressbar' aria-label='Answered players progress'><div class='progress-bar' style='width:" + (totalPlayers ? Math.round((submittedCount / totalPlayers) * 100) : 0) + "%'></div></div>";
+            html += "<div class='row g-2 mb-2'>";
+            q.options.forEach((o) => {
+              html += "<div class='col-12 col-md-6'><div class='q-option'><strong>" + o.letter + "</strong> - " + escapeHtml(o.text) + "</div></div>";
+            });
+            html += "</div>";
+            html += "<div class='d-flex gap-2'><button id='endQuestionNowBtn' class='btn danger-btn focus-ring'>End Question Now</button><button id='revealNowBtn' class='btn outline-moon focus-ring'>Reveal Answer</button></div>";
+            this.el.stageContent.innerHTML = html;
+            document.getElementById("endQuestionNowBtn").addEventListener("click", handlers.onEndQuestionNow);
+            document.getElementById("revealNowBtn").addEventListener("click", handlers.onEndQuestionNow);
+            return;
+          }
+
+          if (phase === PHASES.ANSWER_REVEAL) {
+            const q = game.questions[game.questionIndex];
+            const rv = game.revealedAnswer;
+            let html = "<div class='fw-bold mb-2'>Answer Reveal</div>";
+            html += "<div class='mb-2'>" + escapeHtml(q.query) + "</div>";
+            html += "<div class='small-note mb-2'>Correct options: " + rv.correctOptionIds.map((id) => {
+              const opt = q.options.find((o) => o.id === id);
+              return opt ? opt.letter : id;
+            }).join(", ") + "</div>";
+            html += "<div class='row g-2 mb-2'>";
+            rv.optionStats.forEach((st) => {
+              html += "<div class='col-12 col-md-6'><div class='q-option'><strong>" + st.letter + "</strong> " + escapeHtml(st.text) + "<div class='small-note'>" + st.count + " players • " + st.pct + "%</div></div></div>";
+            });
+            html += "</div>";
+            html += "<div class='glass p-2 mb-2'><div class='small-note'>Answer Details</div><div>" + (q.answerHtml || "") + "</div></div>";
+            if (q.tipHtml) {
+              html += "<div class='glass p-2 mb-2'><div class='small-note'>Tip</div><div>" + q.tipHtml + "</div></div>";
+            }
+            html += "<div class='d-flex gap-2'><button id='showLeaderboardBtn' class='btn moon-btn focus-ring'>Show Leaderboard</button></div>";
+            this.el.stageContent.innerHTML = html;
+            document.getElementById("showLeaderboardBtn").addEventListener("click", handlers.onShowLeaderboard);
+            return;
+          }
+
+          if (phase === PHASES.LEADERBOARD || phase === PHASES.FINISHED) {
+            let html = "<div class='fw-bold mb-2'>" + (phase === PHASES.FINISHED ? "Final Leaderboard" : "Leaderboard") + "</div>";
+            const top3 = leaderboard.slice(0, 3);
+            html += "<div class='podium mb-3'>";
+            [1, 0, 2].forEach((orderIdx, slot) => {
+              const p = top3[orderIdx] || null;
+              const cls = slot === 1 ? "first" : slot === 0 ? "second" : "third";
+              html += "<div class='podium-card " + cls + "'>";
+              html += "<div>" + (p ? (p.rank + (p.rank === 1 ? "st" : p.rank === 2 ? "nd" : "rd")) : "-") + "</div>";
+              html += "<div class='fw-bold'>" + (p ? escapeHtml(p.playerName) : "Waiting") + "</div>";
+              html += "<div class='small-note'>" + (p ? formatScore(p.score) + " pts" : "") + "</div>";
+              html += "</div>";
+            });
+            html += "</div>";
+            leaderboard.slice(0, 10).forEach((row) => {
+              html += "<div class='rank-row d-flex justify-content-between align-items-center'><div>#" + row.rank + " " + escapeHtml(row.playerName) + "</div><div>" + formatScore(row.score) + "</div></div>";
+            });
+
+            if (phase === PHASES.LEADERBOARD) {
+              html += "<div class='d-flex gap-2 mt-2'>";
+              if (game.questionIndex < game.questions.length - 1) {
+                html += "<button id='nextQuestionBtn' class='btn moon-btn focus-ring'>Next Question</button>";
+              } else {
+                html += "<button id='finishGameBtn' class='btn moon-btn focus-ring'>Finish Game</button>";
+              }
+              html += "</div>";
+            } else {
+              html += "<div class='d-flex gap-2 mt-2'><button id='playAgainBtn' class='btn moon-btn focus-ring'>Play Again</button><button id='returnLibraryBtn' class='btn outline-moon focus-ring'>Return to Quiz Library</button></div>";
+            }
+
+            this.el.stageContent.innerHTML = html;
+            const nextBtn = document.getElementById("nextQuestionBtn");
+            if (nextBtn) nextBtn.addEventListener("click", handlers.onNextQuestion);
+            const finishBtn = document.getElementById("finishGameBtn");
+            if (finishBtn) finishBtn.addEventListener("click", handlers.onFinishGame);
+            const playAgainBtn = document.getElementById("playAgainBtn");
+            if (playAgainBtn) playAgainBtn.addEventListener("click", handlers.onPlayAgain);
+            const returnLibraryBtn = document.getElementById("returnLibraryBtn");
+            if (returnLibraryBtn) returnLibraryBtn.addEventListener("click", handlers.onReturnLibrary);
+          }
+        }
+
+        showResumeBanner(meta) {
+          this.el.resumeMeta.textContent = meta;
+          this.el.resumeBanner.classList.remove("d-none");
+        }
+
+        hideResumeBanner() {
+          this.el.resumeBanner.classList.add("d-none");
+        }
+
+        renderDebug(state) {
+          this.el.debugStats.innerHTML = "";
+          const lines = [
+            "WebSocket status: " + state.socketStatus,
+            "Game ID: " + (state.gameId || "-"),
+            "Current phase: " + (state.phase || "-"),
+            "Current question: " + (state.questionLabel || "-"),
+            "Players: " + state.playerCount,
+            "Submissions: " + state.submissionCount,
+            "Last message type: " + (state.lastMessageType || "-"),
+            "Last save time: " + (state.lastSaveTime ? new Date(state.lastSaveTime).toLocaleTimeString() : "-")
+          ];
+          lines.forEach((l) => {
+            const div = document.createElement("div");
+            div.textContent = l;
+            this.el.debugStats.appendChild(div);
+          });
+        }
+      }
+
+      function buildStudentJoinUrl(gameId) {
+        const url = new URL(window.location.href);
+        const basePath = url.pathname.replace(/instructor\.html?$/i, "student.html");
+        const out = url.origin + basePath + "?game=" + encodeURIComponent(gameId);
+        return out;
+      }
+
+      class InstructorApp {
+        constructor() {
+          this.ui = new InstructorUI();
+          this.quizLibrary = new QuizLibrary();
+          this.game = new GameController(this.quizLibrary);
+          this.socket = new SocketManager(this.onMessage.bind(this), this.onSocketState.bind(this));
+          this.socketStatus = "disconnected";
+          this.tickInterval = null;
+          this.heartbeat = null;
+          this.actionLock = false;
+        }
+
+        init() {
+          this.attachEvents();
+          this.renderQuizLibrary();
+          this.socket.connect();
+          this.spawnSparks();
+
+          const unfinished = this.game.loadUnfinished();
+          if (unfinished) {
+            const updated = unfinished.updatedAt ? new Date(unfinished.updatedAt).toLocaleString() : "recently";
+            this.ui.showResumeBanner("Game " + unfinished.gameId + " • " + unfinished.quizTitle + " • Updated " + updated);
+          }
+
+          this.startTicker();
+          this.startHeartbeat();
+          this.renderAll();
+        }
+
+        attachEvents() {
+          const e = this.ui.el;
+          e.createQuizBtn.addEventListener("click", () => this.handleCreateQuiz());
+          e.demoQuizBtn.addEventListener("click", () => this.loadDemoQuiz());
+          e.resumeBtn.addEventListener("click", () => this.resumeGame());
+          e.discardBtn.addEventListener("click", () => this.discardGame());
+        }
+
+        startTicker() {
+          this.tickInterval = setInterval(() => {
+            if (!this.game.activeGame) return;
+            if (this.game.activeGame.phase === PHASES.QUESTION && nowTs() >= this.game.activeGame.questionEndsAt) {
+              this.forceEndQuestion();
+            }
+            this.renderAll();
+          }, 400);
+        }
+
+        startHeartbeat() {
+          this.heartbeat = setInterval(() => {
+            if (this.game.activeGame) {
+              this.send(MSG.INSTRUCTOR_PRESENT, this.game.activeGame.gameId, "instructor-main", {
+                phase: this.game.activeGame.phase,
+                questionIndex: this.game.activeGame.questionIndex
+              });
+            }
+          }, 7000);
+        }
+
+        onSocketState(state) {
+          this.socketStatus = state;
+          this.ui.setSocketState(state);
+          if (state === "connected" && this.game.activeGame) {
+            this.send(MSG.INSTRUCTOR_PRESENT, this.game.activeGame.gameId, "instructor-main", {
+              phase: this.game.activeGame.phase,
+              questionIndex: this.game.activeGame.questionIndex
+            });
+          }
+          this.renderDebug();
+        }
+
+        onMessage(msg) {
+          if (msg.senderRole === "instructor") return;
+          if (!this.game.activeGame) return;
+          if (msg.gameId !== this.game.activeGame.gameId) return;
+
+          switch (msg.type) {
+            case MSG.PLAYER_JOIN:
+            case MSG.PLAYER_REJOIN:
+              this.handleJoin(msg);
+              break;
+            case MSG.SYNC_REQUEST:
+              this.handleSyncRequest(msg);
+              break;
+            case MSG.ANSWER_SUBMITTED:
+              this.handleAnswerSubmitted(msg);
+              break;
+            default:
+              break;
+          }
+          this.renderAll();
+        }
+
+        send(type, gameId, senderId, payload) {
+          const message = {
+            type,
+            gameId,
+            messageId: generateMessageId(),
+            timestamp: nowTs(),
+            senderRole: "instructor",
+            senderId,
+            payload: payload || {}
+          };
+          this.socket.send(message);
+        }
+
+        handleJoin(msg) {
+          const payload = msg.payload || {};
+          const result = this.game.joinOrRejoinPlayer(payload);
+          if (!result.ok) {
+            if (result.reason === "Removed") {
+              this.send(MSG.PLAYER_REMOVED, this.game.activeGame.gameId, "instructor-main", { playerId: payload.playerId, reason: "removed" });
+            }
+            return;
+          }
+          this.send(MSG.PLAYER_JOINED, this.game.activeGame.gameId, "instructor-main", {
+            playerId: result.player.id,
+            playerName: result.player.name,
+            score: result.player.score
+          });
+          const snapshot = this.game.buildSnapshotForPlayer(result.player.id);
+          this.send(MSG.STATE_SNAPSHOT, this.game.activeGame.gameId, "instructor-main", snapshot);
+        }
+
+        handleSyncRequest(msg) {
+          const playerId = String((msg.payload || {}).playerId || "");
+          if (!playerId) return;
+          const snapshot = this.game.buildSnapshotForPlayer(playerId);
+          if (snapshot) {
+            this.send(MSG.STATE_SNAPSHOT, this.game.activeGame.gameId, "instructor-main", snapshot);
+          }
+        }
+
+        handleAnswerSubmitted(msg) {
+          const accepted = this.game.acceptSubmission(msg);
+          if (!accepted.ok) return;
+
+          this.send(MSG.ANSWER_SUBMITTED, this.game.activeGame.gameId, "instructor-main", {
+            playerId: accepted.submission.playerId,
+            questionIndex: accepted.submission.questionIndex,
+            accepted: true
+          });
+
+          this.game.saveGame();
+        }
+
+        handleCreateQuiz() {
+          const title = sanitizeName(this.ui.el.quizTitleInput.value).slice(0, 80);
+          const raw = this.ui.el.quizJsonInput.value.trim();
+          if (!title) {
+            this.ui.showImportStatus("Enter a quiz title.", true);
+            return;
+          }
+          if (!raw) {
+            this.ui.showImportStatus("Paste quiz JSON first.", true);
+            return;
+          }
+
+          let parsed;
+          try {
+            parsed = JSON.parse(raw);
+          } catch (err) {
+            this.ui.showImportStatus("The quiz JSON could not be parsed. " + err.message, true);
+            return;
+          }
+
+          const errors = this.quizLibrary.validateImportedArray(parsed);
+          if (errors.length) {
+            this.ui.showImportStatus(errors[0], true);
+            return;
+          }
+
+          this.quizLibrary.createQuiz(title, parsed);
+          this.ui.el.quizTitleInput.value = "";
+          this.ui.showImportStatus("Quiz created and saved.", false);
+          this.renderQuizLibrary();
+        }
+
+        loadDemoQuiz() {
+          const demo = [
+            {
+              query: "Which AWS service stores container images?",
+              type: "multiple-choice",
+              options: [
+                { text: "Amazon ECS", explanation: "Runs containers, but not an image registry.", correct: false },
+                { text: "Amazon ECR", explanation: "Managed container image registry.", correct: true },
+                { text: "AWS Fargate", explanation: "Compute engine for containers.", correct: false },
+                { text: "Amazon EKS", explanation: "Managed Kubernetes service.", correct: false }
+              ],
+              answer: "<p>The correct option is <b>Amazon ECR</b>.</p>",
+              tip: "<p>Look for the service focused on image repositories.</p>"
+            },
+            {
+              query: "Which are managed orchestration services?",
+              type: "multiple-choice",
+              options: [
+                { text: "Amazon ECS", explanation: "Yes, managed container orchestration.", correct: true },
+                { text: "Amazon EKS", explanation: "Yes, managed Kubernetes control plane.", correct: true },
+                { text: "Amazon ECR", explanation: "Registry, not orchestration.", correct: false },
+                { text: "Amazon S3", explanation: "Object storage service.", correct: false }
+              ],
+              answer: "<p><b>ECS</b> and <b>EKS</b> are orchestration services.</p>",
+              tip: "<p>Select all that run and orchestrate containers.</p>"
+            }
+          ];
+          this.ui.el.quizTitleInput.value = "Demo Moonlit Quiz";
+          this.ui.el.quizJsonInput.value = JSON.stringify(demo, null, 2);
+          this.ui.showImportStatus("Demo quiz loaded into the editor.", false);
+        }
+
+        renderQuizLibrary() {
+          this.ui.renderQuizLibrary(this.quizLibrary.list(), {
+            onStart: (quizId) => this.startGameFromQuiz(quizId),
+            onDelete: (quizId, title) => {
+              if (confirm("Delete quiz '" + title + "'?")) {
+                this.quizLibrary.delete(quizId);
+                this.renderQuizLibrary();
+              }
+            },
+            onPointChange: (quizId, idx, val) => {
+              const n = Math.max(100, Math.min(5000, Number(val) || 100));
+              this.quizLibrary.setQuestionPoints(quizId, idx, n);
+            },
+            onRandomize: (quizId) => {
+              this.quizLibrary.randomizePoints(quizId);
+              this.renderQuizLibrary();
+            }
+          });
+        }
+
+        startGameFromQuiz(quizId) {
+          if (this.game.activeGame && this.game.activeGame.phase !== PHASES.FINISHED) {
+            if (!confirm("A game is active. Start a new game anyway?")) return;
+          }
+          const quiz = this.quizLibrary.getById(quizId);
+          if (!quiz) return;
+          this.game.startNewGame(quiz);
+          this.ui.hideResumeBanner();
+          this.send(MSG.GAME_STARTED, this.game.activeGame.gameId, "instructor-main", {
+            gameId: this.game.activeGame.gameId,
+            quizTitle: this.game.activeGame.quizTitle
+          });
+          this.renderAll();
+        }
+
+        resumeGame() {
+          const unfinished = this.game.loadUnfinished();
+          if (!unfinished) return;
+          this.game.restoreGame(unfinished);
+          this.ui.hideResumeBanner();
+          this.send(MSG.INSTRUCTOR_PRESENT, this.game.activeGame.gameId, "instructor-main", {
+            resumed: true,
+            phase: this.game.activeGame.phase,
+            questionIndex: this.game.activeGame.questionIndex
+          });
+          this.renderAll();
+        }
+
+        discardGame() {
+          this.game.clearGame();
+          this.ui.hideResumeBanner();
+          this.renderAll();
+        }
+
+        withActionLock(fn) {
+          if (this.actionLock) return;
+          this.actionLock = true;
+          try { fn(); } finally { setTimeout(() => { this.actionLock = false; }, 250); }
+        }
+
+        startQuestion() {
+          this.withActionLock(() => {
+            const question = this.game.startQuestion();
+            if (!question) return;
+            const payload = this.game.getPublicQuestionPayload(this.game.activeGame.questionIndex);
+            this.send(MSG.QUESTION_STARTED, this.game.activeGame.gameId, "instructor-main", payload);
+            this.renderAll();
+          });
+        }
+
+        forceEndQuestion() {
+          this.withActionLock(() => {
+            const reveal = this.game.endQuestion();
+            if (!reveal) return;
+            this.send(MSG.QUESTION_ENDED, this.game.activeGame.gameId, "instructor-main", {
+              questionIndex: this.game.activeGame.questionIndex
+            });
+            this.send(MSG.ANSWER_REVEALED, this.game.activeGame.gameId, "instructor-main", {
+              questionIndex: this.game.activeGame.questionIndex,
+              reveal
+            });
+            this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
+              leaderboard: this.game.getLeaderboard()
+            });
+            this.renderAll();
+          });
+        }
+
+        showLeaderboard() {
+          this.withActionLock(() => {
+            this.game.toLeaderboardPhase();
+            this.send(MSG.LEADERBOARD, this.game.activeGame.gameId, "instructor-main", {
+              leaderboard: this.game.getLeaderboard(),
+              questionIndex: this.game.activeGame.questionIndex
+            });
+            this.renderAll();
+          });
+        }
+
+        nextQuestion() {
+          this.startQuestion();
+        }
+
+        finishGame() {
+          this.withActionLock(() => {
+            this.game.finishGame();
+            this.send(MSG.GAME_FINISHED, this.game.activeGame.gameId, "instructor-main", {
+              leaderboard: this.game.getLeaderboard()
+            });
+            this.renderAll();
+          });
+        }
+
+        playAgain() {
+          if (!this.game.activeGame) return;
+          const quiz = this.quizLibrary.getById(this.game.activeGame.quizId);
+          if (!quiz) return;
+          this.startGameFromQuiz(quiz.id);
+        }
+
+        returnToLibrary() {
+          this.game.clearGame();
+          this.renderAll();
+        }
+
+        removePlayer(playerId, playerName) {
+          if (!confirm("Remove " + playerName + " from this game?")) return;
+          if (!this.game.removePlayer(playerId)) return;
+          this.send(MSG.PLAYER_REMOVED, this.game.activeGame.gameId, "instructor-main", {
+            playerId,
+            reason: "removed-by-instructor"
+          });
+          this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
+            leaderboard: this.game.getLeaderboard()
+          });
+          this.renderAll();
+        }
+
+        resetPlayer(playerId) {
+          if (!this.game.resetScore(playerId)) return;
+          this.send(MSG.SCORE_RESET, this.game.activeGame.gameId, "instructor-main", { playerId });
+          this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
+            leaderboard: this.game.getLeaderboard()
+          });
+          this.renderAll();
+        }
+
+        renderDebug() {
+          const g = this.game.activeGame;
+          this.ui.renderDebug({
+            socketStatus: this.socketStatus,
+            gameId: g ? g.gameId : "-",
+            phase: g ? g.phase : "-",
+            questionLabel: g ? (g.questionIndex + 1) + " / " + g.questions.length : "-",
+            playerCount: g ? Object.values(g.players).filter((p) => !p.removed).length : 0,
+            submissionCount: g && g.questionIndex >= 0 ? Object.keys(g.submissions[String(g.questionIndex)] || {}).length : 0,
+            lastMessageType: this.socket.lastMessageType,
+            lastSaveTime: this.game.lastSaveAt
+          });
+        }
+
+        renderAll() {
+          const g = this.game.activeGame;
+          this.ui.updateLobby(g);
+          this.ui.setPhase(g ? g.phase : PHASES.LOBBY);
+          this.ui.renderPlayers(g || { players: {} }, {
+            onRemove: (playerId, name) => this.removePlayer(playerId, name),
+            onReset: (playerId) => this.resetPlayer(playerId)
+          });
+
+          const leaderboard = this.game.getLeaderboard();
+          this.ui.renderStage(g, leaderboard, {
+            onStartQuestion: () => this.startQuestion(),
+            onEndQuestionNow: () => this.forceEndQuestion(),
+            onShowLeaderboard: () => this.showLeaderboard(),
+            onNextQuestion: () => this.nextQuestion(),
+            onFinishGame: () => this.finishGame(),
+            onPlayAgain: () => this.playAgain(),
+            onReturnLibrary: () => this.returnToLibrary()
+          });
+
+          this.renderDebug();
+        }
+
+        spawnSparks() {
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          if (reduce) return;
+          const layer = document.getElementById("sparkLayer");
+          for (let i = 0; i < 16; i += 1) {
+            const s = document.createElement("div");
+            s.className = "spark";
+            s.style.left = Math.floor(Math.random() * 100) + "vw";
+            s.style.bottom = -Math.floor(Math.random() * 130) + "px";
+            s.style.animationDuration = (18 + Math.random() * 16) + "s";
+            s.style.animationDelay = (-Math.random() * 12) + "s";
+            layer.appendChild(s);
+          }
+        }
+      }
+
+      const app = new InstructorApp();
+      app.init();
+    })();
+  </script>
+</body>
+</html>
