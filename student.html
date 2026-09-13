@@ -1115,7 +1115,7 @@
             strip.innerHTML = ""
               + "<span class='power-pill ready'><i class='lni lni-lock-alt'></i>Fog Cloak Ready</span>"
               + "<span class='power-pill ready'><i class='lni lni-target'></i>Shadow Strike Ready</span>"
-              + "<span class='power-pill ready'><i class='lni lni-bolt'></i>Moon Boost Ready</span>";
+              + "<span class='power-pill ready'><i class='lni lni-bolt'></i>Smelling Salts Ready</span>";
             wrap.appendChild(strip);
           }
 
@@ -1134,7 +1134,7 @@
               + "<option value=''>Select prize action...</option>"
               + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 3 turns</option>"
               + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: another player loses 1,000</option>"
-              + "<option value='" + STREAK_ACTION.BONUS + "'>Moon Boost: gain 2,000 points</option>"
+              + "<option value='" + STREAK_ACTION.BONUS + "'>Smelling Salts: gain 2,000 points</option>"
               + "</select>"
               + "<div id='streakPrizeTargetWrap' class='d-none'>"
               + "<select id='streakPrizeTarget' class='form-control join-input'>"
@@ -1348,7 +1348,7 @@
               text = "Shadow Strike used: an opponent took a 1,000 point hit.";
             } else if (model.streakPrizeAction === STREAK_ACTION.BONUS) {
               icon = "lni-bolt";
-              text = "Moon Boost used: you gained 2,000 points.";
+              text = "Smelling Salts used: you gained 2,000 points.";
             }
             actionCard.innerHTML = "<i class='lni " + icon + " me-2'></i>" + safeText(text);
             wrap.appendChild(actionCard);
@@ -1369,7 +1369,7 @@
                 html += "<div class='power-strip'>"
                   + "<span class='power-pill ready'><i class='lni lni-lock-alt'></i>Fog Cloak Ready</span>"
                   + "<span class='power-pill ready'><i class='lni lni-target'></i>Shadow Strike Ready</span>"
-                  + "<span class='power-pill ready'><i class='lni lni-bolt'></i>Moon Boost Ready</span>"
+                  + "<span class='power-pill ready'><i class='lni lni-bolt'></i>Smelling Salts Ready</span>"
                   + "</div>";
                 html += "<div class='streak-prize-note mb-2'>Your streak prize is available. Use it now or save it for a later question.</div>";
                 html += "<div class='d-grid gap-2 mb-2'>"
@@ -1377,7 +1377,7 @@
                   + "<option value=''>Select prize action...</option>"
                   + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 3 turns</option>"
                   + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: another player loses 1,000</option>"
-                  + "<option value='" + STREAK_ACTION.BONUS + "'>Moon Boost: gain 2,000 points</option>"
+                  + "<option value='" + STREAK_ACTION.BONUS + "'>Smelling Salts: gain 2,000 points</option>"
                   + "</select>"
                   + "<div id='lbStreakPrizeTargetWrap' class='d-none'>"
                   + "<select id='lbStreakPrizeTarget' class='form-control join-input'>"
