@@ -727,6 +727,34 @@
       outline-offset: 2px;
     }
 
+    .phase-video {
+      border: 1px solid rgba(247, 221, 233, 0.24);
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.24);
+      padding: 0.55rem;
+      margin-top: 0.9rem;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .phase-video-frame {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .phase-video-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation: none !important;
@@ -924,6 +952,14 @@
         return (sp.get("game") || "").trim().toUpperCase().slice(0, 12);
       }
 
+      const STUDENT_PHASE_VIDEOS = {
+        join: "https://www.youtube.com/embed/CR5Jp_ag2M8",
+        question: "https://www.youtube.com/embed/tBFVAb1rcE0",
+        leaderboard: "https://www.youtube.com/embed/tBFVAb1rcE0",
+        answer: "https://www.youtube.com/embed/CWRTqMGvdpc",
+        final: "https://www.youtube.com/embed/chyRpj-971o"
+      };
+
       class LocalStore {
         static readJson(key, fallback) {
           try {
@@ -1059,6 +1095,16 @@
           this.newFightBtn.onclick = visible && typeof onClick === "function" ? onClick : null;
         }
 
+        buildPhaseVideo(url, title) {
+          return ""
+            + "<div class='phase-video'>"
+            + "<div class='small-note mb-1'>" + safeText(title || "") + "</div>"
+            + "<div class='phase-video-frame'>"
+            + "<iframe src='" + safeText(url) + "' title='" + safeText(title || "Phase Video") + "' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' referrerpolicy='strict-origin-when-cross-origin' allowfullscreen></iframe>"
+            + "</div>"
+            + "</div>";
+        }
+
         renderJoin(prefillGameId, savedName, handlers, stateMsg, quoteSet) {
           this.app.innerHTML = "";
           const wrap = document.createElement("section");
@@ -1073,6 +1119,7 @@
             + "<div class='fight-creed mt-3 text-center'>"
             + "<div>" + safeText(quoteSet && quoteSet.main ? quoteSet.main : "") + "</div>"
             + "</div>";
+          wrap.innerHTML += this.buildPhaseVideo(STUDENT_PHASE_VIDEOS.join, "Walk-in music");
           this.app.appendChild(wrap);
           const gid = document.getElementById("joinGameId");
           const nm = document.getElementById("joinName");
@@ -1208,6 +1255,10 @@
             submit.addEventListener("click", handlers.onSubmitMulti);
             sw.appendChild(submit);
           }
+
+          const videoWrap = document.createElement("div");
+          videoWrap.innerHTML = this.buildPhaseVideo(STUDENT_PHASE_VIDEOS.question, "Question theme");
+          wrap.appendChild(videoWrap);
         }
 
         refreshTimer(question) {
@@ -1450,6 +1501,10 @@
           }
 
           wrap.appendChild(ddWrap);
+
+          const videoWrap = document.createElement("div");
+          videoWrap.innerHTML = this.buildPhaseVideo(STUDENT_PHASE_VIDEOS.answer, "Answer reveal soundtrack");
+          wrap.appendChild(videoWrap);
 
           this.app.appendChild(wrap);
           const ddAction = document.getElementById("doubleDownBtn");
@@ -1838,6 +1893,18 @@
             below.className = "small-note mt-2";
             below.textContent = quoteSet.below;
             wrap.appendChild(below);
+          }
+
+          if (model.phase === PHASES.LEADERBOARD) {
+            const videoWrap = document.createElement("div");
+            videoWrap.innerHTML = this.buildPhaseVideo(STUDENT_PHASE_VIDEOS.leaderboard, "Leaderboard theme");
+            wrap.appendChild(videoWrap);
+          }
+
+          if (model.phase === PHASES.FINISHED) {
+            const videoWrap = document.createElement("div");
+            videoWrap.innerHTML = this.buildPhaseVideo(STUDENT_PHASE_VIDEOS.final, "Final results outro");
+            wrap.appendChild(videoWrap);
           }
 
           this.app.appendChild(wrap);
