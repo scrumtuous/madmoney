@@ -87,6 +87,96 @@
       border: 1px solid rgba(213, 212, 219, 0.3);
     }
 
+    .socket-control {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .socket-pill-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(213, 212, 219, 0.3);
+      background: rgba(213, 212, 219, 0.12);
+      color: var(--soft-pink);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .socket-pill-btn:hover,
+    .socket-pill-btn:focus-visible {
+      background: rgba(213, 212, 219, 0.2);
+      color: #fff;
+    }
+
+    .socket-menu {
+      position: absolute;
+      top: calc(100% + 0.45rem);
+      right: 0;
+      width: min(94vw, 420px);
+      z-index: 80;
+      border-radius: 14px;
+      border: 1px solid rgba(243, 215, 229, 0.28);
+      background: rgba(24, 15, 32, 0.96);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+      padding: 0.7rem;
+    }
+
+    .socket-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid rgba(243, 215, 229, 0.15);
+      border-radius: 10px;
+      padding: 0.45rem 0.55rem;
+      margin-bottom: 0.42rem;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .socket-health-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #7b7b7b;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+    }
+
+    .socket-health-dot.ok {
+      background: var(--ok);
+      box-shadow: 0 0 10px rgba(94, 216, 162, 0.62);
+    }
+
+    .socket-health-dot.fail {
+      background: var(--danger);
+      box-shadow: 0 0 10px rgba(255, 107, 136, 0.62);
+    }
+
+    .socket-health-dot.testing {
+      background: var(--warn);
+      box-shadow: 0 0 10px rgba(255, 159, 125, 0.62);
+    }
+
+    .socket-label {
+      font-weight: 700;
+      font-size: 0.86rem;
+      color: #ffe7f1;
+      display: block;
+      line-height: 1.2;
+    }
+
+    .socket-url {
+      font-size: 0.73rem;
+      color: rgba(243, 215, 229, 0.8);
+      word-break: break-all;
+      display: block;
+      line-height: 1.25;
+      margin-top: 0.1rem;
+    }
+
     .new-fight-pill {
       border-radius: 999px;
       border: 1px solid rgba(243, 215, 229, 0.42);
@@ -438,7 +528,22 @@
       <div class="d-flex align-items-center gap-2">
         <button id="newFightBtn" class="btn new-fight-pill focus-ring d-none" type="button">New Fight</button>
         <span id="phaseBadge" class="badge-phase">LOBBY</span>
-        <span class="header-ribbon"><span id="socketDot" class="status-dot disconnected"></span><span id="socketText">Connecting...</span></span>
+        <div class="socket-control">
+          <button id="socketPill" class="socket-pill-btn focus-ring" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="socketMenu">
+            <span id="socketDot" class="status-dot disconnected"></span><span id="socketText">Connecting...</span>
+          </button>
+          <div id="socketMenu" class="socket-menu d-none" role="dialog" aria-label="WebSocket endpoint selector">
+            <div class="small-note mb-2">Choose endpoint priority. The selected one is tried first, then fallbacks.</div>
+            <div id="socketOptions"></div>
+            <div id="socketModeOptions" class="mt-2"></div>
+            <label class="form-label mb-1 mt-1" for="socketCustomInput">Custom URL</label>
+            <div class="d-flex gap-2">
+              <input id="socketCustomInput" class="form-control form-control-sm" placeholder="ws://example:8099/madmoney" />
+              <button id="socketCustomSaveBtn" class="btn btn-sm moon-btn focus-ring" type="button">Save</button>
+            </div>
+            <div id="socketMenuMsg" class="small-note mt-2" role="status" aria-live="polite"></div>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -558,11 +663,16 @@
     (function () {
       "use strict";
 
-      const socketUrl = "ws://10.23.131.137:8099/madmoney";
+      const SOCKET_CHOICES = [
+        { id: "primary", name: "Primary", url: "wss://websockets.theserverside.com" },
+        { id: "internal", name: "Internal", url: "ws://internal.theserverside.com:8099/madmoney" },
+        { id: "legacy", name: "Legacy", url: "ws://10.23.131.137:8099/madmoney" }
+      ];
       const STORAGE_KEYS = {
         QUIZZES: "gothicQuiz.quizzes.v1",
         ACTIVE_GAME: "gothicQuiz.activeGame.v1",
-        SETTINGS: "gothicQuiz.instructorSettings.v1"
+        SETTINGS: "gothicQuiz.instructorSettings.v1",
+        SOCKET_PREFS: "gothicQuiz.socketPrefs.instructor.v1"
       };
 
       const PHASES = {
@@ -752,6 +862,56 @@
         return trimmed.slice(0, 30);
       }
 
+      function normalizeSocketUrl(value) {
+        return String(value || "").trim();
+      }
+
+      function isValidSocketUrl(value) {
+        return /^wss?:\/\/.+/i.test(normalizeSocketUrl(value));
+      }
+
+      function dedupeByUrl(items) {
+        const seen = new Set();
+        const out = [];
+        items.forEach((item) => {
+          const url = String(item && item.url ? item.url : "");
+          if (!url || seen.has(url)) return;
+          seen.add(url);
+          out.push(item);
+        });
+        return out;
+      }
+
+      function probeSocketUrl(url, timeoutMs) {
+        const target = normalizeSocketUrl(url);
+        if (!isValidSocketUrl(target)) return Promise.resolve(false);
+        return new Promise((resolve) => {
+          let settled = false;
+          let ws;
+          const finish = (ok) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            try {
+              if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+            } catch (err) {
+              // ignore close failures in probe mode
+            }
+            resolve(!!ok);
+          };
+          const timer = setTimeout(() => finish(false), timeoutMs || 2200);
+          try {
+            ws = new WebSocket(target);
+          } catch (err) {
+            finish(false);
+            return;
+          }
+          ws.onopen = () => finish(true);
+          ws.onerror = () => finish(false);
+          ws.onclose = () => finish(false);
+        });
+      }
+
       function randomPoints() {
         return Math.floor(Math.random() * (5000 - 100 + 1)) + 100;
       }
@@ -793,9 +953,11 @@
       }
 
       class SocketManager {
-        constructor(onMessage, onState) {
+        constructor(onMessage, onState, getSocketCandidates, onConnectedUrl) {
           this.onMessage = onMessage;
           this.onState = onState;
+          this.getSocketCandidates = getSocketCandidates;
+          this.onConnectedUrl = onConnectedUrl;
           this.ws = null;
           this.manuallyClosed = false;
           this.retries = 0;
@@ -803,6 +965,7 @@
           this.seen = new Map();
           this.flushSeenTimer = null;
           this.lastMessageType = "-";
+          this.activeUrl = "";
         }
 
         connect() {
@@ -812,41 +975,89 @@
         }
 
         _open() {
-          try {
-            this.ws = new WebSocket(socketUrl);
-          } catch (err) {
+          this.setState("connecting");
+          const candidates = dedupeByUrl(typeof this.getSocketCandidates === "function" ? this.getSocketCandidates() : []);
+          if (!candidates.length) {
             this.scheduleReconnect();
             return;
           }
 
-          this.setState("connecting");
-
-          this.ws.onopen = () => {
-            this.retries = 0;
-            this.setState("connected");
-            this.onState("connected");
-          };
-
-          this.ws.onclose = () => {
-            if (this.manuallyClosed) {
-              this.setState("disconnected");
+          const tryCandidate = (idx) => {
+            if (this.manuallyClosed) return;
+            if (idx >= candidates.length) {
+              this.scheduleReconnect();
               return;
             }
-            this.scheduleReconnect();
+
+            const target = candidates[idx];
+            let probeWs = null;
+            let settled = false;
+            const fail = () => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(openTimer);
+              try {
+                if (probeWs) probeWs.close();
+              } catch (err) {
+                // ignore close failures while rotating fallbacks
+              }
+              tryCandidate(idx + 1);
+            };
+
+            let openTimer = null;
+            try {
+              probeWs = new WebSocket(target.url);
+            } catch (err) {
+              tryCandidate(idx + 1);
+              return;
+            }
+
+            openTimer = setTimeout(() => fail(), 3200);
+
+            probeWs.onopen = () => {
+              if (settled || this.manuallyClosed) {
+                try {
+                  probeWs.close();
+                } catch (err) {
+                  // ignore
+                }
+                return;
+              }
+              settled = true;
+              clearTimeout(openTimer);
+              this.ws = probeWs;
+              this.activeUrl = target.url;
+              this.retries = 0;
+              if (typeof this.onConnectedUrl === "function") this.onConnectedUrl(target);
+              this.setState("connected");
+
+              this.ws.onclose = () => {
+                if (this.manuallyClosed) {
+                  this.setState("disconnected");
+                  return;
+                }
+                this.scheduleReconnect();
+              };
+
+              this.ws.onerror = () => {
+                this.setState("reconnecting");
+              };
+
+              this.ws.onmessage = (evt) => {
+                const parsed = this.safeParse(evt.data);
+                if (!parsed) return;
+                if (!this.validateEnvelope(parsed)) return;
+                if (this.isDuplicate(parsed.messageId)) return;
+                this.lastMessageType = parsed.type;
+                this.onMessage(parsed);
+              };
+            };
+
+            probeWs.onerror = () => fail();
+            probeWs.onclose = () => fail();
           };
 
-          this.ws.onerror = () => {
-            this.setState("reconnecting");
-          };
-
-          this.ws.onmessage = (evt) => {
-            const parsed = this.safeParse(evt.data);
-            if (!parsed) return;
-            if (!this.validateEnvelope(parsed)) return;
-            if (this.isDuplicate(parsed.messageId)) return;
-            this.lastMessageType = parsed.type;
-            this.onMessage(parsed);
-          };
+          tryCandidate(0);
         }
 
         setState(state) {
@@ -868,6 +1079,7 @@
             clearInterval(this.flushSeenTimer);
             this.flushSeenTimer = null;
           }
+          this.activeUrl = "";
           if (this.ws) this.ws.close();
         }
 
@@ -2121,8 +2333,15 @@
       class InstructorUI {
         constructor() {
           this.el = {
+            socketPill: document.getElementById("socketPill"),
             socketDot: document.getElementById("socketDot"),
             socketText: document.getElementById("socketText"),
+            socketMenu: document.getElementById("socketMenu"),
+            socketOptions: document.getElementById("socketOptions"),
+            socketModeOptions: document.getElementById("socketModeOptions"),
+            socketCustomInput: document.getElementById("socketCustomInput"),
+            socketCustomSaveBtn: document.getElementById("socketCustomSaveBtn"),
+            socketMenuMsg: document.getElementById("socketMenuMsg"),
             phaseBadge: document.getElementById("phaseBadge"),
             gameCodeText: document.getElementById("gameCodeText"),
             qrcode: document.getElementById("qrcode"),
@@ -2158,6 +2377,39 @@
         setSocketState(state) {
           this.el.socketDot.className = "status-dot " + (state === "connected" ? "connected" : state === "reconnecting" ? "reconnecting" : "disconnected");
           this.el.socketText.textContent = state === "connected" ? "WebSocket Connected" : state === "reconnecting" ? "Reconnecting..." : "Disconnected";
+        }
+
+        setSocketLabel(state, endpointName) {
+          const base = state === "connected" ? "Connected" : state === "reconnecting" ? "Reconnecting..." : state === "connecting" ? "Connecting..." : "Disconnected";
+          this.el.socketText.textContent = endpointName ? (base + " - " + endpointName) : base;
+        }
+
+        setSocketMenuOpen(isOpen) {
+          this.el.socketMenu.classList.toggle("d-none", !isOpen);
+          this.el.socketPill.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        }
+
+        renderSocketOptions(entries, selectedId, strictMode, healthState) {
+          this.el.socketOptions.innerHTML = "";
+          entries.forEach((entry) => {
+            const row = document.createElement("label");
+            row.className = "socket-row";
+            const health = (healthState && healthState[entry.id]) || "unknown";
+            const healthClass = health === "ok" ? "ok" : health === "fail" ? "fail" : health === "testing" ? "testing" : "";
+            row.innerHTML = ""
+              + "<input class='form-check-input mt-0' type='radio' name='socketEndpoint' value='" + escapeHtml(entry.id) + "' " + (selectedId === entry.id ? "checked" : "") + " />"
+              + "<span><span class='socket-label'>" + escapeHtml(entry.name) + "</span><span class='socket-url'>" + escapeHtml(entry.url) + "</span></span>"
+              + "<span class='socket-health-dot " + healthClass + "' title='Reachability: " + escapeHtml(health) + "'></span>";
+            this.el.socketOptions.appendChild(row);
+          });
+
+          this.el.socketModeOptions.innerHTML = ""
+            + "<div class='d-flex justify-content-between align-items-center gap-2 mb-1 mt-1'>"
+            + "<button id='socketStrictToggleBtn' type='button' class='btn btn-sm " + (strictMode ? "danger-btn" : "outline-moon") + " focus-ring'>"
+            + "Strict Mode: " + (strictMode ? "On" : "Off")
+            + "</button>"
+            + "</div>"
+            + "<div class='socket-url mb-1'>Use only selected endpoint when On. When Off, selected endpoint is tried first, then fallbacks.</div>";
         }
 
         setNewFightVisible(visible, onClick) {
@@ -2810,7 +3062,16 @@
           this.ui = new InstructorUI();
           this.quizLibrary = new QuizLibrary();
           this.game = new GameController(this.quizLibrary);
-          this.socket = new SocketManager(this.onMessage.bind(this), this.onSocketState.bind(this));
+          this.socketPrefs = this.loadSocketPrefs();
+          this.socketEndpointHealth = {};
+          this.socketMenuOpen = false;
+          this.connectedEndpoint = null;
+          this.socket = new SocketManager(
+            this.onMessage.bind(this),
+            this.onSocketState.bind(this),
+            this.getSocketCandidates.bind(this),
+            this.onSocketConnectedEndpoint.bind(this)
+          );
           this.socketStatus = "disconnected";
           this.tickInterval = null;
           this.heartbeat = null;
@@ -2821,6 +3082,156 @@
           };
           this.leaderboardSort = { key: "score", dir: "desc" };
           this.quickDrawSort = { key: "avgResponseMs", dir: "asc" };
+        }
+
+        loadSocketPrefs() {
+          const raw = LocalStore.readJson(STORAGE_KEYS.SOCKET_PREFS, null) || {};
+          const selectedId = typeof raw.selectedId === "string" ? raw.selectedId : "primary";
+          const customUrl = normalizeSocketUrl(raw.customUrl || "");
+          const strictMode = !!raw.strictMode;
+          return {
+            selectedId,
+            customUrl,
+            strictMode
+          };
+        }
+
+        saveSocketPrefs() {
+          LocalStore.writeJson(STORAGE_KEYS.SOCKET_PREFS, this.socketPrefs);
+        }
+
+        getSocketEntries() {
+          const entries = SOCKET_CHOICES.slice();
+          if (this.socketPrefs.customUrl && isValidSocketUrl(this.socketPrefs.customUrl)) {
+            entries.push({ id: "custom", name: "Custom", url: this.socketPrefs.customUrl });
+          }
+          return entries;
+        }
+
+        getSocketCandidates() {
+          const entries = this.getSocketEntries();
+          const selected = entries.find((x) => x.id === this.socketPrefs.selectedId) || entries[0];
+          if (this.socketPrefs.strictMode) {
+            return selected ? [{ id: selected.id, name: selected.name, url: selected.url }] : [];
+          }
+          const ordered = [];
+          if (selected) ordered.push(selected);
+          entries.forEach((entry) => {
+            if (!selected || entry.id !== selected.id) ordered.push(entry);
+          });
+          return dedupeByUrl(ordered);
+        }
+
+        onSocketConnectedEndpoint(endpoint) {
+          this.connectedEndpoint = endpoint || null;
+          this.refreshSocketMenuState();
+        }
+
+        getSelectedSocketName() {
+          const entries = this.getSocketEntries();
+          const selected = entries.find((x) => x.id === this.socketPrefs.selectedId);
+          return selected ? selected.name : "Primary";
+        }
+
+        bindSocketPickerEvents() {
+          const e = this.ui.el;
+          e.socketPill.addEventListener("click", (evt) => {
+            evt.stopPropagation();
+            this.toggleSocketMenu();
+          });
+
+          e.socketMenu.addEventListener("click", (evt) => evt.stopPropagation());
+
+          document.addEventListener("click", () => {
+            if (!this.socketMenuOpen) return;
+            this.socketMenuOpen = false;
+            this.ui.setSocketMenuOpen(false);
+          });
+
+          e.socketOptions.addEventListener("change", (evt) => {
+            const target = evt.target;
+            if (!target || target.name !== "socketEndpoint") return;
+            this.socketPrefs.selectedId = String(target.value || "primary");
+            this.saveSocketPrefs();
+            this.refreshSocketMenuState("Endpoint preference saved. Reconnecting...");
+            this.reconnectSocket();
+          });
+
+          e.socketModeOptions.addEventListener("click", (evt) => {
+            const target = evt.target;
+            if (!target || target.id !== "socketStrictToggleBtn") return;
+            this.socketPrefs.strictMode = !this.socketPrefs.strictMode;
+            this.saveSocketPrefs();
+            this.refreshSocketMenuState(this.socketPrefs.strictMode ? "Strict mode enabled. Reconnecting..." : "Strict mode disabled. Reconnecting...");
+            this.reconnectSocket();
+          });
+
+          e.socketCustomSaveBtn.addEventListener("click", () => {
+            const val = normalizeSocketUrl(e.socketCustomInput.value);
+            if (!isValidSocketUrl(val)) {
+              this.refreshSocketMenuState("Enter a valid ws:// or wss:// URL.");
+              return;
+            }
+            this.socketPrefs.customUrl = val;
+            this.socketPrefs.selectedId = "custom";
+            this.saveSocketPrefs();
+            this.refreshSocketMenuState("Custom endpoint saved. Reconnecting...");
+            this.reconnectSocket();
+          });
+        }
+
+        reconnectSocket() {
+          this.socket.close();
+          this.socket = new SocketManager(
+            this.onMessage.bind(this),
+            this.onSocketState.bind(this),
+            this.getSocketCandidates.bind(this),
+            this.onSocketConnectedEndpoint.bind(this)
+          );
+          this.socket.connect();
+          this.refreshSocketHealth();
+        }
+
+        async refreshSocketHealth() {
+          const entries = this.getSocketEntries();
+          entries.forEach((entry) => {
+            this.socketEndpointHealth[entry.id] = "testing";
+          });
+          this.refreshSocketMenuState();
+
+          const results = await Promise.all(entries.map(async (entry) => {
+            const ok = await probeSocketUrl(entry.url, 1800);
+            return { id: entry.id, ok };
+          }));
+
+          results.forEach((r) => {
+            this.socketEndpointHealth[r.id] = r.ok ? "ok" : "fail";
+          });
+          this.refreshSocketMenuState();
+        }
+
+        refreshSocketMenuState(msg) {
+          const entries = this.getSocketEntries();
+          if (!entries.some((x) => x.id === this.socketPrefs.selectedId)) {
+            this.socketPrefs.selectedId = entries[0] ? entries[0].id : "primary";
+            this.saveSocketPrefs();
+          }
+          this.ui.renderSocketOptions(entries, this.socketPrefs.selectedId, !!this.socketPrefs.strictMode, this.socketEndpointHealth);
+          this.ui.el.socketCustomInput.value = this.socketPrefs.customUrl || "";
+          if (typeof msg === "string") this.ui.el.socketMenuMsg.textContent = msg;
+          const label = this.connectedEndpoint && this.connectedEndpoint.name
+            ? this.connectedEndpoint.name
+            : this.getSelectedSocketName();
+          this.ui.setSocketLabel(this.socketStatus, label);
+        }
+
+        toggleSocketMenu() {
+          this.socketMenuOpen = !this.socketMenuOpen;
+          this.ui.setSocketMenuOpen(this.socketMenuOpen);
+          if (this.socketMenuOpen) {
+            this.refreshSocketMenuState();
+            this.refreshSocketHealth();
+          }
         }
 
         toggleSortState(scope, key) {
@@ -2880,6 +3291,7 @@
         init() {
           this.attachEvents();
           this.renderQuizLibrary();
+          this.bindSocketPickerEvents();
           this.socket.connect();
           this.spawnSparks();
 
@@ -2891,6 +3303,7 @@
 
           this.startTicker();
           this.startHeartbeat();
+          this.refreshSocketMenuState();
           this.renderAll();
         }
 
@@ -2934,6 +3347,7 @@
         onSocketState(state) {
           this.socketStatus = state;
           this.ui.setSocketState(state);
+          this.refreshSocketMenuState();
           if (state === "connected" && this.game.activeGame) {
             this.send(MSG.INSTRUCTOR_PRESENT, this.game.activeGame.gameId, "instructor-main", {
               phase: this.game.activeGame.phase,
