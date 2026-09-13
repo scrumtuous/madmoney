@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Fight soap favicon">
+  <defs>
+    <linearGradient id="soapPink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffb3cc"/>
+      <stop offset="100%" stop-color="#ff7aa8"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="16" width="52" height="32" rx="14" ry="14" fill="url(#soapPink)"/>
+  <rect x="12" y="22" width="40" height="20" rx="10" ry="10" fill="#ffc9da" opacity="0.45"/>
+  <text x="32" y="38" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#7a1f48">FIGHT</text>
+</svg>

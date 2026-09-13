@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<!-- student.html: Player interface for joining, answering, and following the live gothic multiplayer quiz game. -->
+<!-- student.html: Player interface for joining, answering, and following the live Fight Quiz multiplayer game. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Moonlit Quiz Player</title>
+  <title>Fight Quiz | On a long enough timeline, the survival rate for every quiz drops to zero</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
   <style>
@@ -31,7 +32,7 @@
       min-height: 100vh;
       margin: 0;
       color: var(--pink);
-      font-family: "Nunito", sans-serif;
+      font-family: "Barlow Condensed", sans-serif;
       background:
         radial-gradient(circle at 15% 10%, rgba(211, 146, 178, 0.28), transparent 28%),
         radial-gradient(circle at 82% 24%, rgba(200, 175, 217, 0.23), transparent 30%),
@@ -49,7 +50,7 @@
     }
 
     .title-font {
-      font-family: "Cormorant Garamond", serif;
+      font-family: "Teko", sans-serif;
       letter-spacing: 0.06em;
     }
 
@@ -62,6 +63,40 @@
     }
 
     .small-note { color: rgba(247, 221, 233, 0.82); }
+
+    .fight-creed {
+      border: 1px solid rgba(247, 221, 233, 0.16);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 0.55rem 0.65rem;
+      font-size: 0.82rem;
+      line-height: 1.35;
+      color: rgba(247, 221, 233, 0.8);
+    }
+
+    .landing-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .landing-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("fight-landing-bg.svg");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      opacity: 0.08;
+      filter: contrast(0.95);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .landing-card > * {
+      position: relative;
+      z-index: 1;
+    }
 
     .conn-badge {
       border-radius: 999px;
@@ -300,6 +335,61 @@
       50% { box-shadow: 0 0 0 8px rgba(255, 194, 145, 0); }
     }
 
+    .double-down-note {
+      border-radius: 10px;
+      border: 1px solid rgba(247, 221, 233, 0.22);
+      background: rgba(0, 0, 0, 0.26);
+      color: rgba(247, 221, 233, 0.9);
+      padding: 0.55rem 0.65rem;
+      font-size: 0.9rem;
+      line-height: 1.3;
+    }
+
+    .double-down-note.warn {
+      border-color: rgba(255, 194, 145, 0.62);
+      color: #ffe2c5;
+      background: rgba(123, 63, 32, 0.28);
+    }
+
+    .double-down-note.ok {
+      border-color: rgba(130, 235, 186, 0.52);
+      color: #d9ffed;
+      background: rgba(30, 96, 71, 0.26);
+    }
+
+    .double-down-note.bad {
+      border-color: rgba(255, 132, 158, 0.58);
+      color: #ffdce7;
+      background: rgba(114, 41, 61, 0.32);
+    }
+
+    .streak-prize {
+      border-radius: 16px;
+      border: 2px solid rgba(255, 231, 142, 0.92);
+      background: linear-gradient(145deg, rgba(120, 74, 20, 0.38), rgba(98, 45, 26, 0.45));
+      box-shadow: 0 0 0 2px rgba(255, 214, 102, 0.2), 0 0 34px rgba(255, 204, 97, 0.35);
+      padding: 0.85rem;
+      margin-bottom: 0.9rem;
+      animation: prize-pop 680ms ease;
+    }
+
+    .streak-prize-title {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      color: #ffeab7;
+      font-size: 1.12rem;
+    }
+
+    .streak-prize-note {
+      color: #fff0d4;
+      font-size: 0.92rem;
+    }
+
+    @keyframes prize-pop {
+      0% { transform: scale(0.96); opacity: 0.3; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
     @keyframes select-glow {
       0% { box-shadow: 0 0 0 0 rgba(247, 221, 233, 0.45); }
       100% { box-shadow: 0 0 0 9px rgba(247, 221, 233, 0); }
@@ -355,6 +445,55 @@
       animation: rise 280ms ease both;
     }
 
+    .final-action-summary {
+      border-radius: 14px;
+      border: 1px solid rgba(255, 231, 142, 0.58);
+      background: linear-gradient(150deg, rgba(102, 64, 28, 0.44), rgba(62, 36, 53, 0.5));
+      color: #ffeecd;
+      padding: 0.7rem 0.8rem;
+      margin-bottom: 0.7rem;
+      font-weight: 700;
+    }
+
+    .power-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .power-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      border-radius: 999px;
+      border: 1px solid rgba(247, 221, 233, 0.26);
+      background: rgba(0, 0, 0, 0.28);
+      color: rgba(247, 221, 233, 0.92);
+      padding: 0.18rem 0.5rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .power-pill.ready {
+      border-color: rgba(255, 224, 144, 0.62);
+      color: #ffe7ab;
+      background: rgba(123, 78, 27, 0.35);
+    }
+
+    .power-pill.shield {
+      border-color: rgba(145, 240, 211, 0.58);
+      color: #d4fff0;
+      background: rgba(25, 95, 73, 0.31);
+    }
+
+    .power-pill.rocket {
+      border-color: rgba(255, 141, 160, 0.62);
+      color: #ffd4dd;
+      background: rgba(112, 44, 66, 0.34);
+    }
+
     @keyframes rise {
       from { transform: translateY(6px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
@@ -393,13 +532,14 @@
   <div class="shell">
     <header class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
       <div>
-        <div class="title-font fs-2">Moonlit Quiz Player</div>
-        <div class="small-note">Gothic spark, quick taps, big points.</div>
+        <div class="small-note">If this is your first time at Fight Quiz, you have to fight.</div>
       </div>
       <div class="conn-badge"><span id="connDot" class="dot disconnected"></span><span id="connText">Connecting...</span></div>
     </header>
 
     <main id="app"></main>
+
+    <footer class="small-note text-center mt-3 mb-1"><div id="pageFooterQuote">Quote loading...</div><div>This project has no association with the movie Fight Club.</div></footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -440,8 +580,113 @@
         GAME_FINISHED: "GAME_FINISHED",
         INSTRUCTOR_PRESENT: "INSTRUCTOR_PRESENT",
         DOUBLE_DOWN_NEXT: "DOUBLE_DOWN_NEXT",
-        DOUBLE_DOWN_SET: "DOUBLE_DOWN_SET"
+        DOUBLE_DOWN_SET: "DOUBLE_DOWN_SET",
+        DOUBLE_DOWN_BUY: "DOUBLE_DOWN_BUY",
+        DOUBLE_DOWN_BUY_RESULT: "DOUBLE_DOWN_BUY_RESULT",
+        POINT_SHIELD_BUY: "POINT_SHIELD_BUY",
+        POINT_SHIELD_BUY_RESULT: "POINT_SHIELD_BUY_RESULT",
+        STREAK_PRIZE_CLAIM: "STREAK_PRIZE_CLAIM",
+        STREAK_PRIZE_RESULT: "STREAK_PRIZE_RESULT"
       };
+
+      const STREAK_ACTION = {
+        MASK: "MASK_SELF",
+        STEAL: "STEAL_1000",
+        BONUS: "BONUS_2000"
+      };
+
+      const QUOTES = [
+        "You can spend years building a life that never really belonged to you.",
+        "Owning more things does not automatically make you more complete.",
+        "Sometimes the identity you protect is the thing keeping you trapped.",
+        "Comfort can become its own kind of prison.",
+        "Fear loses some of its power once you stop running from it.",
+        "A perfect apartment cannot fix an empty life.",
+        "You learn what matters when the things you relied on disappear.",
+        "People often confuse their possessions with their personality.",
+        "The safest version of your life may also be the least alive.",
+        "Destruction can feel like freedom when everything around you feels fake.",
+        "If your whole identity comes from your career, losing the job feels like losing yourself.",
+        "Consumer culture is very good at inventing problems it can sell you solutions for.",
+        "Sometimes you have to question the person you think you are.",
+        "Routine can numb you so gradually that you barely notice it happening.",
+        "Pain has a way of making the present moment impossible to ignore.",
+        "The desire to control everything often comes from being terrified of chaos.",
+        "A life built entirely around approval eventually belongs to everyone except you.",
+        "You can follow every rule and still end up completely lost.",
+        "The image you show the world can become harder to maintain than the truth.",
+        "People will endure incredible discomfort just to feel something authentic.",
+        "You are more complicated than your resume, salary, clothes, or apartment.",
+        "Sometimes rebellion begins with admitting that the normal path is not working.",
+        "Freedom can be frightening because it leaves you responsible for what happens next.",
+        "The person you pretend to be can eventually start making decisions for you.",
+        "There is something dangerous about believing you have nothing left to lose.",
+        "Society rewards obedience more often than self-examination.",
+        "The things that make you look successful can still leave you miserable.",
+        "Confidence can sometimes be nothing more than refusing to ask permission.",
+        "People often seek extreme experiences when ordinary life stops feeling real.",
+        "Hitting bottom can destroy you, but it can also destroy your illusions.",
+        "The harder you cling to certainty, the more frightening change becomes.",
+        "A polished life can hide a tremendous amount of anger.",
+        "You cannot purchase a personality one product at a time.",
+        "Many people spend their lives performing a version of themselves for strangers.",
+        "Sometimes the greatest threat to your identity is discovering that it was invented.",
+        "Chaos becomes attractive when order feels meaningless.",
+        "Being admired is not the same thing as being understood.",
+        "You can be surrounded by people and still feel completely disconnected.",
+        "There is a difference between being alive and merely functioning.",
+        "The urge to destroy something can come from wanting proof that change is possible.",
+        "Most people are taught how to succeed long before they are taught why success matters.",
+        "You discover strange things about yourself when the usual distractions disappear.",
+        "Losing control can feel liberating right up until you realize you cannot get it back.",
+        "Anger can give you direction without giving you wisdom.",
+        "A movement built around rejecting conformity can create a new kind of conformity.",
+        "The person promising to set you free can become another person telling you what to do.",
+        "Rebellion stops being freedom when nobody is allowed to question it.",
+        "Escaping one identity does not help if you immediately replace it with another.",
+        "The most dangerous ideas are often the ones that make you feel completely certain.",
+        "Becoming free requires more than destroying the life you already have. It requires deciding what should replace it.",
+        "It's only after we've lost everything that we're free to do anything.",
+        "Without pain, without sacrifice, we would have nothing."
+      ];
+
+      function pickRandomQuotes(count) {
+        const pool = QUOTES.slice();
+        const out = [];
+        while (pool.length && out.length < count) {
+          const idx = Math.floor(Math.random() * pool.length);
+          out.push(pool.splice(idx, 1)[0]);
+        }
+        return out;
+      }
+
+      function quoteSetForPhase(phase) {
+        const introspective = QUOTES.filter((q) => /comfort|routine|identity|approval|functioning|disconnected|normal path|obedience|personality/i.test(q));
+        const pressure = QUOTES.filter((q) => /pain|chaos|fear|anger|destroy|bottom|control|frightening|extreme/i.test(q));
+        const resolution = QUOTES.filter((q) => /freedom|replace it|responsible|question|authentic|understood|alive/i.test(q));
+        let pool = QUOTES;
+        if (phase === PHASES.LOBBY) pool = introspective.length ? introspective : QUOTES;
+        else if (phase === PHASES.QUESTION || phase === PHASES.ANSWER_REVEAL) pool = pressure.length ? pressure : QUOTES;
+        else if (phase === PHASES.LEADERBOARD || phase === PHASES.FINISHED) pool = resolution.length ? resolution : QUOTES;
+        const local = pool.slice();
+        const out = [];
+        while (local.length && out.length < 5) {
+          const idx = Math.floor(Math.random() * local.length);
+          out.push(local.splice(idx, 1)[0]);
+        }
+        while (out.length < 5) {
+          const fill = pickRandomQuotes(1)[0] || "";
+          if (!fill) break;
+          out.push(fill);
+        }
+        return {
+          title: out[0] || "",
+          below: out[1] || "",
+          main: out[2] || "",
+          extra: out[3] || "",
+          footer: out[4] || ""
+        };
+      }
 
       function nowTs() { return Date.now(); }
       function generateMessageId() {
@@ -579,6 +824,12 @@
           this.app = document.getElementById("app");
           this.connDot = document.getElementById("connDot");
           this.connText = document.getElementById("connText");
+          this.footerQuote = document.getElementById("pageFooterQuote");
+        }
+
+        setFooterQuote(text) {
+          if (!this.footerQuote) return;
+          this.footerQuote.textContent = text || "";
         }
 
         setConn(state) {
@@ -586,17 +837,20 @@
           this.connText.textContent = state === "connected" ? "Connected" : state === "reconnecting" ? "Reconnecting..." : "Disconnected";
         }
 
-        renderJoin(prefillGameId, savedName, handlers, stateMsg) {
+        renderJoin(prefillGameId, savedName, handlers, stateMsg, quoteSet) {
           this.app.innerHTML = "";
           const wrap = document.createElement("section");
-          wrap.className = "glass p-3";
+          wrap.className = "glass p-3 landing-card";
           wrap.innerHTML = ""
-            + "<div class='title-font fs-3 mb-1'>Join a Game</div>"
-            + "<div class='small-note mb-3'>Enter game code and your name.</div>"
-            + "<div class='mb-2'><label class='form-label'>Game ID</label><input id='joinGameId' class='form-control join-input' maxlength='12' /></div>"
+            + "<div class='title-font fs-3 mb-1'>Join a Fight</div>"
+            + "<div class='small-note mb-3'>Enter fight code and your name.</div>"
+            + "<div class='mb-2'><label class='form-label'>Fight ID</label><input id='joinGameId' class='form-control join-input' maxlength='12' /></div>"
             + "<div class='mb-2'><label class='form-label'>Your Name</label><input id='joinName' class='form-control join-input' maxlength='30' /></div>"
-            + "<button id='joinBtn' class='btn moon-btn w-100 focus-ring'>Join Game</button>"
-            + "<div id='joinMsg' class='small-note mt-2' aria-live='polite'></div>";
+            + "<button id='joinBtn' class='btn moon-btn w-100 focus-ring'>Join Fight</button>"
+            + "<div id='joinMsg' class='small-note mt-2' aria-live='polite'></div>"
+            + "<div class='fight-creed mt-3 text-center'>"
+            + "<div>" + safeText(quoteSet && quoteSet.main ? quoteSet.main : "") + "</div>"
+            + "</div>";
           this.app.appendChild(wrap);
           const gid = document.getElementById("joinGameId");
           const nm = document.getElementById("joinName");
@@ -608,35 +862,41 @@
           document.getElementById("joinBtn").addEventListener("click", () => handlers.onJoin(gid.value, nm.value));
         }
 
-        renderWaiting(text) {
+        renderWaiting(text, quoteSet) {
           this.app.innerHTML = ""
-            + "<section class='glass p-3 text-center'>"
+            + "<section class='glass p-3 text-center landing-card'>"
             + "<div class='title-font fs-3 mb-1'>Waiting for the instructor...</div>"
             + "<div class='small-note'>" + text + "</div>"
-            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Game</button></div>"
+            + "<div class='fight-creed mt-3 text-start'>" + safeText(quoteSet && quoteSet.main ? quoteSet.main : "") + "</div>"
+            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Fight?</button></div>"
             + "</section>";
         }
 
         renderRemoved() {
           this.app.innerHTML = ""
             + "<section class='glass p-3 text-center shake'>"
-            + "<div class='title-font fs-3 mb-1'>You have been removed from this game.</div>"
+            + "<div class='title-font fs-3 mb-1'>You have been removed from this fight.</div>"
             + "<div class='small-note'>Ask the instructor if you should rejoin with a new entry.</div>"
-            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Game</button></div>"
+            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Fight?</button></div>"
             + "</section>";
         }
 
-        renderLobby(model) {
+        renderLobby(model, quoteSet) {
+          const maskedLine = model.isScoreMasked
+            ? "<div class='small-note mt-2'>Leaderboard currently shows " + formatScore(model.playerDisplayedScore || 0) + " points for " + Number(model.fakeScoreTurnsRemaining || 0) + " more turns.</div>"
+            : "";
           this.app.innerHTML = ""
-            + "<section class='glass p-3 text-center celebrate'>"
-            + "<div class='title-font fs-2'>" + (model.quizTitle || "Moonlit Quiz") + "</div>"
-            + "<div class='small-note mb-2'>Game " + model.gameId + "</div>"
+            + "<section class='glass p-3 text-center celebrate landing-card'>"
+            + "<div class='title-font fs-2'>" + (model.quizTitle || "Fight Quiz") + "</div>"
+            + "<div class='small-note mb-2'>Fight " + model.gameId + "</div>"
             + "<div class='score-box'>"
             + "<div class='small-note'>Your Score</div>"
             + "<div class='fs-2 fw-bold'>" + formatScore(model.playerScore) + "</div>"
             + "</div>"
+            + maskedLine
             + "<div class='small-note mt-3'>Hold tight. The next question is coming soon.</div>"
-            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Game</button></div>"
+            + "<div class='fight-creed mt-3 text-start'>" + safeText(quoteSet && quoteSet.main ? quoteSet.main : "") + "</div>"
+            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Fight?</button></div>"
             + "</section>";
         }
 
@@ -660,7 +920,7 @@
             + "<div id='optionsGrid' class='options-grid mb-2'></div>"
             + "<div id='questionStatus' class='small-note mb-2' aria-live='polite'></div>"
             + "<div id='submitWrap'></div>"
-            + "<div class='mt-3 text-center'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Game</button></div>";
+            + "<div class='mt-3 text-center'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Fight</button></div>";
           this.app.appendChild(wrap);
 
           const grid = document.getElementById("optionsGrid");
@@ -749,6 +1009,59 @@
           scoreBox.innerHTML = "<div class='small-note'>Your Score</div><div id='countingScore' class='fs-2 fw-bold'>" + formatScore(model.playerScoreBeforeReveal || 0) + "</div>";
           wrap.appendChild(scoreBox);
 
+          if (model.isScoreMasked) {
+            const masked = document.createElement("div");
+            masked.className = "double-down-note warn mb-3";
+            masked.textContent = "Real score: " + formatScore(model.playerScore || 0) + " pts. Leaderboard shows: " + formatScore(model.playerDisplayedScore || 0) + " pts for " + Number(model.fakeScoreTurnsRemaining || 0) + " more turn" + (Number(model.fakeScoreTurnsRemaining || 0) === 1 ? "" : "s") + ".";
+            wrap.appendChild(masked);
+          }
+
+          if (model.streakPrizeAvailable && !model.streakPrizeUsed) {
+            const strip = document.createElement("div");
+            strip.className = "power-strip";
+            strip.innerHTML = ""
+              + "<span class='power-pill ready'><i class='lni lni-lock-alt'></i>Fog Cloak Ready</span>"
+              + "<span class='power-pill ready'><i class='lni lni-target'></i>Shadow Strike Ready</span>"
+              + "<span class='power-pill ready'><i class='lni lni-bolt'></i>Moon Boost Ready</span>";
+            wrap.appendChild(strip);
+          }
+
+          if (model.streakPrizeAvailable && !model.streakPrizeUsed) {
+            const prize = document.createElement("div");
+            prize.className = "streak-prize";
+            const targetOptions = (model.prizeTargets || []).map((t) => {
+              return "<option value='" + safeText(t.playerId) + "'>" + safeText(t.playerName) + "</option>";
+            }).join("");
+
+            prize.innerHTML = ""
+              + "<div class='streak-prize-title mb-1'><i class='lni lni-gift me-1'></i>Fight Quiz Streak Prize Unlocked</div>"
+              + "<div class='streak-prize-note mb-2'>Choose one action now or later: fog your score for 5 turns, steal 1,000 from one player, or gain 2,000 instantly.</div>"
+              + "<div class='d-grid gap-2'>"
+              + "<select id='streakPrizeAction' class='form-control join-input'>"
+              + "<option value=''>Select prize action...</option>"
+              + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 5 turns</option>"
+              + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: another player loses 1,000</option>"
+              + "<option value='" + STREAK_ACTION.BONUS + "'>Moon Boost: gain 2,000 points</option>"
+              + "</select>"
+              + "<div id='streakPrizeTargetWrap' class='d-none'>"
+              + "<select id='streakPrizeTarget' class='form-control join-input'>"
+              + "<option value=''>Select target player...</option>" + targetOptions
+              + "</select>"
+              + "</div>"
+              + "<button id='claimStreakPrizeBtn' class='btn moon-btn btn-lg focus-ring'>Claim Streak Prize</button>"
+              + "</div>"
+              + "<div id='streakPrizeMsg' class='small-note mt-2'></div>";
+
+            wrap.appendChild(prize);
+          }
+
+          if (model.streakPrizeNotice) {
+            const notice = document.createElement("div");
+            notice.className = "double-down-note mb-3";
+            notice.textContent = model.streakPrizeNotice;
+            wrap.appendChild(notice);
+          }
+
           const corr = document.createElement("div");
           corr.className = "small-note mb-2";
           const labels = (rv.correctOptionIds || []).map((id) => {
@@ -804,9 +1117,72 @@
           const ddBtn = document.createElement("button");
           ddBtn.id = "doubleDownBtn";
           ddBtn.className = "btn moon-btn btn-lg focus-ring";
-          ddBtn.textContent = model.doubleDownArmed ? "Double Down Armed For Next Question" : "Double Down On Next Question";
-          ddBtn.disabled = !!model.doubleDownArmed || !model.hasNextQuestion;
+          if (!model.hasNextQuestion) {
+            ddBtn.textContent = "No Next Question";
+          } else if (model.doubleDownArmed) {
+            ddBtn.textContent = "Double Down Armed For Next Question";
+          } else if (!model.doubleDownEligible) {
+            ddBtn.textContent = "Double Down Disabled";
+          } else {
+            ddBtn.textContent = "Double Down On Next Question";
+          }
+          ddBtn.disabled = !!model.doubleDownArmed || !model.hasNextQuestion || !model.doubleDownEligible;
           ddWrap.appendChild(ddBtn);
+
+          const ddNote = document.createElement("div");
+          let ddStateClass = "";
+          if (model.doubleDownArmed || model.doubleDownEligible) ddStateClass = " ok";
+          else ddStateClass = " bad";
+          ddNote.className = "double-down-note" + ddStateClass;
+          ddNote.textContent = model.doubleDownStatusText || "";
+          ddWrap.appendChild(ddNote);
+
+          if (!model.doubleDownArmed && !model.doubleDownEligible && model.canBuyDoubleDown && model.hasNextQuestion) {
+            const buyBtn = document.createElement("button");
+            buyBtn.id = "buyDoubleDownBtn";
+            buyBtn.className = "btn moon-btn btn-lg focus-ring";
+            buyBtn.textContent = "Buy 1 Double Down for " + formatScore(model.doubleDownBuyCost || 3000) + " pts";
+            ddWrap.appendChild(buyBtn);
+          }
+
+          if (model.doubleDownDisabledReason && !model.doubleDownEligible) {
+            const why = document.createElement("div");
+            why.className = "small-note";
+            why.textContent = model.doubleDownDisabledReason;
+            ddWrap.appendChild(why);
+          }
+
+          if (model.doubleDownBuyBlockedReason && !model.canBuyDoubleDown && !model.doubleDownEligible && model.hasNextQuestion) {
+            const buyWhy = document.createElement("div");
+            buyWhy.className = "small-note";
+            buyWhy.textContent = model.doubleDownBuyBlockedReason;
+            ddWrap.appendChild(buyWhy);
+          }
+
+          if (model.hasNextQuestion) {
+            const shieldBtn = document.createElement("button");
+            shieldBtn.id = "buyPointShieldBtn";
+            shieldBtn.className = "btn moon-btn btn-lg focus-ring";
+            if (model.pointShieldNext) {
+              shieldBtn.textContent = "Shield Armed For Next Question";
+            } else {
+              shieldBtn.textContent = "Shield Next Question for " + formatScore(model.pointShieldCost || 2500) + " pts";
+            }
+            shieldBtn.disabled = !!model.pointShieldNext || !model.canBuyPointShield;
+            ddWrap.appendChild(shieldBtn);
+
+            const shieldState = document.createElement("div");
+            shieldState.className = "double-down-note" + ((model.canBuyPointShield || model.pointShieldNext) ? " ok" : " bad");
+            shieldState.textContent = model.pointShieldStatusText || "";
+            ddWrap.appendChild(shieldState);
+          }
+
+          if (model.pointShieldNotice) {
+            const shieldNote = document.createElement("div");
+            shieldNote.className = "small-note";
+            shieldNote.textContent = model.pointShieldNotice;
+            ddWrap.appendChild(shieldNote);
+          }
 
           const joinBtn = document.createElement("button");
           joinBtn.id = "joinAnotherGameBtn";
@@ -818,6 +1194,46 @@
           this.app.appendChild(wrap);
           const ddAction = document.getElementById("doubleDownBtn");
           if (ddAction) ddAction.addEventListener("click", () => model.onDoubleDown());
+          const buyAction = document.getElementById("buyDoubleDownBtn");
+          if (buyAction) buyAction.addEventListener("click", () => model.onBuyDoubleDown());
+          const shieldAction = document.getElementById("buyPointShieldBtn");
+          if (shieldAction) shieldAction.addEventListener("click", () => model.onBuyPointShield());
+          const claimAction = document.getElementById("claimStreakPrizeBtn");
+          if (claimAction) {
+            const actionEl = document.getElementById("streakPrizeAction");
+            const targetWrap = document.getElementById("streakPrizeTargetWrap");
+            const targetEl = document.getElementById("streakPrizeTarget");
+            const msgEl = document.getElementById("streakPrizeMsg");
+
+            const syncTargetVisibility = () => {
+              const selectedAction = actionEl ? String(actionEl.value || "").toUpperCase() : "";
+              const requiresTarget = selectedAction === STREAK_ACTION.STEAL;
+              if (targetWrap) {
+                if (requiresTarget) targetWrap.classList.remove("d-none");
+                else targetWrap.classList.add("d-none");
+              }
+              if (requiresTarget && (!model.prizeTargets || !model.prizeTargets.length) && msgEl) {
+                msgEl.textContent = "No target players are available yet. Choose another action.";
+              } else if (msgEl) {
+                msgEl.textContent = "";
+              }
+            };
+
+            if (actionEl) {
+              actionEl.addEventListener("change", syncTargetVisibility);
+              syncTargetVisibility();
+            }
+
+            claimAction.addEventListener("click", () => {
+              const selectedAction = actionEl ? String(actionEl.value || "").toUpperCase() : "";
+              const targetId = targetEl ? String(targetEl.value || "") : "";
+              if (selectedAction === STREAK_ACTION.STEAL && (!model.prizeTargets || !model.prizeTargets.length)) {
+                if (msgEl) msgEl.textContent = "No target players are available yet. Choose another action.";
+                return;
+              }
+              model.onClaimStreakPrize(selectedAction, targetId);
+            });
+          }
           this.animateCount("countingScore", model.playerScoreBeforeReveal || 0, model.playerScore || 0, 850);
         }
 
@@ -842,13 +1258,13 @@
           }, 980);
         }
 
-        renderLeaderboard(model) {
+        renderLeaderboard(model, quoteSet) {
           this.app.innerHTML = "";
           const wrap = document.createElement("section");
           wrap.className = "glass p-3";
           const title = document.createElement("div");
           title.className = "title-font fs-2 mb-2";
-          title.textContent = model.phase === PHASES.FINISHED ? "Final Results" : "Leaderboard";
+          title.textContent = quoteSet && quoteSet.title ? quoteSet.title : (model.phase === PHASES.FINISHED ? "Final Results" : "Leaderboard");
           wrap.appendChild(title);
 
           const me = document.createElement("div");
@@ -856,14 +1272,122 @@
           me.innerHTML = "<div class='small-note'>You're #" + (model.rank || "-") + "</div><div class='fs-2 fw-bold'>" + formatScore(model.playerScore) + " points</div>";
           wrap.appendChild(me);
 
+          if (model.isScoreMasked) {
+            const masked = document.createElement("div");
+            masked.className = "double-down-note warn mb-3";
+            masked.textContent = "Real score: " + formatScore(model.playerScore || 0) + " pts. Leaderboard shows: " + formatScore(model.playerDisplayedScore || 0) + " pts for " + Number(model.fakeScoreTurnsRemaining || 0) + " more turn" + (Number(model.fakeScoreTurnsRemaining || 0) === 1 ? "" : "s") + ".";
+            wrap.appendChild(masked);
+          }
+
+          if (model.phase === PHASES.FINISHED && model.streakPrizeUsed && model.streakPrizeAction) {
+            const actionCard = document.createElement("div");
+            actionCard.className = "final-action-summary";
+            let icon = "lni-gift";
+            let text = "Streak prize used.";
+            if (model.streakPrizeAction === STREAK_ACTION.MASK) {
+              icon = "lni-lock-alt";
+              text = "Fog Cloak used: your score was hidden for 5 turns.";
+            } else if (model.streakPrizeAction === STREAK_ACTION.STEAL) {
+              icon = "lni-target";
+              text = "Shadow Strike used: an opponent took a 1,000 point hit.";
+            } else if (model.streakPrizeAction === STREAK_ACTION.BONUS) {
+              icon = "lni-bolt";
+              text = "Moon Boost used: you gained 2,000 points.";
+            }
+            actionCard.innerHTML = "<i class='lni " + icon + " me-2'></i>" + safeText(text);
+            wrap.appendChild(actionCard);
+          }
+
+          if (model.phase !== PHASES.FINISHED) {
+            const hasNextQuestion = !!(model.question && model.question.questionNumber < model.question.questionCount);
+            const canUseStreakPrize = !!(model.streakPrizeAvailable && !model.streakPrizeUsed);
+            if (canUseStreakPrize || hasNextQuestion || model.streakPrizeNotice || model.pointShieldNotice) {
+              const actions = document.createElement("div");
+              actions.className = "streak-prize mb-3";
+
+              let html = "<div class='streak-prize-title mb-1'><i class='lni lni-flash me-1'></i>Power Actions</div>";
+              if (canUseStreakPrize) {
+                const targetOptions = (model.prizeTargets || []).map((t) => {
+                  return "<option value='" + safeText(t.playerId) + "'>" + safeText(t.playerName) + "</option>";
+                }).join("");
+                html += "<div class='power-strip'>"
+                  + "<span class='power-pill ready'><i class='lni lni-lock-alt'></i>Fog Cloak Ready</span>"
+                  + "<span class='power-pill ready'><i class='lni lni-target'></i>Shadow Strike Ready</span>"
+                  + "<span class='power-pill ready'><i class='lni lni-bolt'></i>Moon Boost Ready</span>"
+                  + "</div>";
+                html += "<div class='streak-prize-note mb-2'>Your 5-streak prize is still available. Use it now or save it for later questions.</div>";
+                html += "<div class='d-grid gap-2 mb-2'>"
+                  + "<select id='lbStreakPrizeAction' class='form-control join-input'>"
+                  + "<option value=''>Select prize action...</option>"
+                  + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 5 turns</option>"
+                  + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: another player loses 1,000</option>"
+                  + "<option value='" + STREAK_ACTION.BONUS + "'>Moon Boost: gain 2,000 points</option>"
+                  + "</select>"
+                  + "<div id='lbStreakPrizeTargetWrap' class='d-none'>"
+                  + "<select id='lbStreakPrizeTarget' class='form-control join-input'>"
+                  + "<option value=''>Select target player...</option>" + targetOptions
+                  + "</select></div>"
+                  + "<button id='lbClaimStreakPrizeBtn' class='btn moon-btn btn-lg focus-ring'>Claim Streak Prize</button>"
+                  + "</div>";
+              }
+
+              if (hasNextQuestion) {
+                html += "<div class='power-strip'>"
+                  + "<span class='power-pill shield'><i class='lni lni-shield'></i>Point Shield</span>"
+                  + "</div>";
+                html += "<button id='lbBuyPointShieldBtn' class='btn moon-btn btn-lg focus-ring w-100 mb-2'"
+                  + (model.pointShieldNext ? " disabled" : (!model.canBuyPointShield ? " disabled" : ""))
+                  + ">"
+                  + (model.pointShieldNext
+                    ? "Shield Armed For Next Question"
+                    : "Shield Next Question for " + formatScore(model.pointShieldCost || 2500) + " pts")
+                  + "</button>";
+                html += "<div class='double-down-note " + ((model.pointShieldNext || model.canBuyPointShield) ? "ok" : "bad") + " mb-2'>"
+                  + safeText(model.pointShieldStatusText || "") + "</div>";
+              }
+
+              if (model.streakPrizeNotice) {
+                html += "<div class='small-note mb-1'>" + safeText(model.streakPrizeNotice) + "</div>";
+              }
+              if (model.pointShieldNotice) {
+                html += "<div class='small-note'>" + safeText(model.pointShieldNotice) + "</div>";
+              }
+
+              actions.innerHTML = html;
+              wrap.appendChild(actions);
+            }
+          }
+
           const list = document.createElement("div");
           (model.leaderboard || []).forEach((row) => {
+            let iconHtml = "";
+            if (row.streakPrizeReady) {
+              iconHtml += "<span class='power-pill ready ms-1'><i class='lni lni-lock-alt'></i></span>";
+              iconHtml += "<span class='power-pill ready ms-1'><i class='lni lni-target'></i></span>";
+              iconHtml += "<span class='power-pill ready ms-1'><i class='lni lni-bolt'></i></span>";
+            }
+            if (row.canBuyPointShield || row.pointShieldNext || row.shieldActive) {
+              iconHtml += "<span class='power-pill shield ms-1'><i class='lni lni-shield'></i></span>";
+            }
+            const rockets = Math.max(0, Number(row.incomingStrikeCount || 0));
+            if (rockets > 0) {
+              for (let i = 0; i < rockets; i += 1) {
+                iconHtml += "<span class='power-pill rocket ms-1' role='img' aria-label='Incoming strike'>💥</span>";
+              }
+            }
             const div = document.createElement("div");
             div.className = "rank-row d-flex justify-content-between align-items-center";
-            div.innerHTML = "<div>#" + row.rank + " " + safeText(row.playerName) + "</div><div>" + formatScore(row.score) + "</div>";
+            div.innerHTML = "<div>#" + row.rank + " " + safeText(row.playerName) + iconHtml + "</div><div>" + formatScore(row.score) + "</div>";
             list.appendChild(div);
           });
           wrap.appendChild(list);
+
+          if (quoteSet && quoteSet.below) {
+            const below = document.createElement("div");
+            below.className = "small-note mt-2";
+            below.textContent = quoteSet.below;
+            wrap.appendChild(below);
+          }
 
           const joinBtn = document.createElement("button");
           joinBtn.id = "joinAnotherGameBtn";
@@ -872,6 +1396,40 @@
           wrap.appendChild(joinBtn);
 
           this.app.appendChild(wrap);
+
+          const claimBtn = document.getElementById("lbClaimStreakPrizeBtn");
+          if (claimBtn) {
+            const actionEl = document.getElementById("lbStreakPrizeAction");
+            const targetWrap = document.getElementById("lbStreakPrizeTargetWrap");
+            const targetEl = document.getElementById("lbStreakPrizeTarget");
+
+            const syncTargetVisibility = () => {
+              const selectedAction = actionEl ? String(actionEl.value || "").toUpperCase() : "";
+              const requiresTarget = selectedAction === STREAK_ACTION.STEAL;
+              if (targetWrap) {
+                if (requiresTarget) targetWrap.classList.remove("d-none");
+                else targetWrap.classList.add("d-none");
+              }
+            };
+
+            if (actionEl) {
+              actionEl.addEventListener("change", syncTargetVisibility);
+              syncTargetVisibility();
+            }
+
+            claimBtn.addEventListener("click", () => {
+              const selectedAction = actionEl ? String(actionEl.value || "").toUpperCase() : "";
+              const targetId = targetEl ? String(targetEl.value || "") : "";
+              if (typeof model.onClaimStreakPrize === "function") {
+                model.onClaimStreakPrize(selectedAction, targetId);
+              }
+            });
+          }
+
+          const shieldBtn = document.getElementById("lbBuyPointShieldBtn");
+          if (shieldBtn && typeof model.onBuyPointShield === "function") {
+            shieldBtn.addEventListener("click", () => model.onBuyPointShield());
+          }
         }
 
         animateCount(id, from, to, duration) {
@@ -918,11 +1476,37 @@
             quizTitle: "",
             playerScore: 0,
             rank: null,
+            totalPlayers: 0,
             hasSubmitted: false,
             selectedIds: [],
             playerRemoved: false,
             playerScoreBeforeReveal: 0,
-            doubleDownArmed: false
+            doubleDownArmed: false,
+            doubleDownUses: 0,
+            doubleDownCap: 3,
+            doubleDownPurchasedCredits: 0,
+            doubleDownEligible: true,
+            doubleDownDisabledReason: "",
+            doubleDownNotice: "",
+            canBuyDoubleDown: false,
+            doubleDownBuyCost: 3000,
+            doubleDownBuyBlockedReason: "",
+            pointShieldNext: false,
+            pointShieldArmedForQuestionIndex: null,
+            canBuyPointShield: false,
+            pointShieldCost: 2500,
+            pointShieldNotice: "",
+            incomingStrikeCount: 0,
+            playerDisplayedScore: 0,
+            isScoreMasked: false,
+            fakeScoreTurnsRemaining: 0,
+            fakeScorePrimed: false,
+            correctStreak: 0,
+            streakPrizeAvailable: false,
+            streakPrizeUsed: false,
+            streakPrizeAction: "",
+            streakPrizeNotice: "",
+            prizeTargets: []
           });
 
           this.joinTimeoutHandle = null;
@@ -933,6 +1517,140 @@
             gameId: "",
             playerName: ""
           };
+          this.hydrateGameState();
+        }
+
+        hydrateGameState() {
+          if (!this.game || typeof this.game !== "object") this.game = {};
+          if (!Array.isArray(this.game.leaderboard)) this.game.leaderboard = [];
+          if (!Array.isArray(this.game.selectedIds)) this.game.selectedIds = [];
+          if (typeof this.game.doubleDownArmed !== "boolean") this.game.doubleDownArmed = false;
+          if (typeof this.game.doubleDownUses !== "number") this.game.doubleDownUses = 0;
+          if (typeof this.game.doubleDownCap !== "number") this.game.doubleDownCap = 3;
+          if (typeof this.game.doubleDownPurchasedCredits !== "number") this.game.doubleDownPurchasedCredits = 0;
+          if (typeof this.game.doubleDownEligible !== "boolean") this.game.doubleDownEligible = true;
+          if (typeof this.game.doubleDownDisabledReason !== "string") this.game.doubleDownDisabledReason = "";
+          if (typeof this.game.doubleDownNotice !== "string") this.game.doubleDownNotice = "";
+          if (typeof this.game.canBuyDoubleDown !== "boolean") this.game.canBuyDoubleDown = false;
+          if (typeof this.game.doubleDownBuyCost !== "number") this.game.doubleDownBuyCost = 3000;
+          if (typeof this.game.doubleDownBuyBlockedReason !== "string") this.game.doubleDownBuyBlockedReason = "";
+          if (typeof this.game.pointShieldNext !== "boolean") this.game.pointShieldNext = false;
+          if (typeof this.game.pointShieldArmedForQuestionIndex !== "number") this.game.pointShieldArmedForQuestionIndex = null;
+          if (typeof this.game.canBuyPointShield !== "boolean") this.game.canBuyPointShield = false;
+          if (typeof this.game.pointShieldCost !== "number") this.game.pointShieldCost = 2500;
+          if (typeof this.game.pointShieldNotice !== "string") this.game.pointShieldNotice = "";
+          if (typeof this.game.incomingStrikeCount !== "number") this.game.incomingStrikeCount = 0;
+          if (typeof this.game.playerDisplayedScore !== "number") this.game.playerDisplayedScore = Number(this.game.playerScore || 0);
+          if (typeof this.game.isScoreMasked !== "boolean") this.game.isScoreMasked = false;
+          if (typeof this.game.fakeScoreTurnsRemaining !== "number") this.game.fakeScoreTurnsRemaining = 0;
+          if (typeof this.game.fakeScorePrimed !== "boolean") this.game.fakeScorePrimed = false;
+          if (typeof this.game.correctStreak !== "number") this.game.correctStreak = 0;
+          if (typeof this.game.streakPrizeAvailable !== "boolean") this.game.streakPrizeAvailable = false;
+          if (typeof this.game.streakPrizeUsed !== "boolean") this.game.streakPrizeUsed = false;
+          if (typeof this.game.streakPrizeAction !== "string") this.game.streakPrizeAction = "";
+          if (typeof this.game.streakPrizeNotice !== "string") this.game.streakPrizeNotice = "";
+          if (!Array.isArray(this.game.prizeTargets)) this.game.prizeTargets = [];
+          if (typeof this.game.totalPlayers !== "number") this.game.totalPlayers = 0;
+        }
+
+        refreshDoubleDownPolicy(serverReason) {
+          this.hydrateGameState();
+
+          const cap = Math.max(1, Number(this.game.doubleDownCap || 3));
+          const uses = Math.max(0, Number(this.game.doubleDownUses || 0));
+          const purchasedCredits = Math.max(0, Number(this.game.doubleDownPurchasedCredits || 0));
+          const buyCost = Math.max(1, Number(this.game.doubleDownBuyCost || 3000));
+          const rank = this.game.rank == null ? null : Number(this.game.rank);
+          const boardSize = Array.isArray(this.game.leaderboard) ? this.game.leaderboard.length : 0;
+          const totalPlayers = Math.max(Number(this.game.totalPlayers || 0), boardSize);
+
+          this.game.doubleDownCap = cap;
+          this.game.doubleDownUses = uses;
+          this.game.doubleDownPurchasedCredits = purchasedCredits;
+          this.game.doubleDownBuyCost = buyCost;
+          this.game.totalPlayers = totalPlayers;
+
+          let eligible = false;
+          let reason = "";
+          const baseUsesRemaining = Math.max(0, cap - uses);
+          const bonusEligible = rank != null && (rank === 3 || rank === 5 || rank >= Math.max(1, totalPlayers - 4));
+          const score = Number(this.game.playerScore || 0);
+          const canBuyDoubleDown = rank !== 1 && baseUsesRemaining === 0 && purchasedCredits === 0 && !bonusEligible && score >= buyCost;
+          let buyBlockedReason = "";
+
+          if (rank === 1) {
+            eligible = false;
+            reason = "Double Down is disabled while you are in 1st place.";
+          } else if (baseUsesRemaining > 0) {
+            eligible = true;
+          } else if (purchasedCredits > 0) {
+            eligible = true;
+          } else if (bonusEligible) {
+            eligible = true;
+          } else {
+            eligible = false;
+            reason = "Double Down is disabled after 3 uses unless you are in 3rd, 5th, or bottom 5.";
+          }
+
+          if (rank === 1) buyBlockedReason = "1st place cannot buy Double Down.";
+          else if (baseUsesRemaining > 0) buyBlockedReason = "Use your remaining standard Double Downs first.";
+          else if (purchasedCredits > 0) buyBlockedReason = "You already have a purchased Double Down credit ready.";
+          else if (bonusEligible) buyBlockedReason = "Your rank already unlocks bonus Double Down uses.";
+          else if (score < buyCost) buyBlockedReason = "Need at least " + formatScore(buyCost) + " points to buy one.";
+
+          if (typeof serverReason === "string" && serverReason.trim() && !eligible) {
+            reason = serverReason;
+          }
+
+          this.game.doubleDownEligible = eligible;
+          this.game.doubleDownDisabledReason = reason;
+          this.game.canBuyDoubleDown = canBuyDoubleDown;
+          this.game.doubleDownBuyBlockedReason = buyBlockedReason;
+        }
+
+        getDoubleDownStatusText(hasNextQuestion) {
+          const cap = Math.max(1, Number(this.game.doubleDownCap || 3));
+          const uses = Math.max(0, Number(this.game.doubleDownUses || 0));
+          const purchasedCredits = Math.max(0, Number(this.game.doubleDownPurchasedCredits || 0));
+          const buyCost = Math.max(1, Number(this.game.doubleDownBuyCost || 3000));
+          const remaining = Math.max(0, cap - uses);
+
+          if (!hasNextQuestion) {
+            return "No next question remains, so Double Down is unavailable.";
+          }
+          if (this.game.doubleDownArmed) {
+            return "Double Down is armed for the next question.";
+          }
+          if (this.game.rank === 1) {
+            return "1st place cannot use Double Down.";
+          }
+          if (remaining > 0) {
+            return remaining + " of " + cap + " standard Double Downs remaining.";
+          }
+          if (purchasedCredits > 0) {
+            return "You have " + purchasedCredits + " purchased Double Down credit" + (purchasedCredits === 1 ? "" : "s") + " available.";
+          }
+          if (this.game.doubleDownEligible) {
+            return "Standard Double Downs are spent. Bonus Double Down is unlocked for your current rank.";
+          }
+          if (this.game.canBuyDoubleDown) {
+            return "Standard Double Downs are spent. You can buy one for " + formatScore(buyCost) + " points.";
+          }
+          return "Standard Double Downs are spent. Move into 3rd, 5th, or bottom 5 to unlock more.";
+        }
+
+        getPointShieldStatusText(hasNextQuestion) {
+          const cost = Math.max(1, Number(this.game.pointShieldCost || 2500));
+          if (!hasNextQuestion) {
+            return "No next question remains, so point shield is unavailable.";
+          }
+          if (this.game.pointShieldNext) {
+            return "Point shield is armed for the next question.";
+          }
+          if (Number(this.game.playerScore || 0) < cost) {
+            return "Need at least " + formatScore(cost) + " points to arm point shield.";
+          }
+          return "Spend " + formatScore(cost) + " points to protect against point deductions on the next question.";
         }
 
         init() {
@@ -1023,6 +1741,33 @@
           this.game.phase = PHASES.LOBBY;
           this.game.hasSubmitted = false;
           this.game.selectedIds = [];
+          this.game.doubleDownArmed = false;
+          this.game.doubleDownUses = 0;
+          this.game.doubleDownCap = 3;
+          this.game.doubleDownPurchasedCredits = 0;
+          this.game.doubleDownEligible = true;
+          this.game.doubleDownDisabledReason = "";
+          this.game.doubleDownNotice = "";
+          this.game.canBuyDoubleDown = false;
+          this.game.doubleDownBuyCost = 3000;
+          this.game.doubleDownBuyBlockedReason = "";
+          this.game.pointShieldNext = false;
+          this.game.pointShieldArmedForQuestionIndex = null;
+          this.game.canBuyPointShield = false;
+          this.game.pointShieldCost = 2500;
+          this.game.pointShieldNotice = "";
+          this.game.incomingStrikeCount = 0;
+          this.game.playerDisplayedScore = Number(this.game.playerScore || 0);
+          this.game.isScoreMasked = false;
+          this.game.fakeScoreTurnsRemaining = 0;
+          this.game.fakeScorePrimed = false;
+          this.game.correctStreak = 0;
+          this.game.streakPrizeAvailable = false;
+          this.game.streakPrizeUsed = false;
+          this.game.streakPrizeAction = "";
+          this.game.streakPrizeNotice = "";
+          this.game.prizeTargets = [];
+          this.game.totalPlayers = 0;
           this.persist();
 
           this.send(MSG.PLAYER_JOIN, gameId, {
@@ -1090,6 +1835,15 @@
             case MSG.DOUBLE_DOWN_SET:
               this.handleDoubleDownSet(msg.payload);
               break;
+            case MSG.DOUBLE_DOWN_BUY_RESULT:
+              this.handleDoubleDownBuyResult(msg.payload);
+              break;
+            case MSG.POINT_SHIELD_BUY_RESULT:
+              this.handlePointShieldBuyResult(msg.payload);
+              break;
+            case MSG.STREAK_PRIZE_RESULT:
+              this.handleStreakPrizeResult(msg.payload);
+              break;
             default:
               break;
           }
@@ -1119,6 +1873,29 @@
             this.game.hasSubmitted = !!snapshot.player.hasSubmitted;
             this.game.playerRemoved = !!snapshot.player.removed;
             this.game.doubleDownArmed = !!snapshot.player.doubleDownArmed;
+            this.game.doubleDownUses = Number(snapshot.player.doubleDownUses || this.game.doubleDownUses || 0);
+            this.game.doubleDownCap = Number(snapshot.player.doubleDownCap || this.game.doubleDownCap || 3);
+            this.game.doubleDownPurchasedCredits = Number(snapshot.player.doubleDownPurchasedCredits || this.game.doubleDownPurchasedCredits || 0);
+            this.game.canBuyDoubleDown = !!snapshot.player.canBuyDoubleDown;
+            this.game.doubleDownBuyCost = Number(snapshot.player.doubleDownBuyCost || this.game.doubleDownBuyCost || 3000);
+            this.game.doubleDownBuyBlockedReason = String(snapshot.player.doubleDownBuyBlockedReason || this.game.doubleDownBuyBlockedReason || "");
+            this.game.pointShieldNext = !!snapshot.player.pointShieldNext;
+            this.game.pointShieldArmedForQuestionIndex = snapshot.player.pointShieldArmedForQuestionIndex == null ? null : Number(snapshot.player.pointShieldArmedForQuestionIndex);
+            this.game.incomingStrikeCount = Number(snapshot.player.incomingStrikeCount || 0);
+            this.game.canBuyPointShield = !!snapshot.player.canBuyPointShield;
+            this.game.pointShieldCost = Number(snapshot.player.pointShieldCost || this.game.pointShieldCost || 2500);
+            this.game.pointShieldNotice = "";
+            this.game.playerDisplayedScore = Number(snapshot.player.displayedScore != null ? snapshot.player.displayedScore : this.game.playerDisplayedScore || this.game.playerScore || 0);
+            this.game.isScoreMasked = !!snapshot.player.isScoreMasked;
+            this.game.fakeScoreTurnsRemaining = Number(snapshot.player.fakeScoreTurnsRemaining || 0);
+            this.game.fakeScorePrimed = !!snapshot.player.fakeScorePrimed;
+            this.game.correctStreak = Number(snapshot.player.correctStreak || this.game.correctStreak || 0);
+            this.game.streakPrizeAvailable = !!snapshot.player.streakPrizeAvailable;
+            this.game.streakPrizeUsed = !!snapshot.player.streakPrizeUsed;
+            this.game.streakPrizeAction = String(snapshot.player.streakPrizeAction || this.game.streakPrizeAction || "");
+            this.game.prizeTargets = Array.isArray(snapshot.player.prizeTargets) ? snapshot.player.prizeTargets : [];
+            this.game.totalPlayers = Number(snapshot.player.totalPlayers || this.game.totalPlayers || 0);
+            this.game.doubleDownDisabledReason = typeof snapshot.player.doubleDownDisabledReason === "string" ? snapshot.player.doubleDownDisabledReason : (this.game.doubleDownDisabledReason || "");
           }
 
           if (snapshot.question) {
@@ -1132,6 +1909,8 @@
           if (this.game.phase !== PHASES.QUESTION) {
             this.game.selectedIds = [];
           }
+
+          this.refreshDoubleDownPolicy(this.game.doubleDownDisabledReason);
         }
 
         handleQuestionStarted(payload) {
@@ -1143,6 +1922,36 @@
           this.game.selectedIds = [];
           this.game.playerScoreBeforeReveal = this.game.playerScore;
           this.game.doubleDownArmed = false;
+          this.game.doubleDownNotice = "";
+          this.game.streakPrizeNotice = "";
+          this.game.pointShieldNotice = "";
+          this.game.incomingStrikeCount = 0;
+
+          if (this.game.pointShieldNext) {
+            this.game.pointShieldArmedForQuestionIndex = Number(payload.questionIndex);
+            this.game.pointShieldNext = false;
+          }
+
+          if (this.game.pointShieldArmedForQuestionIndex != null && Number(this.game.pointShieldArmedForQuestionIndex) < Number(payload.questionIndex)) {
+            this.game.pointShieldArmedForQuestionIndex = null;
+          }
+
+          this.game.canBuyPointShield = false;
+
+          if (Number(this.game.fakeScoreTurnsRemaining || 0) > 0) {
+            if (this.game.fakeScorePrimed) {
+              this.game.fakeScorePrimed = false;
+            } else {
+              this.game.fakeScoreTurnsRemaining = Math.max(0, Number(this.game.fakeScoreTurnsRemaining || 0) - 1);
+            }
+          }
+
+          this.game.isScoreMasked = Number(this.game.fakeScoreTurnsRemaining || 0) > 0;
+          this.game.playerDisplayedScore = this.game.isScoreMasked
+            ? Math.trunc(Number(this.game.playerScore || 0) / 2)
+            : Number(this.game.playerScore || 0);
+
+          this.refreshDoubleDownPolicy();
         }
 
         handleSubmissionAck(payload) {
@@ -1164,51 +1973,175 @@
           this.game.reveal = payload ? payload.reveal : null;
           this.game.playerScoreBeforeReveal = this.game.playerScore;
           if (this.game.reveal && this.game.reveal.playerOutcomes && this.game.reveal.playerOutcomes[this.identity.playerId]) {
-            this.game.playerScore = this.game.reveal.playerOutcomes[this.identity.playerId].totalScore;
+            const mine = this.game.reveal.playerOutcomes[this.identity.playerId];
+            const earned = Number(mine.earnedPoints || 0);
+            this.game.playerScore = Number(this.game.playerScoreBeforeReveal || 0) + earned;
+            this.game.playerDisplayedScore = this.game.isScoreMasked
+              ? Math.trunc(Number(this.game.playerScore || 0) / 2)
+              : Number(this.game.playerScore || 0);
+
+            this.game.correctStreak = Number(mine.streak || this.game.correctStreak || 0);
+            if (!this.game.streakPrizeUsed && Number(this.game.correctStreak || 0) >= 5) {
+              this.game.streakPrizeAvailable = true;
+            }
+            if (this.game.streakPrizeAvailable && !this.game.streakPrizeUsed) {
+              this.game.streakPrizeNotice = "Fight Quiz Streak Prize unlocked.";
+            }
             this.game.doubleDownArmed = false;
           }
+          this.refreshDoubleDownPolicy();
         }
 
         handleDoubleDownSet(payload) {
           if (!payload || payload.playerId !== this.identity.playerId) return;
           this.game.doubleDownArmed = !!payload.active;
+          this.game.doubleDownUses = Number(payload.doubleDownUses || this.game.doubleDownUses || 0);
+          this.game.doubleDownCap = Number(payload.doubleDownCap || this.game.doubleDownCap || 3);
+          this.game.doubleDownPurchasedCredits = Number(payload.purchasedCredits || this.game.doubleDownPurchasedCredits || 0);
+          this.game.canBuyDoubleDown = !!payload.canBuyDoubleDown;
+          this.game.doubleDownBuyCost = Number(payload.buyCost || this.game.doubleDownBuyCost || 3000);
+          this.game.doubleDownBuyBlockedReason = String(payload.buyBlockedReason || this.game.doubleDownBuyBlockedReason || "");
+          if (payload.rank != null) this.game.rank = Number(payload.rank);
+          if (payload.totalPlayers != null) this.game.totalPlayers = Number(payload.totalPlayers);
+          this.game.doubleDownNotice = payload.reason ? String(payload.reason) : "";
+          this.refreshDoubleDownPolicy(payload.reason || "");
+        }
+
+        handleDoubleDownBuyResult(payload) {
+          if (!payload || payload.playerId !== this.identity.playerId) return;
+          this.game.doubleDownNotice = payload.reason ? String(payload.reason) : "";
+          if (payload.score != null) this.game.playerScore = Number(payload.score);
+          if (payload.rank != null) this.game.rank = Number(payload.rank);
+          if (payload.totalPlayers != null) this.game.totalPlayers = Number(payload.totalPlayers);
+          if (payload.doubleDownUses != null) this.game.doubleDownUses = Number(payload.doubleDownUses);
+          if (payload.doubleDownCap != null) this.game.doubleDownCap = Number(payload.doubleDownCap);
+          if (payload.purchasedCredits != null) this.game.doubleDownPurchasedCredits = Number(payload.purchasedCredits);
+          if (payload.canBuyDoubleDown != null) this.game.canBuyDoubleDown = !!payload.canBuyDoubleDown;
+          if (payload.buyCost != null) this.game.doubleDownBuyCost = Number(payload.buyCost);
+          if (payload.buyBlockedReason != null) this.game.doubleDownBuyBlockedReason = String(payload.buyBlockedReason || "");
+          this.refreshDoubleDownPolicy(this.game.doubleDownNotice || "");
+        }
+
+        handlePointShieldBuyResult(payload) {
+          if (!payload || payload.playerId !== this.identity.playerId) return;
+          this.game.pointShieldNotice = payload.reason ? String(payload.reason) : "";
+          if (payload.score != null) this.game.playerScore = Number(payload.score);
+          if (payload.cost != null) this.game.pointShieldCost = Number(payload.cost);
+          if (payload.pointShieldNext != null) this.game.pointShieldNext = !!payload.pointShieldNext;
+          if (payload.nextQuestionIndex != null) this.game.pointShieldArmedForQuestionIndex = Number(payload.nextQuestionIndex);
+          if (payload.hasNextQuestion === false) this.game.pointShieldArmedForQuestionIndex = null;
+          if (payload.canBuyPointShield != null) this.game.canBuyPointShield = !!payload.canBuyPointShield;
+          this.refreshDoubleDownPolicy(this.game.doubleDownNotice || "");
+        }
+
+        handleStreakPrizeResult(payload) {
+          if (!payload || payload.playerId !== this.identity.playerId) return;
+          this.game.streakPrizeNotice = payload.reason ? String(payload.reason) : "";
+          if (payload.realScore != null) this.game.playerScore = Number(payload.realScore);
+          if (payload.displayedScore != null) this.game.playerDisplayedScore = Number(payload.displayedScore);
+          this.game.isScoreMasked = !!payload.isScoreMasked;
+          this.game.fakeScoreTurnsRemaining = Number(payload.fakeScoreTurnsRemaining || 0);
+          this.game.fakeScorePrimed = !!payload.fakeScorePrimed;
+          this.game.streakPrizeAvailable = !!payload.streakPrizeAvailable;
+          this.game.streakPrizeUsed = !!payload.streakPrizeUsed;
+          this.game.streakPrizeAction = String(payload.streakPrizeAction || payload.action || this.game.streakPrizeAction || "");
+          this.refreshDoubleDownPolicy();
+          this.persist();
+          this.render();
         }
 
         handleLeaderboard(payload) {
           this.game.phase = PHASES.LEADERBOARD;
           this.game.leaderboard = payload && Array.isArray(payload.leaderboard) ? payload.leaderboard : this.game.leaderboard;
+          this.game.totalPlayers = Array.isArray(this.game.leaderboard) ? this.game.leaderboard.length : this.game.totalPlayers;
+          this.game.prizeTargets = this.game.leaderboard
+            .filter((x) => x && x.playerId !== this.identity.playerId)
+            .map((x) => ({ playerId: x.playerId, playerName: x.playerName }));
           const mine = this.game.leaderboard.find((x) => x.playerId === this.identity.playerId);
           this.game.rank = mine ? mine.rank : this.game.rank;
-          if (mine) this.game.playerScore = mine.score;
+          if (mine) {
+            this.game.playerDisplayedScore = Number(mine.score || this.game.playerDisplayedScore || this.game.playerScore || 0);
+            this.game.incomingStrikeCount = Number(mine.incomingStrikeCount || 0);
+            this.game.canBuyPointShield = !!mine.canBuyPointShield;
+            if (mine.pointShieldNext != null) this.game.pointShieldNext = !!mine.pointShieldNext;
+            if (!this.game.streakPrizeUsed && mine.streakPrizeReady != null) this.game.streakPrizeAvailable = !!mine.streakPrizeReady;
+            if (!mine.shieldActive && this.game.pointShieldArmedForQuestionIndex != null && this.game.question && Number(this.game.pointShieldArmedForQuestionIndex) <= Number(this.game.question.questionIndex || 0)) {
+              this.game.pointShieldArmedForQuestionIndex = null;
+            }
+            if (!this.game.isScoreMasked) {
+              this.game.playerScore = Number(mine.score || this.game.playerScore || 0);
+            }
+          }
           this.game.hasSubmitted = false;
           this.game.selectedIds = [];
+          this.refreshDoubleDownPolicy();
         }
 
         handleScoreUpdated(payload) {
           if (!payload || !Array.isArray(payload.leaderboard)) return;
           this.game.leaderboard = payload.leaderboard;
+          this.game.totalPlayers = payload.leaderboard.length;
+          this.game.prizeTargets = payload.leaderboard
+            .filter((x) => x && x.playerId !== this.identity.playerId)
+            .map((x) => ({ playerId: x.playerId, playerName: x.playerName }));
           const mine = payload.leaderboard.find((x) => x.playerId === this.identity.playerId);
           if (mine) {
             this.game.rank = mine.rank;
-            this.game.playerScore = mine.score;
+            this.game.playerDisplayedScore = Number(mine.score || this.game.playerDisplayedScore || this.game.playerScore || 0);
+            this.game.incomingStrikeCount = Number(mine.incomingStrikeCount || 0);
+            this.game.canBuyPointShield = !!mine.canBuyPointShield;
+            if (mine.pointShieldNext != null) this.game.pointShieldNext = !!mine.pointShieldNext;
+            if (!this.game.streakPrizeUsed && mine.streakPrizeReady != null) this.game.streakPrizeAvailable = !!mine.streakPrizeReady;
+            if (!this.game.isScoreMasked) {
+              this.game.playerScore = Number(mine.score || this.game.playerScore || 0);
+            }
           }
+          this.refreshDoubleDownPolicy();
         }
 
         handleScoreReset(payload) {
           if (!payload || payload.playerId !== this.identity.playerId) return;
           this.game.playerScore = 0;
+          this.game.playerDisplayedScore = 0;
+          this.game.isScoreMasked = false;
+          this.game.fakeScoreTurnsRemaining = 0;
+          this.game.fakeScorePrimed = false;
+          if (payload.streakPrizeAvailable != null) this.game.streakPrizeAvailable = !!payload.streakPrizeAvailable;
+          if (payload.streakPrizeUsed != null) this.game.streakPrizeUsed = !!payload.streakPrizeUsed;
+          this.game.streakPrizeAction = "";
+          this.game.streakPrizeNotice = "";
+          if (payload.doubleDownUses != null) this.game.doubleDownUses = Number(payload.doubleDownUses);
+          if (payload.doubleDownCap != null) this.game.doubleDownCap = Number(payload.doubleDownCap);
+          if (payload.purchasedCredits != null) this.game.doubleDownPurchasedCredits = Number(payload.purchasedCredits);
+          if (payload.buyCost != null) this.game.doubleDownBuyCost = Number(payload.buyCost);
+          if (payload.pointShieldNext != null) this.game.pointShieldNext = !!payload.pointShieldNext;
+          if (payload.pointShieldArmedForQuestionIndex != null) this.game.pointShieldArmedForQuestionIndex = Number(payload.pointShieldArmedForQuestionIndex);
+          if (payload.pointShieldCost != null) this.game.pointShieldCost = Number(payload.pointShieldCost);
+          this.game.canBuyPointShield = false;
+          this.game.pointShieldNotice = "";
+          this.game.incomingStrikeCount = 0;
+          this.refreshDoubleDownPolicy();
         }
 
         handleGameFinished(payload) {
           this.game.phase = PHASES.FINISHED;
           if (payload && Array.isArray(payload.leaderboard)) {
             this.game.leaderboard = payload.leaderboard;
+            this.game.totalPlayers = payload.leaderboard.length;
             const mine = payload.leaderboard.find((x) => x.playerId === this.identity.playerId);
             if (mine) {
               this.game.rank = mine.rank;
-              this.game.playerScore = mine.score;
+              this.game.playerScore = Number(mine.score || this.game.playerScore || 0);
+              this.game.playerDisplayedScore = Number(mine.score || this.game.playerDisplayedScore || this.game.playerScore || 0);
             }
           }
+          this.game.isScoreMasked = false;
+          this.game.fakeScoreTurnsRemaining = 0;
+          this.game.fakeScorePrimed = false;
+          this.game.pointShieldNext = false;
+          this.game.pointShieldArmedForQuestionIndex = null;
+          this.game.canBuyPointShield = false;
+          this.refreshDoubleDownPolicy();
         }
 
         handlePlayerRemoved(payload) {
@@ -1266,8 +2199,97 @@
         onDoubleDown() {
           if (this.game.doubleDownArmed) return;
           if (!this.identity.gameId) return;
+          this.refreshDoubleDownPolicy();
+          if (!this.game.doubleDownEligible) {
+            if (this.game.rank == null) {
+              this.send(MSG.DOUBLE_DOWN_NEXT, this.identity.gameId, {
+                playerId: this.identity.playerId
+              });
+              return;
+            }
+            this.game.doubleDownNotice = this.game.doubleDownDisabledReason || "Double Down is currently disabled.";
+            this.persist();
+            this.render();
+            return;
+          }
+          this.game.doubleDownNotice = "";
           this.send(MSG.DOUBLE_DOWN_NEXT, this.identity.gameId, {
             playerId: this.identity.playerId
+          });
+        }
+
+        onBuyDoubleDown() {
+          if (!this.identity.gameId) return;
+          this.refreshDoubleDownPolicy();
+          if (!this.game.canBuyDoubleDown) {
+            this.game.doubleDownNotice = this.game.doubleDownBuyBlockedReason || "Double Down purchase is unavailable right now.";
+            this.persist();
+            this.render();
+            return;
+          }
+          this.send(MSG.DOUBLE_DOWN_BUY, this.identity.gameId, {
+            playerId: this.identity.playerId
+          });
+        }
+
+        onBuyPointShield() {
+          if (!this.identity.gameId) return;
+          const hasNextQuestion = this.game.question && this.game.question.questionNumber < this.game.question.questionCount;
+          const cost = Math.max(1, Number(this.game.pointShieldCost || 2500));
+
+          if (!hasNextQuestion) {
+            this.game.pointShieldNotice = "No next question remains for shield activation.";
+            this.persist();
+            this.render();
+            return;
+          }
+
+          if (this.game.pointShieldNext) {
+            this.game.pointShieldNotice = "Shield is already armed for the next question.";
+            this.persist();
+            this.render();
+            return;
+          }
+
+          if (Number(this.game.playerScore || 0) < cost) {
+            this.game.pointShieldNotice = "Need at least " + formatScore(cost) + " points to arm shield.";
+            this.persist();
+            this.render();
+            return;
+          }
+
+          this.game.pointShieldNotice = "";
+          this.send(MSG.POINT_SHIELD_BUY, this.identity.gameId, {
+            playerId: this.identity.playerId
+          });
+        }
+
+        onClaimStreakPrize(action, targetPlayerId) {
+          if (!this.identity.gameId) return;
+          if (!this.game.streakPrizeAvailable || this.game.streakPrizeUsed) {
+            this.game.streakPrizeNotice = "This prize is unavailable.";
+            this.persist();
+            this.render();
+            return;
+          }
+          const chosen = String(action || "").toUpperCase();
+          if (chosen !== STREAK_ACTION.MASK && chosen !== STREAK_ACTION.STEAL && chosen !== STREAK_ACTION.BONUS) {
+            this.game.streakPrizeNotice = "Choose a prize action first.";
+            this.persist();
+            this.render();
+            return;
+          }
+          if (chosen === STREAK_ACTION.STEAL && !targetPlayerId) {
+            this.game.streakPrizeNotice = "Choose a player to target first.";
+            this.persist();
+            this.render();
+            return;
+          }
+          this.game.streakPrizeNotice = "";
+          this.send(MSG.STREAK_PRIZE_CLAIM, this.identity.gameId, {
+            playerId: this.identity.playerId,
+            action: chosen,
+            targetPlayerId: chosen === STREAK_ACTION.STEAL ? String(targetPlayerId || "") : ""
           });
         }
 
@@ -1287,6 +2309,32 @@
           this.game.selectedIds = [];
           this.game.playerRemoved = false;
           this.game.doubleDownArmed = false;
+          this.game.doubleDownUses = 0;
+          this.game.doubleDownCap = 3;
+          this.game.doubleDownPurchasedCredits = 0;
+          this.game.doubleDownEligible = true;
+          this.game.doubleDownDisabledReason = "";
+          this.game.doubleDownNotice = "";
+          this.game.canBuyDoubleDown = false;
+          this.game.doubleDownBuyCost = 3000;
+          this.game.doubleDownBuyBlockedReason = "";
+          this.game.pointShieldNext = false;
+          this.game.pointShieldArmedForQuestionIndex = null;
+          this.game.canBuyPointShield = false;
+          this.game.pointShieldCost = 2500;
+          this.game.pointShieldNotice = "";
+          this.game.incomingStrikeCount = 0;
+          this.game.playerDisplayedScore = 0;
+          this.game.isScoreMasked = false;
+          this.game.fakeScoreTurnsRemaining = 0;
+          this.game.fakeScorePrimed = false;
+          this.game.correctStreak = 0;
+          this.game.streakPrizeAvailable = false;
+          this.game.streakPrizeUsed = false;
+          this.game.streakPrizeAction = "";
+          this.game.streakPrizeNotice = "";
+          this.game.prizeTargets = [];
+          this.game.totalPlayers = 0;
           this.joinDraft.gameId = "";
           this.persist();
           this.render();
@@ -1313,34 +2361,41 @@
         }
 
         render(joinMsg) {
+          const quoteSet = quoteSetForPhase(this.game && this.game.phase ? this.game.phase : PHASES.LOBBY);
+
           if (this.game.playerRemoved) {
+            this.ui.setFooterQuote(quoteSet.footer);
             this.ui.renderRemoved();
             this.bindJoinAnotherGameButton();
             return;
           }
 
           if (!this.identity.playerName || !this.identity.gameId) {
+            this.ui.setFooterQuote("");
             this.ui.renderJoin(this.joinDraft.gameId || this.game.gameId || readQueryGame(), this.joinDraft.playerName || this.identity.playerName || "", {
               onJoin: this.onJoin.bind(this),
               onJoinInputChange: this.onJoinInputChange.bind(this)
-            }, joinMsg || "");
+            }, joinMsg || "", quoteSet);
             return;
           }
 
           if (this.currentConnState !== "connected" && this.game.phase !== PHASES.QUESTION) {
-            this.ui.renderWaiting("Your connection was interrupted. Reconnecting...");
+            this.ui.setFooterQuote(quoteSet.footer);
+            this.ui.renderWaiting("Your connection was interrupted. Reconnecting...", quoteSet);
             this.bindJoinAnotherGameButton();
             return;
           }
 
           switch (this.game.phase) {
             case PHASES.LOBBY:
-              this.ui.renderLobby(this.game);
+              this.ui.setFooterQuote(quoteSet.footer);
+              this.ui.renderLobby(this.game, quoteSet);
               this.bindJoinAnotherGameButton();
               break;
             case PHASES.QUESTION:
+              this.ui.setFooterQuote(quoteSet.footer);
               if (!this.game.question) {
-                this.ui.renderWaiting("Waiting for the current question...");
+                this.ui.renderWaiting("Waiting for the current question...", quoteSet);
                 break;
               }
               this.ui.renderQuestion({
@@ -1358,29 +2413,80 @@
               this.bindJoinAnotherGameButton();
               break;
             case PHASES.ANSWER_REVEAL:
+              this.ui.setFooterQuote(quoteSet.footer);
               if (!this.game.question || !this.game.reveal) {
-                this.ui.renderWaiting("Answer reveal incoming...");
+                this.ui.renderWaiting("Answer reveal incoming...", quoteSet);
                 break;
               }
+              this.refreshDoubleDownPolicy(this.game.doubleDownNotice || this.game.doubleDownDisabledReason || "");
+              const hasNextQuestion = this.game.question && this.game.question.questionNumber < this.game.question.questionCount;
               this.ui.renderReveal({
                 reveal: this.game.reveal,
                 question: this.game.question,
                 playerId: this.identity.playerId,
                 playerScore: this.game.playerScore,
+                playerDisplayedScore: this.game.playerDisplayedScore,
+                isScoreMasked: !!this.game.isScoreMasked,
+                fakeScoreTurnsRemaining: Number(this.game.fakeScoreTurnsRemaining || 0),
                 playerScoreBeforeReveal: this.game.playerScoreBeforeReveal,
+                streakPrizeAvailable: !!this.game.streakPrizeAvailable,
+                streakPrizeUsed: !!this.game.streakPrizeUsed,
+                streakPrizeNotice: this.game.streakPrizeNotice || "",
+                prizeTargets: Array.isArray(this.game.prizeTargets) ? this.game.prizeTargets : [],
                 doubleDownArmed: this.game.doubleDownArmed,
-                hasNextQuestion: this.game.question && this.game.question.questionNumber < this.game.question.questionCount,
-                onDoubleDown: this.onDoubleDown.bind(this)
+                doubleDownEligible: !!this.game.doubleDownEligible,
+                doubleDownDisabledReason: this.game.doubleDownNotice || this.game.doubleDownDisabledReason || "",
+                doubleDownStatusText: this.getDoubleDownStatusText(hasNextQuestion),
+                doubleDownUses: Number(this.game.doubleDownUses || 0),
+                doubleDownCap: Number(this.game.doubleDownCap || 3),
+                canBuyDoubleDown: !!this.game.canBuyDoubleDown,
+                doubleDownBuyCost: Number(this.game.doubleDownBuyCost || 3000),
+                doubleDownBuyBlockedReason: this.game.doubleDownBuyBlockedReason || "",
+                pointShieldNext: !!this.game.pointShieldNext,
+                canBuyPointShield: !!this.game.canBuyPointShield,
+                pointShieldCost: Number(this.game.pointShieldCost || 2500),
+                pointShieldNotice: this.game.pointShieldNotice || "",
+                incomingStrikeCount: Number(this.game.incomingStrikeCount || 0),
+                pointShieldStatusText: this.getPointShieldStatusText(hasNextQuestion),
+                hasNextQuestion,
+                onDoubleDown: this.onDoubleDown.bind(this),
+                onBuyDoubleDown: this.onBuyDoubleDown.bind(this),
+                onBuyPointShield: this.onBuyPointShield.bind(this),
+                onClaimStreakPrize: this.onClaimStreakPrize.bind(this)
               });
               this.bindJoinAnotherGameButton();
               break;
             case PHASES.LEADERBOARD:
             case PHASES.FINISHED:
-              this.ui.renderLeaderboard(this.game);
+              this.ui.setFooterQuote(quoteSet.footer);
+              const hasNextFromBoard = !!(this.game.question && this.game.question.questionNumber < this.game.question.questionCount);
+              this.ui.renderLeaderboard({
+                phase: this.game.phase,
+                leaderboard: this.game.leaderboard,
+                rank: this.game.rank,
+                playerScore: this.game.playerScore,
+                playerDisplayedScore: this.game.playerDisplayedScore,
+                isScoreMasked: this.game.isScoreMasked,
+                fakeScoreTurnsRemaining: this.game.fakeScoreTurnsRemaining,
+                streakPrizeUsed: this.game.streakPrizeUsed,
+                streakPrizeAction: this.game.streakPrizeAction,
+                streakPrizeAvailable: this.game.streakPrizeAvailable,
+                streakPrizeNotice: this.game.streakPrizeNotice || "",
+                prizeTargets: Array.isArray(this.game.prizeTargets) ? this.game.prizeTargets : [],
+                pointShieldNext: !!this.game.pointShieldNext,
+                canBuyPointShield: !!this.game.canBuyPointShield,
+                pointShieldCost: Number(this.game.pointShieldCost || 2500),
+                pointShieldNotice: this.game.pointShieldNotice || "",
+                pointShieldStatusText: this.getPointShieldStatusText(hasNextFromBoard),
+                question: this.game.question,
+                onBuyPointShield: this.onBuyPointShield.bind(this),
+                onClaimStreakPrize: this.onClaimStreakPrize.bind(this)
+              }, quoteSet);
               this.bindJoinAnotherGameButton();
               break;
             default:
-              this.ui.renderWaiting("Waiting for the instructor...");
+              this.ui.setFooterQuote(quoteSet.footer);
+              this.ui.renderWaiting("Waiting for the instructor...", quoteSet);
               this.bindJoinAnotherGameButton();
           }
         }

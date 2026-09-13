@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<!-- instructor.html: Authoritative host interface for the gothic multiplayer quiz game. -->
+<!-- instructor.html: Authoritative host interface for the Fight Quiz multiplayer game. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Moonlit Quiz Host</title>
+  <title>Fight Quiz Host</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
   <style>
@@ -30,7 +31,7 @@
     }
 
     body {
-      font-family: "Quicksand", sans-serif;
+      font-family: "Barlow Condensed", sans-serif;
       color: var(--soft-pink);
       min-height: 100vh;
       background:
@@ -39,10 +40,24 @@
         radial-gradient(circle at 50% 80%, rgba(206, 179, 220, 0.1), transparent 28%),
         linear-gradient(150deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
       overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url("fight-landing-bg.svg");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      opacity: 0.08;
+      pointer-events: none;
+      z-index: -1;
     }
 
     .title-font {
-      font-family: "Cinzel", serif;
+      font-family: "Teko", sans-serif;
       letter-spacing: 0.08em;
     }
 
@@ -130,6 +145,15 @@
     }
 
     .small-note { color: rgba(243, 215, 229, 0.78); font-size: 0.9rem; }
+
+    .host-footer {
+      border-top: 1px solid rgba(243, 215, 229, 0.2);
+      margin-top: 0.9rem;
+      padding-top: 0.7rem;
+      font-size: 0.83rem;
+      line-height: 1.35;
+      color: rgba(243, 215, 229, 0.72);
+    }
 
     textarea.form-control,
     input.form-control,
@@ -225,6 +249,45 @@
       margin-bottom: 0.45rem;
     }
 
+    .power-icons {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      margin-left: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .power-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.2rem;
+      height: 1.2rem;
+      border-radius: 999px;
+      border: 1px solid rgba(243, 215, 229, 0.28);
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 0.74rem;
+      color: #f7ddeb;
+    }
+
+    .power-icon.ready {
+      border-color: rgba(255, 233, 169, 0.65);
+      color: #ffe9a9;
+      background: rgba(122, 85, 31, 0.34);
+    }
+
+    .power-icon.shield {
+      border-color: rgba(147, 241, 212, 0.62);
+      color: #cfffee;
+      background: rgba(29, 94, 73, 0.32);
+    }
+
+    .power-icon.rocket {
+      border-color: rgba(255, 146, 164, 0.62);
+      color: #ffd2dc;
+      background: rgba(105, 41, 61, 0.35);
+    }
+
     .podium {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -242,6 +305,78 @@
     .podium-card.first { box-shadow: 0 0 18px rgba(255, 222, 140, 0.4); }
     .podium-card.second { box-shadow: 0 0 12px rgba(214, 214, 225, 0.25); }
     .podium-card.third { box-shadow: 0 0 12px rgba(214, 168, 148, 0.25); }
+
+    .control-dock {
+      position: sticky;
+      top: 0.65rem;
+      z-index: 35;
+      border: 1px solid rgba(255, 214, 224, 0.42);
+      background: linear-gradient(145deg, rgba(51, 31, 64, 0.92), rgba(31, 19, 40, 0.9));
+      box-shadow: 0 0 0 1px rgba(255, 214, 224, 0.18), 0 12px 28px rgba(0, 0, 0, 0.45);
+    }
+
+    .control-dock .section-title {
+      color: #f7ddeb;
+      margin-bottom: 0.2rem;
+    }
+
+    .control-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .sort-btn {
+      border: 1px solid rgba(243, 215, 229, 0.35);
+      border-radius: 10px;
+      background: rgba(72, 48, 90, 0.5);
+      color: var(--soft-pink);
+      padding: 0.2rem 0.55rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .sort-btn:hover,
+    .sort-btn:focus-visible {
+      background: rgba(115, 76, 141, 0.6);
+      color: #fff;
+    }
+
+    .stats-table-wrap {
+      border: 1px solid rgba(243, 215, 229, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(10, 7, 14, 0.45);
+    }
+
+    .stats-table {
+      margin-bottom: 0;
+      color: var(--soft-pink);
+    }
+
+    .stats-table th,
+    .stats-table td {
+      background: transparent !important;
+      border-color: rgba(243, 215, 229, 0.18) !important;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .stats-table th {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--lavender);
+    }
+
+    .stats-empty {
+      border: 1px dashed rgba(243, 215, 229, 0.24);
+      border-radius: 12px;
+      padding: 0.75rem;
+      color: rgba(243, 215, 229, 0.75);
+    }
 
     .spark {
       position: fixed;
@@ -278,8 +413,8 @@
   <div class="shell">
     <header class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
       <div>
-        <div class="title-font fs-3">Moonlit Quiz Host</div>
-        <div class="small-note">A gothic party quiz stage for classrooms and teams.</div>
+        <div class="title-font fs-3">Fight Quiz Host</div>
+        <div class="small-note">On a long enough timeline, the survival rate for every quiz drops to zero.</div>
       </div>
       <div class="d-flex align-items-center gap-2">
         <span id="phaseBadge" class="badge-phase">LOBBY</span>
@@ -297,6 +432,16 @@
           <button id="resumeBtn" class="btn moon-btn focus-ring"><i class="lni lni-spinner-arrow me-1"></i>Resume Game</button>
           <button id="discardBtn" class="btn danger-btn focus-ring"><i class="lni lni-trash-can me-1"></i>Discard Game</button>
         </div>
+      </div>
+    </div>
+
+    <div id="activeControls" class="glass control-dock p-3 mb-3 d-none" aria-live="polite">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <div class="section-title">Active Quiz Controls</div>
+          <div id="activeControlsMeta" class="small-note">Start or resume a game to unlock controls.</div>
+        </div>
+        <div id="activeControlsButtons" class="control-strip"></div>
       </div>
     </div>
 
@@ -376,6 +521,8 @@
         </div>
       </section>
     </main>
+
+    <footer class="host-footer"><div id="hostFooterQuote">Quote loading...</div><div>This project has no association with the movie Fight Club.</div></footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -399,6 +546,106 @@
         FINISHED: "FINISHED"
       };
 
+      const DOUBLE_DOWN_BASE_USES = 3;
+      const DOUBLE_DOWN_BUY_COST = 3000;
+      const POINT_SHIELD_COST = 2500;
+      const STREAK_PRIZE_STREAK = 5;
+      const STREAK_PRIZE_FAKE_TURNS = 5;
+      const STREAK_PRIZE_SELF_BONUS = 2000;
+      const STREAK_PRIZE_TARGET_PENALTY = 1000;
+      const STREAK_ACTION = {
+        MASK: "MASK_SELF",
+        STEAL: "STEAL_1000",
+        BONUS: "BONUS_2000"
+      };
+
+      const QUOTES = [
+        "You can spend years building a life that never really belonged to you.",
+        "Owning more things does not automatically make you more complete.",
+        "Sometimes the identity you protect is the thing keeping you trapped.",
+        "Comfort can become its own kind of prison.",
+        "Fear loses some of its power once you stop running from it.",
+        "A perfect apartment cannot fix an empty life.",
+        "You learn what matters when the things you relied on disappear.",
+        "People often confuse their possessions with their personality.",
+        "The safest version of your life may also be the least alive.",
+        "Destruction can feel like freedom when everything around you feels fake.",
+        "If your whole identity comes from your career, losing the job feels like losing yourself.",
+        "Consumer culture is very good at inventing problems it can sell you solutions for.",
+        "Sometimes you have to question the person you think you are.",
+        "Routine can numb you so gradually that you barely notice it happening.",
+        "Pain has a way of making the present moment impossible to ignore.",
+        "The desire to control everything often comes from being terrified of chaos.",
+        "A life built entirely around approval eventually belongs to everyone except you.",
+        "You can follow every rule and still end up completely lost.",
+        "The image you show the world can become harder to maintain than the truth.",
+        "People will endure incredible discomfort just to feel something authentic.",
+        "You are more complicated than your resume, salary, clothes, or apartment.",
+        "Sometimes rebellion begins with admitting that the normal path is not working.",
+        "Freedom can be frightening because it leaves you responsible for what happens next.",
+        "The person you pretend to be can eventually start making decisions for you.",
+        "There is something dangerous about believing you have nothing left to lose.",
+        "Society rewards obedience more often than self-examination.",
+        "The things that make you look successful can still leave you miserable.",
+        "Confidence can sometimes be nothing more than refusing to ask permission.",
+        "People often seek extreme experiences when ordinary life stops feeling real.",
+        "Hitting bottom can destroy you, but it can also destroy your illusions.",
+        "The harder you cling to certainty, the more frightening change becomes.",
+        "A polished life can hide a tremendous amount of anger.",
+        "You cannot purchase a personality one product at a time.",
+        "Many people spend their lives performing a version of themselves for strangers.",
+        "Sometimes the greatest threat to your identity is discovering that it was invented.",
+        "Chaos becomes attractive when order feels meaningless.",
+        "Being admired is not the same thing as being understood.",
+        "You can be surrounded by people and still feel completely disconnected.",
+        "There is a difference between being alive and merely functioning.",
+        "The urge to destroy something can come from wanting proof that change is possible.",
+        "Most people are taught how to succeed long before they are taught why success matters.",
+        "You discover strange things about yourself when the usual distractions disappear.",
+        "Losing control can feel liberating right up until you realize you cannot get it back.",
+        "Anger can give you direction without giving you wisdom.",
+        "A movement built around rejecting conformity can create a new kind of conformity.",
+        "The person promising to set you free can become another person telling you what to do.",
+        "Rebellion stops being freedom when nobody is allowed to question it.",
+        "Escaping one identity does not help if you immediately replace it with another.",
+        "The most dangerous ideas are often the ones that make you feel completely certain.",
+        "Becoming free requires more than destroying the life you already have. It requires deciding what should replace it.",
+        "It's only after we've lost everything that we're free to do anything.",
+        "Without pain, without sacrifice, we would have nothing."
+      ];
+
+      function pickRandomQuotes(count) {
+        const pool = QUOTES.slice();
+        const out = [];
+        while (pool.length && out.length < count) {
+          const idx = Math.floor(Math.random() * pool.length);
+          out.push(pool.splice(idx, 1)[0]);
+        }
+        return out;
+      }
+
+      function quoteSetForPhase(phase) {
+        const introspective = QUOTES.filter((q) => /comfort|routine|identity|approval|functioning|disconnected|normal path|obedience|personality/i.test(q));
+        const pressure = QUOTES.filter((q) => /pain|chaos|fear|anger|destroy|bottom|control|frightening|extreme/i.test(q));
+        const resolution = QUOTES.filter((q) => /freedom|replace it|responsible|question|authentic|understood|alive/i.test(q));
+        let pool = QUOTES;
+        if (phase === PHASES.LOBBY) pool = introspective.length ? introspective : QUOTES;
+        else if (phase === PHASES.QUESTION || phase === PHASES.ANSWER_REVEAL) pool = pressure.length ? pressure : QUOTES;
+        else if (phase === PHASES.LEADERBOARD || phase === PHASES.FINISHED) pool = resolution.length ? resolution : QUOTES;
+        const local = pool.slice();
+        const out = [];
+        while (local.length && out.length < 3) {
+          const idx = Math.floor(Math.random() * local.length);
+          out.push(local.splice(idx, 1)[0]);
+        }
+        while (out.length < 3) {
+          const fill = pickRandomQuotes(1)[0] || "";
+          if (!fill) break;
+          out.push(fill);
+        }
+        return { title: out[0] || "", below: out[1] || "", footer: out[2] || "" };
+      }
+
       const MSG = {
         PLAYER_JOIN: "PLAYER_JOIN",
         PLAYER_REJOIN: "PLAYER_REJOIN",
@@ -418,7 +665,13 @@
         GAME_FINISHED: "GAME_FINISHED",
         INSTRUCTOR_PRESENT: "INSTRUCTOR_PRESENT",
         DOUBLE_DOWN_NEXT: "DOUBLE_DOWN_NEXT",
-        DOUBLE_DOWN_SET: "DOUBLE_DOWN_SET"
+        DOUBLE_DOWN_SET: "DOUBLE_DOWN_SET",
+        DOUBLE_DOWN_BUY: "DOUBLE_DOWN_BUY",
+        DOUBLE_DOWN_BUY_RESULT: "DOUBLE_DOWN_BUY_RESULT",
+        POINT_SHIELD_BUY: "POINT_SHIELD_BUY",
+        POINT_SHIELD_BUY_RESULT: "POINT_SHIELD_BUY_RESULT",
+        STREAK_PRIZE_CLAIM: "STREAK_PRIZE_CLAIM",
+        STREAK_PRIZE_RESULT: "STREAK_PRIZE_RESULT"
       };
 
       const OPTION_COLORS = ["red", "green", "blue", "purple", "orange", "pink"];
@@ -459,6 +712,11 @@
         const m = String(Math.floor(totalSec / 60)).padStart(2, "0");
         const s = String(totalSec % 60).padStart(2, "0");
         return m + ":" + s;
+      }
+
+      function formatMs(ms) {
+        if (ms == null || !isFinite(ms)) return "-";
+        return Math.round(ms) + " ms";
       }
 
       function sanitizeName(name) {
@@ -783,6 +1041,128 @@
         ensureMaps() {
           if (!this.activeGame.players || typeof this.activeGame.players !== "object") this.activeGame.players = {};
           if (!this.activeGame.submissions || typeof this.activeGame.submissions !== "object") this.activeGame.submissions = {};
+          Object.values(this.activeGame.players).forEach((p) => this.normalizePlayerState(p));
+        }
+
+        normalizePlayerState(player) {
+          if (!player || typeof player !== "object") return;
+          if (typeof player.doubleDownNext !== "boolean") player.doubleDownNext = false;
+          if (typeof player.doubleDownUses !== "number") player.doubleDownUses = 0;
+          if (typeof player.doubleDownPurchasedCredits !== "number") player.doubleDownPurchasedCredits = 0;
+          if (typeof player.pointShieldNext !== "boolean") player.pointShieldNext = false;
+          if (typeof player.pointShieldQuestionIndex !== "number") player.pointShieldQuestionIndex = null;
+          if (typeof player.incomingStrikeCount !== "number") player.incomingStrikeCount = 0;
+          if (typeof player.streakPrizeAvailable !== "boolean") player.streakPrizeAvailable = false;
+          if (typeof player.streakPrizeUsed !== "boolean") player.streakPrizeUsed = false;
+          if (typeof player.streakPrizeAction !== "string") player.streakPrizeAction = "";
+          if (typeof player.fakeScoreTurnsRemaining !== "number") player.fakeScoreTurnsRemaining = 0;
+          if (typeof player.fakeScorePrimed !== "boolean") player.fakeScorePrimed = false;
+          if (typeof player.correctStreak !== "number") player.correctStreak = 0;
+          if (typeof player.quickDrawWins !== "number") player.quickDrawWins = 0;
+          if (typeof player.responseTotalMs !== "number") player.responseTotalMs = 0;
+          if (typeof player.responseCount !== "number") player.responseCount = 0;
+          if (player.fastestResponseMs != null && typeof player.fastestResponseMs !== "number") {
+            player.fastestResponseMs = null;
+          }
+        }
+
+        getDisplayedScore(player) {
+          this.normalizePlayerState(player);
+          if (Number(player.fakeScoreTurnsRemaining || 0) > 0) {
+            return Math.trunc(Number(player.score || 0) / 2);
+          }
+          return Number(player.score || 0);
+        }
+
+        getDoubleDownPolicy(playerId, opts) {
+          if (!this.activeGame) {
+            return { allowed: false, reason: "No active game", source: "none", rank: null, totalPlayers: 0, uses: 0, cap: DOUBLE_DOWN_BASE_USES, remainingBaseUses: 0, purchasedCredits: 0, bonusEligible: false, canBuyDoubleDown: false, buyCost: DOUBLE_DOWN_BUY_COST, buyBlockedReason: "No active game" };
+          }
+
+          const player = this.activeGame.players[playerId];
+          if (!player || player.removed) {
+            return { allowed: false, reason: "Unknown player", source: "none", rank: null, totalPlayers: 0, uses: 0, cap: DOUBLE_DOWN_BASE_USES, remainingBaseUses: 0, purchasedCredits: 0, bonusEligible: false, canBuyDoubleDown: false, buyCost: DOUBLE_DOWN_BUY_COST, buyBlockedReason: "Unknown player" };
+          }
+
+          this.normalizePlayerState(player);
+
+          const board = this.getLeaderboard();
+          const rankObj = board.find((row) => row.playerId === playerId);
+          const rank = rankObj ? rankObj.rank : null;
+          const totalPlayers = board.length;
+          const uses = Number(player.doubleDownUses || 0);
+          const cap = DOUBLE_DOWN_BASE_USES;
+          const remainingBaseUses = Math.max(0, cap - uses);
+          const purchasedCredits = Math.max(0, Number(player.doubleDownPurchasedCredits || 0));
+          const inBottomFive = rank != null && rank >= Math.max(1, totalPlayers - 4);
+          const bonusEligible = rank === 3 || rank === 5 || inBottomFive;
+
+          let allowed = false;
+          let reason = "";
+          let source = "none";
+
+          if (rank === 1) {
+            reason = "Double Down is disabled for 1st place.";
+          } else if (remainingBaseUses > 0) {
+            allowed = true;
+            source = "base";
+          } else if (purchasedCredits > 0) {
+            allowed = true;
+            source = "purchased";
+          } else if (bonusEligible) {
+            allowed = true;
+            source = "bonus";
+          } else {
+            reason = "Double Down disabled after 3 uses unless you are in 3rd, 5th, or the bottom 5.";
+          }
+
+          if (opts && opts.enforcePhase) {
+            const validPhase = this.activeGame.phase === PHASES.ANSWER_REVEAL || this.activeGame.phase === PHASES.LEADERBOARD || this.activeGame.phase === PHASES.LOBBY;
+            if (!validPhase) {
+              allowed = false;
+              source = "none";
+              reason = "Double Down can only be armed after reveals, on leaderboard, or in lobby.";
+            }
+          }
+
+          if (opts && opts.requireNextQuestion) {
+            const nextIndex = this.activeGame.questionIndex + 1;
+            if (nextIndex >= this.activeGame.questions.length) {
+              allowed = false;
+              source = "none";
+              reason = "No next question.";
+            }
+          }
+
+          if (player.doubleDownNext) {
+            allowed = false;
+            source = "none";
+            reason = "Double Down is already armed for the next question.";
+          }
+
+          const exhaustedStandard = remainingBaseUses === 0;
+          const canBuyDoubleDown = rank !== 1 && exhaustedStandard && !bonusEligible && Number(player.score || 0) >= DOUBLE_DOWN_BUY_COST;
+          let buyBlockedReason = "";
+          if (rank === 1) buyBlockedReason = "1st place cannot use or buy Double Down.";
+          else if (!exhaustedStandard) buyBlockedReason = "Use your remaining standard Double Downs first.";
+          else if (bonusEligible) buyBlockedReason = "Your current rank already unlocks bonus Double Down uses.";
+          else if (Number(player.score || 0) < DOUBLE_DOWN_BUY_COST) buyBlockedReason = "Need at least " + formatScore(DOUBLE_DOWN_BUY_COST) + " points to buy one.";
+
+          return {
+            allowed,
+            reason,
+            source,
+            rank,
+            totalPlayers,
+            uses,
+            cap,
+            remainingBaseUses,
+            purchasedCredits,
+            bonusEligible,
+            canBuyDoubleDown,
+            buyCost: DOUBLE_DOWN_BUY_COST,
+            buyBlockedReason
+          };
         }
 
         saveGame() {
@@ -813,14 +1193,28 @@
               lastSeenAt: nowTs(),
               removed: false,
               currentSubmission: null,
-              doubleDownNext: false
+              doubleDownNext: false,
+              doubleDownUses: 0,
+              doubleDownPurchasedCredits: 0,
+              pointShieldNext: false,
+              pointShieldQuestionIndex: null,
+              incomingStrikeCount: 0,
+              streakPrizeAvailable: false,
+              streakPrizeUsed: false,
+              fakeScoreTurnsRemaining: 0,
+              fakeScorePrimed: false,
+              correctStreak: 0,
+              quickDrawWins: 0,
+              responseTotalMs: 0,
+              responseCount: 0,
+              fastestResponseMs: null
             };
             this.activeGame.players[playerId] = p;
           } else {
             p.name = playerName;
             p.lastSeenAt = nowTs();
             if (p.removed) return { ok: false, reason: "Removed" };
-            if (typeof p.doubleDownNext !== "boolean") p.doubleDownNext = false;
+            this.normalizePlayerState(p);
           }
 
           this.saveGame();
@@ -839,25 +1233,339 @@
         resetScore(playerId) {
           const p = this.activeGame.players[playerId];
           if (!p || p.removed) return false;
+          const alreadyUsedPrize = !!p.streakPrizeUsed;
+          const usedAction = String(p.streakPrizeAction || "");
           p.score = 0;
           p.doubleDownNext = false;
+          p.doubleDownUses = 0;
+          p.doubleDownPurchasedCredits = 0;
+          p.pointShieldNext = false;
+          p.pointShieldQuestionIndex = null;
+          p.incomingStrikeCount = 0;
+          p.streakPrizeAvailable = false;
+          p.streakPrizeUsed = alreadyUsedPrize;
+          p.streakPrizeAction = alreadyUsedPrize ? usedAction : "";
+          p.fakeScoreTurnsRemaining = 0;
+          p.fakeScorePrimed = false;
+          p.correctStreak = 0;
+          p.quickDrawWins = 0;
+          p.responseTotalMs = 0;
+          p.responseCount = 0;
+          p.fastestResponseMs = null;
           this.saveGame();
           return true;
         }
 
         setDoubleDownNext(playerId) {
-          if (!this.activeGame) return { ok: false, reason: "No active game" };
+          if (!this.activeGame) return { ok: false, reason: "No active game", playerId };
           const p = this.activeGame.players[playerId];
-          if (!p || p.removed) return { ok: false, reason: "Unknown player" };
-          if (this.activeGame.phase !== PHASES.ANSWER_REVEAL && this.activeGame.phase !== PHASES.LEADERBOARD && this.activeGame.phase !== PHASES.LOBBY) {
-            return { ok: false, reason: "Invalid phase" };
+          if (!p || p.removed) return { ok: false, reason: "Unknown player", playerId };
+
+          const policy = this.getDoubleDownPolicy(playerId, { enforcePhase: true, requireNextQuestion: true });
+          if (!policy.allowed) {
+            return {
+              ok: false,
+              playerId,
+              reason: policy.reason,
+              rank: policy.rank,
+              totalPlayers: policy.totalPlayers,
+              doubleDownUses: policy.uses,
+              doubleDownCap: policy.cap,
+              remainingBaseUses: policy.remainingBaseUses,
+              bonusEligible: policy.bonusEligible,
+              purchasedCredits: policy.purchasedCredits,
+              canBuyDoubleDown: policy.canBuyDoubleDown,
+              buyCost: policy.buyCost,
+              buyBlockedReason: policy.buyBlockedReason
+            };
           }
-          const nextIndex = this.activeGame.questionIndex + 1;
-          if (nextIndex >= this.activeGame.questions.length) return { ok: false, reason: "No next question" };
+
+          if (policy.source === "purchased" && Number(p.doubleDownPurchasedCredits || 0) > 0) {
+            p.doubleDownPurchasedCredits = Number(p.doubleDownPurchasedCredits || 0) - 1;
+          }
           p.doubleDownNext = true;
+          p.doubleDownUses = Number(p.doubleDownUses || 0) + 1;
           p.lastSeenAt = nowTs();
           this.saveGame();
-          return { ok: true, playerId: p.id, armedForQuestionIndex: nextIndex };
+
+          const nextPolicy = this.getDoubleDownPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
+
+          return {
+            ok: true,
+            playerId: p.id,
+            armedForQuestionIndex: this.activeGame.questionIndex + 1,
+            rank: policy.rank,
+            totalPlayers: policy.totalPlayers,
+            doubleDownUses: p.doubleDownUses,
+            doubleDownCap: DOUBLE_DOWN_BASE_USES,
+            remainingBaseUses: Math.max(0, DOUBLE_DOWN_BASE_USES - p.doubleDownUses),
+            bonusEligible: policy.bonusEligible,
+            purchasedCredits: Number(p.doubleDownPurchasedCredits || 0),
+            canBuyDoubleDown: nextPolicy.canBuyDoubleDown,
+            buyCost: DOUBLE_DOWN_BUY_COST,
+            buyBlockedReason: nextPolicy.buyBlockedReason,
+            source: policy.source,
+            reason: "Double Down armed for the next question."
+          };
+        }
+
+        purchaseDoubleDown(playerId) {
+          if (!this.activeGame) return { ok: false, playerId, reason: "No active game" };
+          const p = this.activeGame.players[playerId];
+          if (!p || p.removed) return { ok: false, playerId, reason: "Unknown player" };
+
+          if (p.doubleDownNext) {
+            const policy = this.getDoubleDownPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
+            return {
+              ok: false,
+              playerId,
+              reason: "Double Down is already armed for the next question.",
+              rank: policy.rank,
+              totalPlayers: policy.totalPlayers,
+              doubleDownUses: policy.uses,
+              doubleDownCap: policy.cap,
+              remainingBaseUses: policy.remainingBaseUses,
+              purchasedCredits: policy.purchasedCredits,
+              canBuyDoubleDown: false,
+              buyCost: DOUBLE_DOWN_BUY_COST,
+              buyBlockedReason: "Double Down is already armed."
+            };
+          }
+
+          const policy = this.getDoubleDownPolicy(playerId, { enforcePhase: true, requireNextQuestion: true });
+
+          if (policy.rank === 1) {
+            return { ok: false, playerId, reason: "1st place cannot buy Double Down.", rank: policy.rank, totalPlayers: policy.totalPlayers, doubleDownUses: policy.uses, doubleDownCap: policy.cap, remainingBaseUses: policy.remainingBaseUses, purchasedCredits: policy.purchasedCredits, canBuyDoubleDown: false, buyCost: DOUBLE_DOWN_BUY_COST, buyBlockedReason: "1st place cannot buy Double Down." };
+          }
+
+          if (policy.remainingBaseUses > 0) {
+            return { ok: false, playerId, reason: "You still have standard Double Downs left.", rank: policy.rank, totalPlayers: policy.totalPlayers, doubleDownUses: policy.uses, doubleDownCap: policy.cap, remainingBaseUses: policy.remainingBaseUses, purchasedCredits: policy.purchasedCredits, canBuyDoubleDown: false, buyCost: DOUBLE_DOWN_BUY_COST, buyBlockedReason: "Use your standard Double Downs first." };
+          }
+
+          if (policy.bonusEligible) {
+            return { ok: false, playerId, reason: "Your rank already has unlimited bonus Double Down access.", rank: policy.rank, totalPlayers: policy.totalPlayers, doubleDownUses: policy.uses, doubleDownCap: policy.cap, remainingBaseUses: policy.remainingBaseUses, purchasedCredits: policy.purchasedCredits, canBuyDoubleDown: false, buyCost: DOUBLE_DOWN_BUY_COST, buyBlockedReason: "Bonus Double Down already unlocked by rank." };
+          }
+
+          if (Number(p.score || 0) < DOUBLE_DOWN_BUY_COST) {
+            return { ok: false, playerId, reason: "Need at least " + formatScore(DOUBLE_DOWN_BUY_COST) + " points to buy a Double Down.", rank: policy.rank, totalPlayers: policy.totalPlayers, doubleDownUses: policy.uses, doubleDownCap: policy.cap, remainingBaseUses: policy.remainingBaseUses, purchasedCredits: policy.purchasedCredits, canBuyDoubleDown: false, buyCost: DOUBLE_DOWN_BUY_COST, buyBlockedReason: "Not enough points." };
+          }
+
+          p.score = Number(p.score || 0) - DOUBLE_DOWN_BUY_COST;
+          p.doubleDownPurchasedCredits = Number(p.doubleDownPurchasedCredits || 0) + 1;
+          p.lastSeenAt = nowTs();
+          this.saveGame();
+
+          const nextPolicy = this.getDoubleDownPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
+          return {
+            ok: true,
+            playerId,
+            reason: "Purchased 1 Double Down credit for " + formatScore(DOUBLE_DOWN_BUY_COST) + " points.",
+            rank: nextPolicy.rank,
+            totalPlayers: nextPolicy.totalPlayers,
+            score: p.score,
+            doubleDownUses: Number(p.doubleDownUses || 0),
+            doubleDownCap: DOUBLE_DOWN_BASE_USES,
+            remainingBaseUses: nextPolicy.remainingBaseUses,
+            purchasedCredits: Number(p.doubleDownPurchasedCredits || 0),
+            canBuyDoubleDown: nextPolicy.canBuyDoubleDown,
+            buyCost: DOUBLE_DOWN_BUY_COST,
+            buyBlockedReason: nextPolicy.buyBlockedReason,
+            bonusEligible: nextPolicy.bonusEligible
+          };
+        }
+
+        getPointShieldPolicy(playerId, opts) {
+          if (!this.activeGame) {
+            return {
+              allowed: false,
+              reason: "No active game",
+              playerId,
+              hasNextQuestion: false,
+              nextQuestionIndex: null,
+              cost: POINT_SHIELD_COST,
+              pointShieldNext: false
+            };
+          }
+
+          const player = this.activeGame.players[playerId];
+          if (!player || player.removed) {
+            return {
+              allowed: false,
+              reason: "Unknown player",
+              playerId,
+              hasNextQuestion: false,
+              nextQuestionIndex: null,
+              cost: POINT_SHIELD_COST,
+              pointShieldNext: false
+            };
+          }
+
+          this.normalizePlayerState(player);
+          const nextQuestionIndex = this.activeGame.questionIndex + 1;
+          const hasNextQuestion = nextQuestionIndex < this.activeGame.questions.length;
+          const validPhase = this.activeGame.phase === PHASES.ANSWER_REVEAL || this.activeGame.phase === PHASES.LEADERBOARD || this.activeGame.phase === PHASES.LOBBY;
+
+          let allowed = true;
+          let reason = "";
+
+          if (opts && opts.enforcePhase && !validPhase) {
+            allowed = false;
+            reason = "Shield can only be armed after reveals, on leaderboard, or in lobby.";
+          }
+
+          if (allowed && opts && opts.requireNextQuestion && !hasNextQuestion) {
+            allowed = false;
+            reason = "No next question remains.";
+          }
+
+          if (allowed && player.pointShieldNext) {
+            allowed = false;
+            reason = "Shield is already armed for the next question.";
+          }
+
+          if (allowed && Number(player.score || 0) < POINT_SHIELD_COST) {
+            allowed = false;
+            reason = "Need at least " + formatScore(POINT_SHIELD_COST) + " points to arm a shield.";
+          }
+
+          return {
+            allowed,
+            reason,
+            playerId,
+            hasNextQuestion,
+            nextQuestionIndex: hasNextQuestion ? nextQuestionIndex : null,
+            cost: POINT_SHIELD_COST,
+            pointShieldNext: !!player.pointShieldNext
+          };
+        }
+
+        purchasePointShield(playerId) {
+          if (!this.activeGame) return { ok: false, playerId, reason: "No active game", cost: POINT_SHIELD_COST };
+          const p = this.activeGame.players[playerId];
+          if (!p || p.removed) return { ok: false, playerId, reason: "Unknown player", cost: POINT_SHIELD_COST };
+
+          const policy = this.getPointShieldPolicy(playerId, { enforcePhase: true, requireNextQuestion: true });
+          if (!policy.allowed) {
+            return {
+              ok: false,
+              playerId,
+              reason: policy.reason,
+              cost: POINT_SHIELD_COST,
+              pointShieldNext: !!p.pointShieldNext,
+              hasNextQuestion: policy.hasNextQuestion,
+              nextQuestionIndex: policy.nextQuestionIndex
+            };
+          }
+
+          p.score = Number(p.score || 0) - POINT_SHIELD_COST;
+          p.pointShieldNext = true;
+          p.lastSeenAt = nowTs();
+          this.saveGame();
+
+          const nextPolicy = this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
+          return {
+            ok: true,
+            playerId,
+            reason: "Point shield armed for the next question.",
+            score: Number(p.score || 0),
+            cost: POINT_SHIELD_COST,
+            pointShieldNext: !!p.pointShieldNext,
+            hasNextQuestion: nextPolicy.hasNextQuestion,
+            nextQuestionIndex: nextPolicy.nextQuestionIndex,
+            canBuyPointShield: !!nextPolicy.allowed
+          };
+        }
+
+        claimStreakPrize(playerId, action, targetPlayerId) {
+          if (!this.activeGame) return { ok: false, playerId, reason: "No active game" };
+          if (this.activeGame.phase === PHASES.QUESTION) {
+            return { ok: false, playerId, reason: "Prize can only be claimed outside active question countdown." };
+          }
+
+          const actor = this.activeGame.players[playerId];
+          if (!actor || actor.removed) return { ok: false, playerId, reason: "Unknown player" };
+          this.normalizePlayerState(actor);
+
+          if (actor.streakPrizeUsed) {
+            return { ok: false, playerId, reason: "This prize can only be used once per game." };
+          }
+
+          if (!actor.streakPrizeAvailable && Number(actor.correctStreak || 0) < STREAK_PRIZE_STREAK) {
+            return { ok: false, playerId, reason: "You need a 5-question correct streak to unlock this prize." };
+          }
+
+          if (!actor.streakPrizeAvailable && Number(actor.correctStreak || 0) >= STREAK_PRIZE_STREAK) {
+            actor.streakPrizeAvailable = true;
+          }
+
+          const chosen = String(action || "").toUpperCase();
+          if (chosen !== STREAK_ACTION.MASK && chosen !== STREAK_ACTION.STEAL && chosen !== STREAK_ACTION.BONUS) {
+            return { ok: false, playerId, reason: "Choose a valid prize action." };
+          }
+
+          let targetId = null;
+          let target = null;
+          let targetShielded = false;
+          if (chosen === STREAK_ACTION.STEAL) {
+            targetId = String(targetPlayerId || "");
+            if (!targetId || targetId === playerId) {
+              return { ok: false, playerId, reason: "Pick another player as the target." };
+            }
+            target = this.activeGame.players[targetId];
+            if (!target || target.removed) {
+              return { ok: false, playerId, reason: "Target player is unavailable." };
+            }
+            this.normalizePlayerState(target);
+            target.incomingStrikeCount = Number(target.incomingStrikeCount || 0) + 1;
+            targetShielded = Number(target.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex);
+            if (!targetShielded) {
+              target.score = Number(target.score || 0) - STREAK_PRIZE_TARGET_PENALTY;
+            }
+            target.lastSeenAt = nowTs();
+          }
+
+          if (chosen === STREAK_ACTION.BONUS) {
+            actor.score = Number(actor.score || 0) + STREAK_PRIZE_SELF_BONUS;
+          }
+
+          if (chosen === STREAK_ACTION.MASK) {
+            actor.fakeScoreTurnsRemaining = STREAK_PRIZE_FAKE_TURNS;
+            actor.fakeScorePrimed = true;
+          }
+
+          actor.streakPrizeUsed = true;
+          actor.streakPrizeAvailable = false;
+          actor.streakPrizeAction = chosen;
+          actor.lastSeenAt = nowTs();
+
+          this.saveGame();
+
+          const displayedScore = this.getDisplayedScore(actor);
+          let reason = "";
+          if (chosen === STREAK_ACTION.MASK) reason = "Streak prize activated: your leaderboard score is masked for 5 turns.";
+          else if (chosen === STREAK_ACTION.STEAL) reason = targetShielded
+            ? "Streak prize activated: strike launched, but the target's shield blocked the point loss."
+            : "Streak prize activated: target loses " + formatScore(STREAK_PRIZE_TARGET_PENALTY) + " points.";
+          else reason = "Streak prize activated: you gained " + formatScore(STREAK_PRIZE_SELF_BONUS) + " points.";
+
+          return {
+            ok: true,
+            playerId,
+            action: chosen,
+            targetPlayerId: target ? target.id : null,
+            reason,
+            realScore: Number(actor.score || 0),
+            displayedScore,
+            isScoreMasked: Number(actor.fakeScoreTurnsRemaining || 0) > 0,
+            fakeScoreTurnsRemaining: Number(actor.fakeScoreTurnsRemaining || 0),
+            fakeScorePrimed: !!actor.fakeScorePrimed,
+            streakPrizeAvailable: !!actor.streakPrizeAvailable,
+            streakPrizeUsed: !!actor.streakPrizeUsed,
+            streakPrizeAction: actor.streakPrizeAction,
+            targetShielded,
+            targetIncomingStrikeCount: target ? Number(target.incomingStrikeCount || 0) : 0,
+            targetNewScore: target ? Number(target.score || 0) : null
+          };
         }
 
         getQuestion(index) {
@@ -869,6 +1577,26 @@
           if (!this.activeGame) return null;
           const nextIndex = this.activeGame.phase === PHASES.LOBBY ? this.activeGame.questionIndex + 1 : this.activeGame.questionIndex + 1;
           if (nextIndex >= this.activeGame.questions.length) return null;
+
+          Object.values(this.activeGame.players).forEach((p) => {
+            this.normalizePlayerState(p);
+            p.incomingStrikeCount = 0;
+
+            if (p.pointShieldNext) {
+              p.pointShieldQuestionIndex = nextIndex;
+              p.pointShieldNext = false;
+            } else if (typeof p.pointShieldQuestionIndex === "number" && p.pointShieldQuestionIndex < nextIndex) {
+              p.pointShieldQuestionIndex = null;
+            }
+
+            if (p.fakeScoreTurnsRemaining > 0) {
+              if (p.fakeScorePrimed) {
+                p.fakeScorePrimed = false;
+              } else {
+                p.fakeScoreTurnsRemaining = Math.max(0, p.fakeScoreTurnsRemaining - 1);
+              }
+            }
+          });
 
           this.activeGame.questionIndex = nextIndex;
           this.activeGame.phase = PHASES.QUESTION;
@@ -933,6 +1661,14 @@
           const qIndex = this.activeGame.questionIndex;
           const question = this.getQuestion(qIndex);
           const submissions = this.activeGame.submissions[String(qIndex)] || {};
+          const submissionRecords = Object.values(submissions).filter(Boolean);
+          let fastestSubmittedAt = null;
+          submissionRecords.forEach((sub) => {
+            if (typeof sub.submittedAt !== "number") return;
+            if (fastestSubmittedAt === null || sub.submittedAt < fastestSubmittedAt) {
+              fastestSubmittedAt = sub.submittedAt;
+            }
+          });
           const correctSet = new Set(question.options.filter((o) => o.correct).map((o) => o.id));
           const isSingle = correctSet.size === 1;
           const optionStats = question.options.map((o) => ({ id: o.id, letter: o.letter, text: o.text, count: 0, pct: 0 }));
@@ -949,6 +1685,12 @@
               const selectedSet = new Set(sub.selectedOptionIds);
               const exactMatch = selectedSet.size === correctSet.size && [...selectedSet].every((id) => correctSet.has(id));
               correct = exactMatch;
+              const responseMs = Math.max(0, Number(sub.submittedAt || this.activeGame.questionEndsAt) - Number(this.activeGame.questionStartedAt || sub.submittedAt));
+              p.responseTotalMs = Number(p.responseTotalMs || 0) + responseMs;
+              p.responseCount = Number(p.responseCount || 0) + 1;
+              if (p.fastestResponseMs == null || responseMs < p.fastestResponseMs) p.fastestResponseMs = responseMs;
+              const wonQuickDraw = fastestSubmittedAt !== null && sub.submittedAt === fastestSubmittedAt;
+              if (wonQuickDraw) p.quickDrawWins = Number(p.quickDrawWins || 0) + 1;
               if (correct) {
                 earned = calculateScore(question.pointValue, this.activeGame.questionEndsAt, sub.submittedAt);
                 if (usedDoubleDown) earned = earned * 2;
@@ -963,14 +1705,22 @@
               earned = -question.pointValue * 5;
             }
 
+            if (correct) p.correctStreak = Number(p.correctStreak || 0) + 1;
+            else p.correctStreak = 0;
+
+            if (!p.streakPrizeUsed && !p.streakPrizeAvailable && p.correctStreak >= STREAK_PRIZE_STREAK) {
+              p.streakPrizeAvailable = true;
+            }
+
             p.score += earned;
             p.doubleDownNext = false;
             playerOutcomes[p.id] = {
               playerId: p.id,
               correct,
               earnedPoints: earned,
-              totalScore: p.score,
-              usedDoubleDown
+              usedDoubleDown,
+              streak: p.correctStreak,
+              quickDrawWins: Number(p.quickDrawWins || 0)
             };
           });
 
@@ -998,15 +1748,27 @@
 
         getLeaderboard() {
           if (!this.activeGame) return [];
+          const hasNextQuestion = this.activeGame.questionIndex < this.activeGame.questions.length - 1;
+          const phaseAllowsShield = this.activeGame.phase === PHASES.ANSWER_REVEAL || this.activeGame.phase === PHASES.LEADERBOARD || this.activeGame.phase === PHASES.LOBBY;
           const sorted = Object.values(this.activeGame.players)
             .filter((p) => !p.removed)
             .slice()
-            .sort((a, b) => b.score - a.score || a.joinedAt - b.joinedAt)
+            .sort((a, b) => this.getDisplayedScore(b) - this.getDisplayedScore(a) || a.joinedAt - b.joinedAt)
             .map((p, idx) => ({
               rank: idx + 1,
               playerId: p.id,
               playerName: p.name,
-              score: p.score
+              score: this.getDisplayedScore(p),
+              streak: Number(p.correctStreak || 0),
+              streakPrizeReady: !!p.streakPrizeAvailable && !p.streakPrizeUsed,
+              canBuyPointShield: hasNextQuestion && phaseAllowsShield && !p.pointShieldNext && Number(p.score || 0) >= POINT_SHIELD_COST,
+              pointShieldNext: !!p.pointShieldNext,
+              shieldActive: Number(p.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex),
+              incomingStrikeCount: Number(p.incomingStrikeCount || 0),
+              quickDrawWins: Number(p.quickDrawWins || 0),
+              avgResponseMs: Number(p.responseCount || 0) > 0 ? Math.round(Number(p.responseTotalMs || 0) / Number(p.responseCount || 0)) : null,
+              fastestResponseMs: p.fastestResponseMs == null ? null : Number(p.fastestResponseMs),
+              responseCount: Number(p.responseCount || 0)
             }));
           return sorted;
         }
@@ -1019,6 +1781,14 @@
 
         finishGame() {
           if (!this.activeGame) return;
+          Object.values(this.activeGame.players || {}).forEach((p) => {
+            this.normalizePlayerState(p);
+            p.fakeScoreTurnsRemaining = 0;
+            p.fakeScorePrimed = false;
+            p.pointShieldNext = false;
+            p.pointShieldQuestionIndex = null;
+            p.incomingStrikeCount = 0;
+          });
           this.activeGame.phase = PHASES.FINISHED;
           this.saveGame();
         }
@@ -1054,8 +1824,15 @@
         buildSnapshotForPlayer(playerId) {
           if (!this.activeGame) return null;
           const player = this.activeGame.players[playerId] || null;
+          if (player) this.normalizePlayerState(player);
           const board = this.getLeaderboard();
           const rankObj = board.find((r) => r.playerId === playerId);
+          const ddPolicy = this.getDoubleDownPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
+          const shieldPolicy = this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
+          const displayedScore = player ? this.getDisplayedScore(player) : 0;
+          const prizeTargets = Object.values(this.activeGame.players || {})
+            .filter((p) => p && !p.removed && p.id !== playerId)
+            .map((p) => ({ playerId: p.id, playerName: p.name }));
           const hasSubmitted = !!(
             this.activeGame.phase === PHASES.QUESTION &&
             this.activeGame.submissions[String(this.activeGame.questionIndex)] &&
@@ -1072,11 +1849,35 @@
             player: {
               id: playerId,
               name: player ? player.name : "",
-              score: player ? player.score : 0,
+              score: player ? Number(player.score || 0) : 0,
+              displayedScore,
+              isScoreMasked: player ? Number(player.fakeScoreTurnsRemaining || 0) > 0 : false,
+              fakeScoreTurnsRemaining: player ? Number(player.fakeScoreTurnsRemaining || 0) : 0,
+              fakeScorePrimed: player ? !!player.fakeScorePrimed : false,
+              correctStreak: player ? Number(player.correctStreak || 0) : 0,
+              streakPrizeAvailable: player ? !!player.streakPrizeAvailable : false,
+              streakPrizeUsed: player ? !!player.streakPrizeUsed : false,
+              streakPrizeAction: player ? String(player.streakPrizeAction || "") : "",
+              prizeTargets,
               rank: rankObj ? rankObj.rank : null,
               hasSubmitted,
               removed: !!(player && player.removed),
-              doubleDownArmed: !!(player && player.doubleDownNext)
+              totalPlayers: board.length,
+              doubleDownArmed: !!(player && player.doubleDownNext),
+              doubleDownUses: player ? Number(player.doubleDownUses || 0) : 0,
+              doubleDownCap: DOUBLE_DOWN_BASE_USES,
+              doubleDownPurchasedCredits: player ? Number(player.doubleDownPurchasedCredits || 0) : 0,
+              doubleDownEligible: !!ddPolicy.allowed,
+              doubleDownDisabledReason: ddPolicy.reason || "",
+              canBuyDoubleDown: !!ddPolicy.canBuyDoubleDown,
+              doubleDownBuyCost: Number(ddPolicy.buyCost || DOUBLE_DOWN_BUY_COST),
+              doubleDownBuyBlockedReason: ddPolicy.buyBlockedReason || "",
+              pointShieldNext: player ? !!player.pointShieldNext : false,
+              pointShieldArmedForQuestionIndex: player && typeof player.pointShieldQuestionIndex === "number" ? Number(player.pointShieldQuestionIndex) : null,
+              incomingStrikeCount: player ? Number(player.incomingStrikeCount || 0) : 0,
+              canBuyPointShield: !!shieldPolicy.allowed,
+              pointShieldCost: Number(shieldPolicy.cost || POINT_SHIELD_COST),
+              pointShieldReason: shieldPolicy.reason || ""
             },
             leaderboard: board.slice(0, 10)
           };
@@ -1126,8 +1927,17 @@
             resumeBanner: document.getElementById("resumeBanner"),
             resumeMeta: document.getElementById("resumeMeta"),
             resumeBtn: document.getElementById("resumeBtn"),
-            discardBtn: document.getElementById("discardBtn")
+            discardBtn: document.getElementById("discardBtn"),
+            activeControls: document.getElementById("activeControls"),
+            activeControlsMeta: document.getElementById("activeControlsMeta"),
+            activeControlsButtons: document.getElementById("activeControlsButtons"),
+            hostFooterQuote: document.getElementById("hostFooterQuote")
           };
+        }
+
+        setFooterQuote(text) {
+          if (!this.el.hostFooterQuote) return;
+          this.el.hostFooterQuote.textContent = text || "";
         }
 
         setSocketState(state) {
@@ -1171,9 +1981,16 @@
           }
         }
 
-        renderPlayers(game, handlers) {
+        renderPlayers(game, handlers, displayedScoreMap) {
           this.el.playerGrid.innerHTML = "";
-          const players = Object.values(game ? game.players || {} : {}).filter((p) => !p.removed).sort((a, b) => b.score - a.score || a.joinedAt - b.joinedAt);
+          const map = displayedScoreMap || {};
+          const players = Object.values(game ? game.players || {} : {})
+            .filter((p) => !p.removed)
+            .sort((a, b) => {
+              const aScore = Number(map[a.id] != null ? map[a.id] : a.score || 0);
+              const bScore = Number(map[b.id] != null ? map[b.id] : b.score || 0);
+              return bScore - aScore || a.joinedAt - b.joinedAt;
+            });
           if (!players.length) {
             this.el.playerGrid.innerHTML = "<div class='small-note'>No players yet. Share the code or QR.</div>";
             return;
@@ -1194,8 +2011,9 @@
             name.textContent = p.name;
             const status = document.createElement("div");
             const secondsAgo = Math.max(0, Math.floor((nowTs() - (p.lastSeenAt || 0)) / 1000));
+            const shownScore = Number(map[p.id] != null ? map[p.id] : p.score || 0);
             status.className = "small-note";
-            status.textContent = "Score " + formatScore(p.score) + "  •  Seen " + secondsAgo + "s ago";
+            status.textContent = "Score " + formatScore(shownScore) + "  •  Seen " + secondsAgo + "s ago";
             left.appendChild(name);
             left.appendChild(status);
 
@@ -1226,9 +2044,19 @@
           this.el.phaseBadge.textContent = phase;
         }
 
-        renderQuizLibrary(quizzes, handlers) {
+        renderQuizLibrary(quizzes, handlers, viewState) {
           this.el.quizLibrary.innerHTML = "";
           this.el.quizCount.textContent = quizzes.length + " saved";
+          const startLocked = !!(viewState && viewState.startLocked);
+          const activeQuizTitle = viewState && viewState.activeQuizTitle ? viewState.activeQuizTitle : "";
+
+          if (startLocked) {
+            const lockBanner = document.createElement("div");
+            lockBanner.className = "small-note mb-2";
+            lockBanner.textContent = "A game is active (" + activeQuizTitle + "). Finish or return to library before starting another quiz.";
+            this.el.quizLibrary.appendChild(lockBanner);
+          }
+
           if (!quizzes.length) {
             this.el.quizLibrary.innerHTML = "<div class='small-note'>No quizzes saved yet.</div>";
             return;
@@ -1245,7 +2073,8 @@
             right.className = "d-flex gap-1";
             const startBtn = document.createElement("button");
             startBtn.className = "btn btn-sm moon-btn focus-ring";
-            startBtn.textContent = "Start";
+            startBtn.textContent = startLocked ? "Locked" : "Start";
+            startBtn.disabled = startLocked;
             startBtn.addEventListener("click", () => handlers.onStart(quiz.id));
             const pointsBtn = document.createElement("button");
             pointsBtn.className = "btn btn-sm outline-moon focus-ring";
@@ -1296,7 +2125,67 @@
           });
         }
 
-        renderStage(game, leaderboard, handlers) {
+        renderActiveControls(game, handlers) {
+          const dock = this.el.activeControls;
+          const meta = this.el.activeControlsMeta;
+          const strip = this.el.activeControlsButtons;
+
+          if (!game) {
+            dock.classList.add("d-none");
+            return;
+          }
+
+          dock.classList.remove("d-none");
+          strip.innerHTML = "";
+
+          const phaseLabel = game.phase + "  •  Question " + Math.max(0, game.questionIndex + 1) + " / " + game.questions.length;
+          meta.textContent = "Game " + game.gameId + "  •  " + game.quizTitle + "  •  " + phaseLabel;
+
+          const addBtn = (label, className, clickHandler, disabled) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = className;
+            btn.textContent = label;
+            btn.disabled = !!disabled;
+            btn.addEventListener("click", clickHandler);
+            strip.appendChild(btn);
+          };
+
+          if (game.phase === PHASES.LOBBY) {
+            addBtn("Start Question", "btn moon-btn focus-ring", handlers.onStartQuestion, false);
+            return;
+          }
+
+          if (game.phase === PHASES.QUESTION) {
+            addBtn("End Question", "btn danger-btn focus-ring", handlers.onEndQuestionNow, false);
+            addBtn("Reveal Answer", "btn outline-moon focus-ring", handlers.onEndQuestionNow, false);
+            return;
+          }
+
+          if (game.phase === PHASES.ANSWER_REVEAL) {
+            if (game.questionIndex < game.questions.length - 1) {
+              addBtn("Next Question", "btn moon-btn focus-ring", handlers.onNextQuestion, false);
+            } else {
+              addBtn("Finish Game", "btn moon-btn focus-ring", handlers.onFinishGame, false);
+            }
+            addBtn("Show Leaderboard", "btn outline-moon focus-ring", handlers.onShowLeaderboard, false);
+            return;
+          }
+
+          if (game.phase === PHASES.LEADERBOARD) {
+            if (game.questionIndex < game.questions.length - 1) {
+              addBtn("Next Question", "btn moon-btn focus-ring", handlers.onNextQuestion, false);
+            } else {
+              addBtn("Finish Game", "btn moon-btn focus-ring", handlers.onFinishGame, false);
+            }
+            return;
+          }
+
+          addBtn("Play Again", "btn moon-btn focus-ring", handlers.onPlayAgain, false);
+          addBtn("Return To Library", "btn outline-moon focus-ring", handlers.onReturnLibrary, false);
+        }
+
+        renderStage(game, stageStats, handlers, quoteSet) {
           if (!game) {
             this.el.stageContent.innerHTML = "<div class='small-note'>Start or resume a game to begin.</div>";
             return;
@@ -1361,15 +2250,55 @@
             if (q.tipHtml) {
               html += "<div class='glass p-2 mb-2'><div class='small-note'>Tip</div><div>" + q.tipHtml + "</div></div>";
             }
-            html += "<div class='d-flex gap-2'><button id='showLeaderboardBtn' class='btn moon-btn focus-ring'>Show Leaderboard</button></div>";
+            html += "<div class='d-flex flex-wrap gap-2'>";
+            if (game.questionIndex < game.questions.length - 1) {
+              html += "<button id='nextQuestionBtn' class='btn moon-btn focus-ring'>Next Question</button>";
+            } else {
+              html += "<button id='finishGameBtn' class='btn moon-btn focus-ring'>Finish Game</button>";
+            }
+            html += "<button id='showLeaderboardBtn' class='btn outline-moon focus-ring'>Show Leaderboard</button></div>";
             this.el.stageContent.innerHTML = html;
+            const nextBtn = document.getElementById("nextQuestionBtn");
+            if (nextBtn) nextBtn.addEventListener("click", handlers.onNextQuestion);
+            const finishBtn = document.getElementById("finishGameBtn");
+            if (finishBtn) finishBtn.addEventListener("click", handlers.onFinishGame);
             document.getElementById("showLeaderboardBtn").addEventListener("click", handlers.onShowLeaderboard);
             return;
           }
 
           if (phase === PHASES.LEADERBOARD || phase === PHASES.FINISHED) {
-            let html = "<div class='fw-bold mb-2'>" + (phase === PHASES.FINISHED ? "Final Leaderboard" : "Leaderboard") + "</div>";
-            const top3 = leaderboard.slice(0, 3);
+            const scoreRankRows = stageStats && Array.isArray(stageStats.scoreRankRows) ? stageStats.scoreRankRows : [];
+            const leaderboardRows = stageStats && Array.isArray(stageStats.leaderboardRows) ? stageStats.leaderboardRows : scoreRankRows;
+            const quickDrawRows = stageStats && Array.isArray(stageStats.quickDrawRows) ? stageStats.quickDrawRows : [];
+            const lbSort = stageStats && stageStats.leaderboardSort ? stageStats.leaderboardSort : { key: "score", dir: "desc" };
+            const qdSort = stageStats && stageStats.quickDrawSort ? stageStats.quickDrawSort : { key: "avgResponseMs", dir: "asc" };
+            const labelWithSort = (base, state, key) => {
+              if (!state || state.key !== key) return base;
+              return base + (state.dir === "asc" ? " ▲" : " ▼");
+            };
+            const powerIcons = (row) => {
+              let out = "";
+              if (row.streakPrizeReady) {
+                out += "<span class='power-icon ready' title='Fog Cloak available'><i class='lni lni-lock-alt'></i></span>";
+                out += "<span class='power-icon ready' title='Shadow Strike available'><i class='lni lni-target'></i></span>";
+                out += "<span class='power-icon ready' title='Moon Boost available'><i class='lni lni-bolt'></i></span>";
+              }
+              if (row.canBuyPointShield || row.pointShieldNext || row.shieldActive) {
+                out += "<span class='power-icon shield' title='Point shield'><i class='lni lni-shield'></i></span>";
+              }
+              const rockets = Math.max(0, Number(row.incomingStrikeCount || 0));
+              if (rockets > 0) {
+                for (let i = 0; i < rockets; i += 1) {
+                  out += "<span class='power-icon rocket' title='Incoming strike'><i class='lni lni-rocket'></i></span>";
+                }
+              }
+              return out ? "<span class='power-icons'>" + out + "</span>" : "";
+            };
+
+            const titleQuote = quoteSet && quoteSet.title ? quoteSet.title : (phase === PHASES.FINISHED ? "Final Leaderboard" : "Leaderboard");
+            const belowQuote = quoteSet && quoteSet.below ? quoteSet.below : "";
+            let html = "<div class='fw-bold mb-2'>" + escapeHtml(titleQuote) + "</div>";
+            const top3 = scoreRankRows.slice(0, 3);
             html += "<div class='podium mb-3'>";
             [1, 0, 2].forEach((orderIdx, slot) => {
               const p = top3[orderIdx] || null;
@@ -1381,9 +2310,59 @@
               html += "</div>";
             });
             html += "</div>";
-            leaderboard.slice(0, 10).forEach((row) => {
-              html += "<div class='rank-row d-flex justify-content-between align-items-center'><div>#" + row.rank + " " + escapeHtml(row.playerName) + "</div><div>" + formatScore(row.score) + "</div></div>";
-            });
+
+            html += "<div class='d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1'>";
+            html += "<div class='fw-bold mb-0'>Leaderboard Details</div>";
+            html += "<button id='resetSortsBtn' class='btn btn-sm outline-moon focus-ring'>Reset Sorts</button></div>";
+            if (!leaderboardRows.length) {
+              html += "<div class='stats-empty mb-3'>No players yet.</div>";
+            } else {
+              html += "<div class='stats-table-wrap mb-3'><div class='table-responsive'><table class='table table-sm stats-table'>";
+              html += "<thead><tr>";
+              html += "<th>Rank</th>";
+              html += "<th><button id='sortLbNameBtn' class='sort-btn focus-ring'>" + labelWithSort("Player", lbSort, "playerName") + "</button></th>";
+              html += "<th><button id='sortLbScoreBtn' class='sort-btn focus-ring'>" + labelWithSort("Score", lbSort, "score") + "</button></th>";
+              html += "<th><button id='sortLbStreakBtn' class='sort-btn focus-ring'>" + labelWithSort("Streak", lbSort, "streak") + "</button></th>";
+              html += "<th><button id='sortLbQuickBtn' class='sort-btn focus-ring'>" + labelWithSort("Quick Draw Wins", lbSort, "quickDrawWins") + "</button></th>";
+              html += "</tr></thead><tbody>";
+              leaderboardRows.forEach((row) => {
+                html += "<tr>";
+                html += "<td>#" + row.rank + "</td>";
+                html += "<td>" + escapeHtml(row.playerName) + powerIcons(row) + "</td>";
+                html += "<td>" + formatScore(row.score) + "</td>";
+                html += "<td>" + formatScore(row.streak || 0) + "</td>";
+                html += "<td>" + formatScore(row.quickDrawWins || 0) + "</td>";
+                html += "</tr>";
+              });
+              html += "</tbody></table></div></div>";
+            }
+
+            if (belowQuote) {
+              html += "<div class='small-note mb-3'>" + escapeHtml(belowQuote) + "</div>";
+            }
+
+            html += "<div class='fw-bold mb-1'>Quick Draw</div>";
+            html += "<div class='small-note mb-2'>Fastest average lock-in speed across answered questions, regardless of correctness.</div>";
+            if (!quickDrawRows.length) {
+              html += "<div class='stats-empty mb-3'>No speed data yet.</div>";
+            } else {
+              html += "<div class='stats-table-wrap mb-3'><div class='table-responsive'><table class='table table-sm stats-table'>";
+              html += "<thead><tr>";
+              html += "<th><button id='sortQdNameBtn' class='sort-btn focus-ring'>" + labelWithSort("Player", qdSort, "playerName") + "</button></th>";
+              html += "<th><button id='sortQdAvgBtn' class='sort-btn focus-ring'>" + labelWithSort("Average", qdSort, "avgResponseMs") + "</button></th>";
+              html += "<th><button id='sortQdFastBtn' class='sort-btn focus-ring'>" + labelWithSort("Fastest", qdSort, "fastestResponseMs") + "</button></th>";
+              html += "<th><button id='sortQdWinsBtn' class='sort-btn focus-ring'>" + labelWithSort("Wins", qdSort, "quickDrawWins") + "</button></th>";
+              html += "</tr></thead><tbody>";
+              quickDrawRows.forEach((row) => {
+                html += "<tr>";
+                html += "<td>" + escapeHtml(row.playerName) + "</td>";
+                html += "<td>" + formatMs(row.avgResponseMs) + "</td>";
+                html += "<td>" + formatMs(row.fastestResponseMs) + "</td>";
+                html += "<td>" + formatScore(row.quickDrawWins || 0) + "</td>";
+                html += "</tr>";
+              });
+              html += "</tbody></table></div></div>";
+            }
 
             if (phase === PHASES.LEADERBOARD) {
               html += "<div class='d-flex gap-2 mt-2'>";
@@ -1406,6 +2385,27 @@
             if (playAgainBtn) playAgainBtn.addEventListener("click", handlers.onPlayAgain);
             const returnLibraryBtn = document.getElementById("returnLibraryBtn");
             if (returnLibraryBtn) returnLibraryBtn.addEventListener("click", handlers.onReturnLibrary);
+
+            const sortLbNameBtn = document.getElementById("sortLbNameBtn");
+            if (sortLbNameBtn) sortLbNameBtn.addEventListener("click", () => handlers.onSortLeaderboard("playerName"));
+            const sortLbScoreBtn = document.getElementById("sortLbScoreBtn");
+            if (sortLbScoreBtn) sortLbScoreBtn.addEventListener("click", () => handlers.onSortLeaderboard("score"));
+            const sortLbStreakBtn = document.getElementById("sortLbStreakBtn");
+            if (sortLbStreakBtn) sortLbStreakBtn.addEventListener("click", () => handlers.onSortLeaderboard("streak"));
+            const sortLbQuickBtn = document.getElementById("sortLbQuickBtn");
+            if (sortLbQuickBtn) sortLbQuickBtn.addEventListener("click", () => handlers.onSortLeaderboard("quickDrawWins"));
+
+            const sortQdNameBtn = document.getElementById("sortQdNameBtn");
+            if (sortQdNameBtn) sortQdNameBtn.addEventListener("click", () => handlers.onSortQuickDraw("playerName"));
+            const sortQdAvgBtn = document.getElementById("sortQdAvgBtn");
+            if (sortQdAvgBtn) sortQdAvgBtn.addEventListener("click", () => handlers.onSortQuickDraw("avgResponseMs"));
+            const sortQdFastBtn = document.getElementById("sortQdFastBtn");
+            if (sortQdFastBtn) sortQdFastBtn.addEventListener("click", () => handlers.onSortQuickDraw("fastestResponseMs"));
+            const sortQdWinsBtn = document.getElementById("sortQdWinsBtn");
+            if (sortQdWinsBtn) sortQdWinsBtn.addEventListener("click", () => handlers.onSortQuickDraw("quickDrawWins"));
+
+            const resetSortsBtn = document.getElementById("resetSortsBtn");
+            if (resetSortsBtn) resetSortsBtn.addEventListener("click", handlers.onResetSorts);
           }
         }
 
@@ -1482,6 +2482,62 @@
           this.importDraft = {
             title: "",
             json: ""
+          };
+          this.leaderboardSort = { key: "score", dir: "desc" };
+          this.quickDrawSort = { key: "avgResponseMs", dir: "asc" };
+        }
+
+        toggleSortState(scope, key) {
+          const target = scope === "leaderboard" ? this.leaderboardSort : this.quickDrawSort;
+          const prefersAsc = key === "playerName" || key === "avgResponseMs" || key === "fastestResponseMs";
+          const fallbackDir = prefersAsc ? "asc" : "desc";
+          if (target.key === key) {
+            target.dir = target.dir === "asc" ? "desc" : "asc";
+          } else {
+            target.key = key;
+            target.dir = fallbackDir;
+          }
+        }
+
+        resetSorts() {
+          this.leaderboardSort = { key: "score", dir: "desc" };
+          this.quickDrawSort = { key: "avgResponseMs", dir: "asc" };
+        }
+
+        sortRows(rows, sortState) {
+          const list = rows.slice();
+          list.sort((a, b) => {
+            if (sortState.key === "playerName") {
+              const cmpName = String(a.playerName || "").localeCompare(String(b.playerName || ""));
+              if (cmpName !== 0) return sortState.dir === "asc" ? cmpName : -cmpName;
+              return a.rank - b.rank;
+            }
+
+            const aVal = a[sortState.key];
+            const bVal = b[sortState.key];
+            const aNil = aVal == null;
+            const bNil = bVal == null;
+            if (aNil && bNil) return a.rank - b.rank;
+            if (aNil) return 1;
+            if (bNil) return -1;
+
+            const cmpNum = Number(aVal) - Number(bVal);
+            if (cmpNum !== 0) return sortState.dir === "asc" ? cmpNum : -cmpNum;
+            return a.rank - b.rank;
+          });
+          return list;
+        }
+
+        buildStageStats(scoreRankRows) {
+          const leaderboardRows = this.sortRows(scoreRankRows, this.leaderboardSort);
+          const quickDrawSource = scoreRankRows.filter((row) => Number(row.responseCount || 0) > 0);
+          const quickDrawRows = this.sortRows(quickDrawSource, this.quickDrawSort);
+          return {
+            scoreRankRows,
+            leaderboardRows,
+            quickDrawRows,
+            leaderboardSort: this.leaderboardSort,
+            quickDrawSort: this.quickDrawSort
           };
         }
 
@@ -1570,6 +2626,15 @@
             case MSG.DOUBLE_DOWN_NEXT:
               this.handleDoubleDown(msg);
               break;
+            case MSG.DOUBLE_DOWN_BUY:
+              this.handleDoubleDownPurchase(msg);
+              break;
+            case MSG.POINT_SHIELD_BUY:
+              this.handlePointShieldPurchase(msg);
+              break;
+            case MSG.STREAK_PRIZE_CLAIM:
+              this.handleStreakPrizeClaim(msg);
+              break;
             default:
               break;
           }
@@ -1635,12 +2700,112 @@
           const playerId = String(payload.playerId || "");
           if (!playerId) return;
           const result = this.game.setDoubleDownNext(playerId);
-          if (!result.ok) return;
           this.send(MSG.DOUBLE_DOWN_SET, this.game.activeGame.gameId, "instructor-main", {
-            playerId: result.playerId,
+            playerId: result.playerId || playerId,
             armedForQuestionIndex: result.armedForQuestionIndex,
-            active: true
+            active: !!result.ok,
+            reason: result.reason || "",
+            doubleDownUses: Number(result.doubleDownUses || 0),
+            doubleDownCap: Number(result.doubleDownCap || DOUBLE_DOWN_BASE_USES),
+            remainingBaseUses: Number(result.remainingBaseUses || 0),
+            rank: result.rank == null ? null : Number(result.rank),
+            totalPlayers: Number(result.totalPlayers || 0),
+            bonusEligible: !!result.bonusEligible,
+            purchasedCredits: Number(result.purchasedCredits || 0),
+            canBuyDoubleDown: !!result.canBuyDoubleDown,
+            buyCost: Number(result.buyCost || DOUBLE_DOWN_BUY_COST),
+            buyBlockedReason: String(result.buyBlockedReason || "")
           });
+        }
+
+        handleDoubleDownPurchase(msg) {
+          if (!this.game.activeGame) return;
+          const payload = msg.payload || {};
+          const playerId = String(payload.playerId || "");
+          if (!playerId) return;
+
+          const result = this.game.purchaseDoubleDown(playerId);
+          this.send(MSG.DOUBLE_DOWN_BUY_RESULT, this.game.activeGame.gameId, "instructor-main", {
+            ok: !!result.ok,
+            playerId,
+            reason: String(result.reason || ""),
+            score: result.score == null ? null : Number(result.score),
+            rank: result.rank == null ? null : Number(result.rank),
+            totalPlayers: Number(result.totalPlayers || 0),
+            doubleDownUses: Number(result.doubleDownUses || 0),
+            doubleDownCap: Number(result.doubleDownCap || DOUBLE_DOWN_BASE_USES),
+            remainingBaseUses: Number(result.remainingBaseUses || 0),
+            purchasedCredits: Number(result.purchasedCredits || 0),
+            canBuyDoubleDown: !!result.canBuyDoubleDown,
+            buyCost: Number(result.buyCost || DOUBLE_DOWN_BUY_COST),
+            buyBlockedReason: String(result.buyBlockedReason || ""),
+            bonusEligible: !!result.bonusEligible
+          });
+
+          if (result.ok) {
+            this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
+              leaderboard: this.game.getLeaderboard()
+            });
+          }
+        }
+
+        handlePointShieldPurchase(msg) {
+          if (!this.game.activeGame) return;
+          const payload = msg.payload || {};
+          const playerId = String(payload.playerId || "");
+          if (!playerId) return;
+
+          const result = this.game.purchasePointShield(playerId);
+          this.send(MSG.POINT_SHIELD_BUY_RESULT, this.game.activeGame.gameId, "instructor-main", {
+            ok: !!result.ok,
+            playerId,
+            reason: String(result.reason || ""),
+            score: result.score == null ? null : Number(result.score),
+            cost: Number(result.cost || POINT_SHIELD_COST),
+            pointShieldNext: !!result.pointShieldNext,
+            nextQuestionIndex: result.nextQuestionIndex == null ? null : Number(result.nextQuestionIndex),
+            hasNextQuestion: !!result.hasNextQuestion,
+            canBuyPointShield: !!result.canBuyPointShield
+          });
+
+          if (result.ok) {
+            this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
+              leaderboard: this.game.getLeaderboard()
+            });
+          }
+        }
+
+        handleStreakPrizeClaim(msg) {
+          if (!this.game.activeGame) return;
+          const payload = msg.payload || {};
+          const playerId = String(payload.playerId || "");
+          const action = String(payload.action || "").toUpperCase();
+          const targetPlayerId = String(payload.targetPlayerId || "");
+          if (!playerId) return;
+
+          const result = this.game.claimStreakPrize(playerId, action, targetPlayerId);
+          this.send(MSG.STREAK_PRIZE_RESULT, this.game.activeGame.gameId, "instructor-main", {
+            ok: !!result.ok,
+            playerId,
+            action: result.action || action,
+            targetPlayerId: result.targetPlayerId || null,
+            reason: String(result.reason || ""),
+            realScore: result.realScore == null ? null : Number(result.realScore),
+            displayedScore: result.displayedScore == null ? null : Number(result.displayedScore),
+            isScoreMasked: !!result.isScoreMasked,
+            fakeScoreTurnsRemaining: Number(result.fakeScoreTurnsRemaining || 0),
+            fakeScorePrimed: !!result.fakeScorePrimed,
+            streakPrizeAvailable: !!result.streakPrizeAvailable,
+            streakPrizeUsed: !!result.streakPrizeUsed,
+            streakPrizeAction: String(result.streakPrizeAction || ""),
+            targetShielded: !!result.targetShielded
+          });
+
+          if (result.ok) {
+            this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
+              leaderboard: this.game.getLeaderboard()
+            });
+          }
         }
 
         handleCreateQuiz() {
@@ -1705,7 +2870,7 @@
               tip: "<p>Select all that run and orchestrate containers.</p>"
             }
           ];
-          this.ui.el.quizTitleInput.value = "Demo Moonlit Quiz";
+          this.ui.el.quizTitleInput.value = "Demo Fight Quiz";
           this.ui.el.quizJsonInput.value = JSON.stringify(demo, null, 2);
           this.importDraft.title = this.ui.el.quizTitleInput.value;
           this.importDraft.json = this.ui.el.quizJsonInput.value;
@@ -1729,12 +2894,16 @@
               this.quizLibrary.randomizePoints(quizId);
               this.renderQuizLibrary();
             }
+          }, {
+            startLocked: !!(this.game.activeGame && this.game.activeGame.phase !== PHASES.FINISHED),
+            activeQuizTitle: this.game.activeGame ? this.game.activeGame.quizTitle : ""
           });
         }
 
         startGameFromQuiz(quizId) {
           if (this.game.activeGame && this.game.activeGame.phase !== PHASES.FINISHED) {
-            if (!confirm("A game is active. Start a new game anyway?")) return;
+            this.ui.showImportStatus("A quiz is already active. Finish it or return to library before starting another.", true);
+            return;
           }
           const quiz = this.quizLibrary.getById(quizId);
           if (!quiz) return;
@@ -1852,7 +3021,20 @@
 
         resetPlayer(playerId) {
           if (!this.game.resetScore(playerId)) return;
-          this.send(MSG.SCORE_RESET, this.game.activeGame.gameId, "instructor-main", { playerId });
+          const p = this.game.activeGame.players[playerId];
+          this.send(MSG.SCORE_RESET, this.game.activeGame.gameId, "instructor-main", {
+            playerId,
+            doubleDownUses: 0,
+            doubleDownCap: DOUBLE_DOWN_BASE_USES,
+            purchasedCredits: 0,
+            buyCost: DOUBLE_DOWN_BUY_COST,
+            pointShieldNext: false,
+            pointShieldArmedForQuestionIndex: null,
+            pointShieldCost: POINT_SHIELD_COST,
+            streakPrizeAvailable: false,
+            streakPrizeUsed: !!(p && p.streakPrizeUsed),
+            fakeScoreTurnsRemaining: 0
+          });
           this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
             leaderboard: this.game.getLeaderboard()
           });
@@ -1875,23 +3057,48 @@
 
         renderAll() {
           const g = this.game.activeGame;
-          this.ui.updateLobby(g);
-          this.ui.setPhase(g ? g.phase : PHASES.LOBBY);
-          this.ui.renderPlayers(g || { players: {} }, {
-            onRemove: (playerId, name) => this.removePlayer(playerId, name),
-            onReset: (playerId) => this.resetPlayer(playerId)
-          });
+          const quoteSet = quoteSetForPhase(g ? g.phase : PHASES.LOBBY);
+          this.renderQuizLibrary();
 
-          const leaderboard = this.game.getLeaderboard();
-          this.ui.renderStage(g, leaderboard, {
+          const handlers = {
             onStartQuestion: () => this.startQuestion(),
             onEndQuestionNow: () => this.forceEndQuestion(),
             onShowLeaderboard: () => this.showLeaderboard(),
             onNextQuestion: () => this.nextQuestion(),
             onFinishGame: () => this.finishGame(),
             onPlayAgain: () => this.playAgain(),
-            onReturnLibrary: () => this.returnToLibrary()
+            onReturnLibrary: () => this.returnToLibrary(),
+            onSortLeaderboard: (key) => {
+              this.toggleSortState("leaderboard", key);
+              this.renderAll();
+            },
+            onSortQuickDraw: (key) => {
+              this.toggleSortState("quickdraw", key);
+              this.renderAll();
+            },
+            onResetSorts: () => {
+              this.resetSorts();
+              this.renderAll();
+            }
+          };
+
+          this.ui.updateLobby(g);
+          this.ui.setPhase(g ? g.phase : PHASES.LOBBY);
+          this.ui.renderActiveControls(g, handlers);
+
+          const scoreRankRows = this.game.getLeaderboard();
+          const displayedScoreMap = {};
+          scoreRankRows.forEach((row) => {
+            displayedScoreMap[row.playerId] = Number(row.score || 0);
           });
+          this.ui.renderPlayers(g || { players: {} }, {
+            onRemove: (playerId, name) => this.removePlayer(playerId, name),
+            onReset: (playerId) => this.resetPlayer(playerId)
+          }, displayedScoreMap);
+
+          const stageStats = this.buildStageStats(scoreRankRows);
+          this.ui.renderStage(g, stageStats, handlers, quoteSet);
+          this.ui.setFooterQuote(quoteSet.footer);
 
           this.renderDebug();
         }
