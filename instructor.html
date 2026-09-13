@@ -468,6 +468,14 @@
     <main class="row g-3">
       <section class="col-12 col-xl-4">
         <div class="glass p-3 mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="section-title mb-0">My Quizzes</div>
+            <small id="quizCount" class="small-note">0 saved</small>
+          </div>
+          <div id="quizLibrary" class="d-grid gap-2"></div>
+        </div>
+
+        <div class="glass p-3">
           <div class="section-title">Quiz Import</div>
           <label class="form-label" for="quizTitleInput">Quiz Title</label>
           <input id="quizTitleInput" class="form-control mb-2" maxlength="80" placeholder="Ex: AWS Fundamentals" />
@@ -478,14 +486,6 @@
             <button id="demoQuizBtn" class="btn outline-moon focus-ring">Load Demo Quiz</button>
           </div>
           <div id="importStatus" class="small-note mt-2" role="status" aria-live="polite"></div>
-        </div>
-
-        <div class="glass p-3">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="section-title mb-0">My Quizzes</div>
-            <small id="quizCount" class="small-note">0 saved</small>
-          </div>
-          <div id="quizLibrary" class="d-grid gap-2"></div>
         </div>
       </section>
 
