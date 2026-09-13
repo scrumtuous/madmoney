@@ -39,6 +39,20 @@
         radial-gradient(circle at 50% 78%, rgba(211, 146, 178, 0.15), transparent 36%),
         linear-gradient(165deg, var(--night), var(--plum-dark) 44%, var(--plum-mid));
       overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url("fight-landing-bg.svg");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      opacity: 0.08;
+      pointer-events: none;
+      z-index: 0;
     }
 
     .shell {
@@ -1037,6 +1051,26 @@
           const wrap = document.createElement("section");
           wrap.className = "glass p-3 answer-reveal-blast " + (correct ? "celebrate" : "shake");
 
+          const grid = document.createElement("div");
+          grid.className = "options-grid mb-3";
+          (model.question.options || []).forEach((o) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "ans-btn c-" + o.color + " focus-ring";
+            btn.innerHTML = "<span class='letter'>" + o.letter + "</span><span>" + safeText(o.text) + "</span>";
+            const isCorrect = (rv.correctOptionIds || []).includes(o.id);
+            if (isCorrect) {
+              btn.classList.add("reveal-correct");
+              btn.addEventListener("mouseenter", () => this.spawnConfetti(btn));
+              btn.addEventListener("focus", () => this.spawnConfetti(btn));
+            } else {
+              btn.classList.add("reveal-wrong");
+            }
+            btn.disabled = true;
+            grid.appendChild(btn);
+          });
+          wrap.appendChild(grid);
+
           const heading = document.createElement("div");
           heading.className = "title-font fs-2 mb-1";
           heading.textContent = correct ? "Correct!" : "Not this time!";
@@ -1060,26 +1094,6 @@
           query.className = "fw-bold mb-2";
           query.textContent = model.question.query || "";
           wrap.appendChild(query);
-
-          const grid = document.createElement("div");
-          grid.className = "options-grid mb-3";
-          (model.question.options || []).forEach((o) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "ans-btn c-" + o.color + " focus-ring";
-            btn.innerHTML = "<span class='letter'>" + o.letter + "</span><span>" + safeText(o.text) + "</span>";
-            const isCorrect = (rv.correctOptionIds || []).includes(o.id);
-            if (isCorrect) {
-              btn.classList.add("reveal-correct");
-              btn.addEventListener("mouseenter", () => this.spawnConfetti(btn));
-              btn.addEventListener("focus", () => this.spawnConfetti(btn));
-            } else {
-              btn.classList.add("reveal-wrong");
-            }
-            btn.disabled = true;
-            grid.appendChild(btn);
-          });
-          wrap.appendChild(grid);
 
           const answerHtml = typeof rv.answerHtml === "string" ? rv.answerHtml : "";
           if (answerHtml) {
