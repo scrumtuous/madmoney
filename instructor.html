@@ -1083,6 +1083,7 @@
           if (typeof player.pointShieldMode !== "string") player.pointShieldMode = "NORMAL";
           if (typeof player.pointShieldActiveMode !== "string") player.pointShieldActiveMode = "NONE";
           if (typeof player.incomingStrikeCount !== "number") player.incomingStrikeCount = 0;
+          if (typeof player.attackedCount !== "number") player.attackedCount = 0;
           if (!Array.isArray(player.pendingIncomingStrikes)) player.pendingIncomingStrikes = [];
           if (typeof player.strikeOutcome !== "string") player.strikeOutcome = "";
           if (typeof player.strikeDelta !== "number") player.strikeDelta = 0;
@@ -1096,6 +1097,7 @@
           if (typeof player.fakeScoreTurnsRemaining !== "number") player.fakeScoreTurnsRemaining = 0;
           if (typeof player.fakeScorePrimed !== "boolean") player.fakeScorePrimed = false;
           if (typeof player.correctStreak !== "number") player.correctStreak = 0;
+          if (typeof player.longestStreak !== "number") player.longestStreak = 0;
           if (typeof player.quickDrawWins !== "number") player.quickDrawWins = 0;
           if (typeof player.responseTotalMs !== "number") player.responseTotalMs = 0;
           if (typeof player.responseCount !== "number") player.responseCount = 0;
@@ -1251,6 +1253,7 @@
               pointShieldMode: "NORMAL",
               pointShieldActiveMode: "NONE",
               incomingStrikeCount: 0,
+              attackedCount: 0,
               pendingIncomingStrikes: [],
               strikeOutcome: "",
               strikeDelta: 0,
@@ -1263,6 +1266,7 @@
               fakeScoreTurnsRemaining: 0,
               fakeScorePrimed: false,
               correctStreak: 0,
+              longestStreak: 0,
               quickDrawWins: 0,
               responseTotalMs: 0,
               responseCount: 0,
@@ -1301,6 +1305,7 @@
           p.pointShieldMode = "NORMAL";
           p.pointShieldActiveMode = "NONE";
           p.incomingStrikeCount = 0;
+          p.attackedCount = 0;
           p.pendingIncomingStrikes = [];
           p.strikeOutcome = "";
           p.strikeDelta = 0;
@@ -1314,6 +1319,7 @@
           p.fakeScoreTurnsRemaining = 0;
           p.fakeScorePrimed = false;
           p.correctStreak = 0;
+          p.longestStreak = 0;
           p.quickDrawWins = 0;
           p.responseTotalMs = 0;
           p.responseCount = 0;
@@ -1593,6 +1599,7 @@
             this.normalizePlayerState(target);
             target.pendingIncomingStrikes.push(actor.id);
             target.incomingStrikeCount = Number(target.pendingIncomingStrikes.length || 0);
+            target.attackedCount = Number(target.attackedCount || 0) + 1;
             target.lastSeenAt = nowTs();
           }
 
@@ -1862,6 +1869,7 @@
 
             if (correct) p.correctStreak = Number(p.correctStreak || 0) + 1;
             else p.correctStreak = 0;
+            p.longestStreak = Math.max(Number(p.longestStreak || 0), Number(p.correctStreak || 0));
 
             this.maybeUnlockStreakPrize(p);
 
@@ -1913,6 +1921,8 @@
               playerName: p.name,
               score: this.getDisplayedScore(p),
               streak: Number(p.correctStreak || 0),
+              currentStreak: Number(p.correctStreak || 0),
+              longestStreak: Number(p.longestStreak || 0),
               streakPrizeReady: !!p.streakPrizeAvailable,
               canBuyPointShield: hasNextQuestion && phaseAllowsShield && !p.pointShieldNext && Number(p.score || 0) >= POINT_SHIELD_COST,
               canBuyReflectiveShield: hasNextQuestion && phaseAllowsShield && !p.pointShieldNext && Number(p.score || 0) >= REFLECTIVE_SHIELD_COST,
@@ -1921,6 +1931,7 @@
               shieldActive: Number(p.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex),
               shieldReflectiveActive: Number(p.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex) && String(p.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE",
               incomingStrikeCount: Number(p.incomingStrikeCount || 0),
+              attackedCount: Number(p.attackedCount || 0),
               strikeOutcome: String(p.strikeOutcome || ""),
               strikeDelta: Number(p.strikeDelta || 0),
               strikeCount: Number(p.strikeCount || 0),
@@ -2032,6 +2043,7 @@
               fakeScoreTurnsRemaining: player ? Number(player.fakeScoreTurnsRemaining || 0) : 0,
               fakeScorePrimed: player ? !!player.fakeScorePrimed : false,
               correctStreak: player ? Number(player.correctStreak || 0) : 0,
+              longestStreak: player ? Number(player.longestStreak || 0) : 0,
               streakPrizeAvailable: player ? !!player.streakPrizeAvailable : false,
               streakPrizeUsed: player ? !!player.streakPrizeUsed : false,
               streakPrizeUses: player ? Number(player.streakPrizeUses || 0) : 0,
@@ -2056,6 +2068,7 @@
               pointShieldArmedForQuestionIndex: player && typeof player.pointShieldQuestionIndex === "number" ? Number(player.pointShieldQuestionIndex) : null,
               pointShieldActiveMode: player ? String(player.pointShieldActiveMode || "NONE") : "NONE",
               incomingStrikeCount: player ? Number(player.incomingStrikeCount || 0) : 0,
+              attackedCount: player ? Number(player.attackedCount || 0) : 0,
               strikeOutcome: player ? String(player.strikeOutcome || "") : "",
               strikeDelta: player ? Number(player.strikeDelta || 0) : 0,
               strikeCount: player ? Number(player.strikeCount || 0) : 0,
@@ -2528,19 +2541,31 @@
               html += "<th>Rank</th>";
               html += "<th><button id='sortLbNameBtn' class='sort-btn focus-ring'>" + labelWithSort("Player", lbSort, "playerName") + "</button></th>";
               html += "<th><button id='sortLbScoreBtn' class='sort-btn focus-ring'>" + labelWithSort("Score", lbSort, "score") + "</button></th>";
-              html += "<th><button id='sortLbStreakBtn' class='sort-btn focus-ring'>" + labelWithSort("Streak", lbSort, "streak") + "</button></th>";
+              html += "<th><button id='sortLbCurrentStreakBtn' class='sort-btn focus-ring'>" + labelWithSort("Current Streak", lbSort, "currentStreak") + "</button></th>";
+              html += "<th><button id='sortLbLongestStreakBtn' class='sort-btn focus-ring'>" + labelWithSort("Longest Streak", lbSort, "longestStreak") + "</button></th>";
               html += "<th><button id='sortLbQuickBtn' class='sort-btn focus-ring'>" + labelWithSort("Quick Draw Wins", lbSort, "quickDrawWins") + "</button></th>";
+              html += "<th><button id='sortLbAttackedBtn' class='sort-btn focus-ring'>" + labelWithSort("Times Attacked", lbSort, "attackedCount") + "</button></th>";
               html += "</tr></thead><tbody>";
               leaderboardRows.forEach((row) => {
                 html += "<tr>";
                 html += "<td>#" + row.rank + "</td>";
                 html += "<td>" + escapeHtml(row.playerName) + powerIcons(row) + "</td>";
                 html += "<td>" + formatScore(row.score) + "</td>";
-                html += "<td>" + formatScore(row.streak || 0) + "</td>";
+                html += "<td>" + formatScore(row.currentStreak || row.streak || 0) + "</td>";
+                html += "<td>" + formatScore(row.longestStreak || 0) + "</td>";
                 html += "<td>" + formatScore(row.quickDrawWins || 0) + "</td>";
+                html += "<td>" + formatScore(row.attackedCount || 0) + "</td>";
                 html += "</tr>";
               });
               html += "</tbody></table></div></div>";
+            }
+
+            const longestStreakRows = scoreRankRows
+              .slice()
+              .sort((a, b) => Number(b.longestStreak || 0) - Number(a.longestStreak || 0) || Number(b.currentStreak || b.streak || 0) - Number(a.currentStreak || a.streak || 0) || Number(b.score || 0) - Number(a.score || 0) || a.rank - b.rank);
+            const streakLeader = longestStreakRows[0] || null;
+            if (streakLeader && Number(streakLeader.longestStreak || 0) > 0) {
+              html += "<div class='small-note mb-3'>Longest streak leader: <strong>" + escapeHtml(streakLeader.playerName) + "</strong> at <strong>" + formatScore(streakLeader.longestStreak || 0) + "</strong>.</div>";
             }
 
             if (belowQuote) {
@@ -2570,6 +2595,60 @@
               html += "</tbody></table></div></div>";
             }
 
+            if (phase === PHASES.FINISHED) {
+              const fastestGun = scoreRankRows
+                .filter((row) => Number(row.responseCount || 0) > 0)
+                .slice()
+                .sort((a, b) => Number(a.avgResponseMs || Number.MAX_SAFE_INTEGER) - Number(b.avgResponseMs || Number.MAX_SAFE_INTEGER) || Number(a.fastestResponseMs || Number.MAX_SAFE_INTEGER) - Number(b.fastestResponseMs || Number.MAX_SAFE_INTEGER) || Number(b.quickDrawWins || 0) - Number(a.quickDrawWins || 0) || a.rank - b.rank)[0] || null;
+              const mostAttacked = scoreRankRows
+                .slice()
+                .sort((a, b) => Number(b.attackedCount || 0) - Number(a.attackedCount || 0) || Number(b.score || 0) - Number(a.score || 0) || a.rank - b.rank)
+                .slice(0, 3);
+
+              html += "<div class='fw-bold mb-1'>Final Awards</div>";
+              html += "<div class='small-note mb-2'>Award Icons: ⚡ Fastest Gun • 🏆 Top 3 Score • 🔥 Top 3 Correct Streaks • 🎯 Top 3 Most Attacked</div>";
+              if (fastestGun) {
+                html += "<div class='glass p-2 mb-2'><strong>Fastest Gun:</strong> " + escapeHtml(fastestGun.playerName) + " (avg " + formatMs(fastestGun.avgResponseMs) + ", fastest " + formatMs(fastestGun.fastestResponseMs) + ")</div>";
+              } else {
+                html += "<div class='stats-empty mb-2'>Fastest Gun: no response-time data this game.</div>";
+              }
+
+              const topStreaks = longestStreakRows.slice(0, 3);
+              html += "<div class='fw-bold mb-1'>Top 3 Correct Streaks</div>";
+              if (!topStreaks.length || Number(topStreaks[0].longestStreak || 0) === 0) {
+                html += "<div class='stats-empty mb-3'>No streaks were recorded.</div>";
+              } else {
+                html += "<div class='podium mb-3'>";
+                [1, 0, 2].forEach((orderIdx, slot) => {
+                  const p = topStreaks[orderIdx] || null;
+                  const cls = slot === 1 ? "first" : slot === 0 ? "second" : "third";
+                  html += "<div class='podium-card " + cls + "'>";
+                  html += "<div>" + (p ? ((orderIdx + 1) + (orderIdx === 0 ? "st" : orderIdx === 1 ? "nd" : "rd")) : "-") + "</div>";
+                  html += "<div class='fw-bold'>" + (p ? escapeHtml(p.playerName) : "Waiting") + "</div>";
+                  html += "<div class='small-note'>" + (p ? ("Longest " + formatScore(p.longestStreak || 0) + " • Current " + formatScore(p.currentStreak || p.streak || 0)) : "") + "</div>";
+                  html += "</div>";
+                });
+                html += "</div>";
+              }
+
+              html += "<div class='fw-bold mb-1'>Top 3 Most Attacked</div>";
+              if (!mostAttacked.length || Number(mostAttacked[0].attackedCount || 0) === 0) {
+                html += "<div class='stats-empty mb-3'>No attacks were attempted this game.</div>";
+              } else {
+                html += "<div class='podium mb-3'>";
+                [1, 0, 2].forEach((orderIdx, slot) => {
+                  const p = mostAttacked[orderIdx] || null;
+                  const cls = slot === 1 ? "first" : slot === 0 ? "second" : "third";
+                  html += "<div class='podium-card " + cls + "'>";
+                  html += "<div>" + (p ? ((orderIdx + 1) + (orderIdx === 0 ? "st" : orderIdx === 1 ? "nd" : "rd")) : "-") + "</div>";
+                  html += "<div class='fw-bold'>" + (p ? escapeHtml(p.playerName) : "Waiting") + "</div>";
+                  html += "<div class='small-note'>" + (p ? ("🎯 " + formatScore(p.attackedCount || 0) + " attacks") : "") + "</div>";
+                  html += "</div>";
+                });
+                html += "</div>";
+              }
+            }
+
             if (phase === PHASES.LEADERBOARD) {
               html += "<div class='d-flex gap-2 mt-2'>";
               if (game.questionIndex < game.questions.length - 1) {
@@ -2596,10 +2675,14 @@
             if (sortLbNameBtn) sortLbNameBtn.addEventListener("click", () => handlers.onSortLeaderboard("playerName"));
             const sortLbScoreBtn = document.getElementById("sortLbScoreBtn");
             if (sortLbScoreBtn) sortLbScoreBtn.addEventListener("click", () => handlers.onSortLeaderboard("score"));
-            const sortLbStreakBtn = document.getElementById("sortLbStreakBtn");
-            if (sortLbStreakBtn) sortLbStreakBtn.addEventListener("click", () => handlers.onSortLeaderboard("streak"));
+            const sortLbCurrentStreakBtn = document.getElementById("sortLbCurrentStreakBtn");
+            if (sortLbCurrentStreakBtn) sortLbCurrentStreakBtn.addEventListener("click", () => handlers.onSortLeaderboard("currentStreak"));
+            const sortLbLongestStreakBtn = document.getElementById("sortLbLongestStreakBtn");
+            if (sortLbLongestStreakBtn) sortLbLongestStreakBtn.addEventListener("click", () => handlers.onSortLeaderboard("longestStreak"));
             const sortLbQuickBtn = document.getElementById("sortLbQuickBtn");
             if (sortLbQuickBtn) sortLbQuickBtn.addEventListener("click", () => handlers.onSortLeaderboard("quickDrawWins"));
+            const sortLbAttackedBtn = document.getElementById("sortLbAttackedBtn");
+            if (sortLbAttackedBtn) sortLbAttackedBtn.addEventListener("click", () => handlers.onSortLeaderboard("attackedCount"));
 
             const sortQdNameBtn = document.getElementById("sortQdNameBtn");
             if (sortQdNameBtn) sortQdNameBtn.addEventListener("click", () => handlers.onSortQuickDraw("playerName"));
