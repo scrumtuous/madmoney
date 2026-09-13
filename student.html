@@ -1493,7 +1493,7 @@
           const wrap = document.createElement("section");
           wrap.className = "glass p-3 leaderboard-view";
           const title = document.createElement("div");
-          title.className = "title-font fs-2 mb-2";
+          title.className = "small-note mb-2";
           title.textContent = quoteSet && quoteSet.title ? quoteSet.title : (model.phase === PHASES.FINISHED ? "Final Results" : "Leaderboard");
           wrap.appendChild(title);
 
@@ -1649,6 +1649,7 @@
             detailsHtml += "<th><button id='studentSortLbNameBtn' class='sort-btn focus-ring'>" + labelWithSort("Player", lbSort, "playerName") + "</button></th>";
             detailsHtml += "<th><button id='studentSortLbScoreBtn' class='sort-btn focus-ring'>" + labelWithSort("Score", lbSort, "score") + "</button></th>";
             detailsHtml += "<th><button id='studentSortLbCurrentStreakBtn' class='sort-btn focus-ring'>" + labelWithSort("Current Streak", lbSort, "currentStreak") + "</button></th>";
+            detailsHtml += "<th><button id='studentSortLbCorrectAnswersBtn' class='sort-btn focus-ring'>" + labelWithSort("Correct Answers", lbSort, "correctAnswers") + "</button></th>";
             detailsHtml += "<th><button id='studentSortLbLongestStreakBtn' class='sort-btn focus-ring'>" + labelWithSort("Longest Streak", lbSort, "longestStreak") + "</button></th>";
             detailsHtml += "<th><button id='studentSortLbQuickBtn' class='sort-btn focus-ring'>" + labelWithSort("Quick Draw Wins", lbSort, "quickDrawWins") + "</button></th>";
             detailsHtml += "<th><button id='studentSortLbAttackedBtn' class='sort-btn focus-ring'>" + labelWithSort("Times Attacked", lbSort, "attackedCount") + "</button></th>";
@@ -1686,6 +1687,7 @@
               detailsHtml += "<td>" + iconHtml + safeText(row.playerName || "") + "</td>";
               detailsHtml += "<td>" + formatScore(row.score || 0) + "</td>";
               detailsHtml += "<td>" + formatScore(row.currentStreak || row.streak || 0) + "</td>";
+              detailsHtml += "<td>" + formatScore(row.correctAnswers || 0) + "</td>";
               detailsHtml += "<td>" + formatScore(row.longestStreak || 0) + "</td>";
               detailsHtml += "<td>" + formatScore(row.quickDrawWins || 0) + "</td>";
               detailsHtml += "<td>" + formatScore(row.attackedCount || 0) + "</td>";
@@ -1730,9 +1732,13 @@
               .slice()
               .sort((a, b) => Number(b.attackedCount || 0) - Number(a.attackedCount || 0) || Number(b.score || 0) - Number(a.score || 0) || Number(a.rank || 0) - Number(b.rank || 0))
               .slice(0, 3);
+            const mostCorrectAnswers = scoreRankRows
+              .slice()
+              .sort((a, b) => Number(b.correctAnswers || 0) - Number(a.correctAnswers || 0) || Number(b.score || 0) - Number(a.score || 0) || Number(a.rank || 0) - Number(b.rank || 0))
+              .slice(0, 3);
 
             detailsHtml += "<div class='fw-bold mb-1'>Final Awards</div>";
-            detailsHtml += "<div class='small-note mb-2'>Award Icons: ⚡ Fastest Gun • 🏆 Top 3 Score • 🔥 Top 3 Correct Streaks • 🎯 Top 3 Most Attacked</div>";
+            detailsHtml += "<div class='small-note mb-2'>Award Icons: ⚡ Fastest Gun • 🏆 Top 3 Score • ✅ Top 3 Most Correct Answers • 🔥 Top 3 Correct Streaks • 🎯 Top 3 Most Attacked</div>";
             if (fastestGun) {
               detailsHtml += "<div class='glass p-2 mb-2'><strong>Fastest Gun:</strong> " + safeText(fastestGun.playerName || "") + " (avg " + formatMs(fastestGun.avgResponseMs) + ", fastest " + formatMs(fastestGun.fastestResponseMs) + ")</div>";
             } else {
@@ -1752,6 +1758,23 @@
                 detailsHtml += "<div>" + (p ? ((orderIdx + 1) + (orderIdx === 0 ? "st" : orderIdx === 1 ? "nd" : "rd")) : "-") + "</div>";
                 detailsHtml += "<div class='fw-bold'>" + (p ? safeText(p.playerName || "") : "Waiting") + "</div>";
                 detailsHtml += "<div class='small-note'>" + (p ? ("Longest " + formatScore(p.longestStreak || 0) + " • Current " + formatScore(p.currentStreak || p.streak || 0)) : "") + "</div>";
+                detailsHtml += "</div>";
+              });
+              detailsHtml += "</div>";
+            }
+
+            detailsHtml += "<div class='fw-bold mb-1'>Top 3 Most Correct Answers</div>";
+            if (!mostCorrectAnswers.length || Number(mostCorrectAnswers[0].correctAnswers || 0) === 0) {
+              detailsHtml += "<div class='stats-empty mb-3'>No correct answers were recorded.</div>";
+            } else {
+              detailsHtml += "<div class='podium mb-3'>";
+              [1, 0, 2].forEach((orderIdx, slot) => {
+                const p = mostCorrectAnswers[orderIdx] || null;
+                const cls = slot === 1 ? "first" : slot === 0 ? "second" : "third";
+                detailsHtml += "<div class='podium-card " + cls + "'>";
+                detailsHtml += "<div>" + (p ? ((orderIdx + 1) + (orderIdx === 0 ? "st" : orderIdx === 1 ? "nd" : "rd")) : "-") + "</div>";
+                detailsHtml += "<div class='fw-bold'>" + (p ? safeText(p.playerName || "") : "Waiting") + "</div>";
+                detailsHtml += "<div class='small-note'>" + (p ? ("✅ " + formatScore(p.correctAnswers || 0) + " correct") : "") + "</div>";
                 detailsHtml += "</div>";
               });
               detailsHtml += "</div>";
@@ -1836,6 +1859,10 @@
           const sortLbCurrentStreakBtn = document.getElementById("studentSortLbCurrentStreakBtn");
           if (sortLbCurrentStreakBtn && typeof model.onSortLeaderboard === "function") {
             sortLbCurrentStreakBtn.addEventListener("click", () => model.onSortLeaderboard("currentStreak"));
+          }
+          const sortLbCorrectAnswersBtn = document.getElementById("studentSortLbCorrectAnswersBtn");
+          if (sortLbCorrectAnswersBtn && typeof model.onSortLeaderboard === "function") {
+            sortLbCorrectAnswersBtn.addEventListener("click", () => model.onSortLeaderboard("correctAnswers"));
           }
           const sortLbLongestStreakBtn = document.getElementById("studentSortLbLongestStreakBtn");
           if (sortLbLongestStreakBtn && typeof model.onSortLeaderboard === "function") {

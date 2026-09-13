@@ -1097,6 +1097,7 @@
           if (typeof player.fakeScoreTurnsRemaining !== "number") player.fakeScoreTurnsRemaining = 0;
           if (typeof player.fakeScorePrimed !== "boolean") player.fakeScorePrimed = false;
           if (typeof player.correctStreak !== "number") player.correctStreak = 0;
+          if (typeof player.correctAnswers !== "number") player.correctAnswers = 0;
           if (typeof player.longestStreak !== "number") player.longestStreak = 0;
           if (typeof player.quickDrawWins !== "number") player.quickDrawWins = 0;
           if (typeof player.responseTotalMs !== "number") player.responseTotalMs = 0;
@@ -1266,6 +1267,7 @@
               fakeScoreTurnsRemaining: 0,
               fakeScorePrimed: false,
               correctStreak: 0,
+              correctAnswers: 0,
               longestStreak: 0,
               quickDrawWins: 0,
               responseTotalMs: 0,
@@ -1319,6 +1321,7 @@
           p.fakeScoreTurnsRemaining = 0;
           p.fakeScorePrimed = false;
           p.correctStreak = 0;
+          p.correctAnswers = 0;
           p.longestStreak = 0;
           p.quickDrawWins = 0;
           p.responseTotalMs = 0;
@@ -1867,8 +1870,12 @@
               earned = -question.pointValue * 5;
             }
 
-            if (correct) p.correctStreak = Number(p.correctStreak || 0) + 1;
-            else p.correctStreak = 0;
+            if (correct) {
+              p.correctStreak = Number(p.correctStreak || 0) + 1;
+              p.correctAnswers = Number(p.correctAnswers || 0) + 1;
+            } else {
+              p.correctStreak = 0;
+            }
             p.longestStreak = Math.max(Number(p.longestStreak || 0), Number(p.correctStreak || 0));
 
             this.maybeUnlockStreakPrize(p);
@@ -1922,6 +1929,7 @@
               score: this.getDisplayedScore(p),
               streak: Number(p.correctStreak || 0),
               currentStreak: Number(p.correctStreak || 0),
+              correctAnswers: Number(p.correctAnswers || 0),
               longestStreak: Number(p.longestStreak || 0),
               streakPrizeReady: !!p.streakPrizeAvailable,
               canBuyPointShield: hasNextQuestion && phaseAllowsShield && !p.pointShieldNext && Number(p.score || 0) >= POINT_SHIELD_COST,
@@ -2358,14 +2366,20 @@
             strip.appendChild(btn);
           };
 
+          const addEndGameButton = () => {
+            addBtn("End Game", "btn danger-btn focus-ring", handlers.onEndGameEarly, false);
+          };
+
           if (game.phase === PHASES.LOBBY) {
             addBtn("Start Question", "btn moon-btn focus-ring", handlers.onStartQuestion, false);
+            addEndGameButton();
             return;
           }
 
           if (game.phase === PHASES.QUESTION) {
             addBtn("End Question", "btn danger-btn focus-ring", handlers.onEndQuestionNow, false);
             addBtn("Reveal Answer", "btn outline-moon focus-ring", handlers.onEndQuestionNow, false);
+            addEndGameButton();
             return;
           }
 
@@ -2376,6 +2390,7 @@
               addBtn("Finish Game", "btn moon-btn focus-ring", handlers.onFinishGame, false);
             }
             addBtn("Show Leaderboard", "btn outline-moon focus-ring", handlers.onShowLeaderboard, false);
+            addEndGameButton();
             return;
           }
 
@@ -2385,6 +2400,7 @@
             } else {
               addBtn("Finish Game", "btn moon-btn focus-ring", handlers.onFinishGame, false);
             }
+            addEndGameButton();
             return;
           }
 
@@ -2542,6 +2558,7 @@
               html += "<th><button id='sortLbNameBtn' class='sort-btn focus-ring'>" + labelWithSort("Player", lbSort, "playerName") + "</button></th>";
               html += "<th><button id='sortLbScoreBtn' class='sort-btn focus-ring'>" + labelWithSort("Score", lbSort, "score") + "</button></th>";
               html += "<th><button id='sortLbCurrentStreakBtn' class='sort-btn focus-ring'>" + labelWithSort("Current Streak", lbSort, "currentStreak") + "</button></th>";
+              html += "<th><button id='sortLbCorrectAnswersBtn' class='sort-btn focus-ring'>" + labelWithSort("Correct Answers", lbSort, "correctAnswers") + "</button></th>";
               html += "<th><button id='sortLbLongestStreakBtn' class='sort-btn focus-ring'>" + labelWithSort("Longest Streak", lbSort, "longestStreak") + "</button></th>";
               html += "<th><button id='sortLbQuickBtn' class='sort-btn focus-ring'>" + labelWithSort("Quick Draw Wins", lbSort, "quickDrawWins") + "</button></th>";
               html += "<th><button id='sortLbAttackedBtn' class='sort-btn focus-ring'>" + labelWithSort("Times Attacked", lbSort, "attackedCount") + "</button></th>";
@@ -2552,6 +2569,7 @@
                 html += "<td>" + powerIcons(row) + escapeHtml(row.playerName) + "</td>";
                 html += "<td>" + formatScore(row.score) + "</td>";
                 html += "<td>" + formatScore(row.currentStreak || row.streak || 0) + "</td>";
+                html += "<td>" + formatScore(row.correctAnswers || 0) + "</td>";
                 html += "<td>" + formatScore(row.longestStreak || 0) + "</td>";
                 html += "<td>" + formatScore(row.quickDrawWins || 0) + "</td>";
                 html += "<td>" + formatScore(row.attackedCount || 0) + "</td>";
@@ -2604,9 +2622,13 @@
                 .slice()
                 .sort((a, b) => Number(b.attackedCount || 0) - Number(a.attackedCount || 0) || Number(b.score || 0) - Number(a.score || 0) || a.rank - b.rank)
                 .slice(0, 3);
+              const mostCorrectAnswers = scoreRankRows
+                .slice()
+                .sort((a, b) => Number(b.correctAnswers || 0) - Number(a.correctAnswers || 0) || Number(b.score || 0) - Number(a.score || 0) || a.rank - b.rank)
+                .slice(0, 3);
 
               html += "<div class='fw-bold mb-1'>Final Awards</div>";
-              html += "<div class='small-note mb-2'>Award Icons: ⚡ Fastest Gun • 🏆 Top 3 Score • 🔥 Top 3 Correct Streaks • 🎯 Top 3 Most Attacked</div>";
+              html += "<div class='small-note mb-2'>Award Icons: ⚡ Fastest Gun • 🏆 Top 3 Score • ✅ Top 3 Most Correct Answers • 🔥 Top 3 Correct Streaks • 🎯 Top 3 Most Attacked</div>";
               if (fastestGun) {
                 html += "<div class='glass p-2 mb-2'><strong>Fastest Gun:</strong> " + escapeHtml(fastestGun.playerName) + " (avg " + formatMs(fastestGun.avgResponseMs) + ", fastest " + formatMs(fastestGun.fastestResponseMs) + ")</div>";
               } else {
@@ -2626,6 +2648,23 @@
                   html += "<div>" + (p ? ((orderIdx + 1) + (orderIdx === 0 ? "st" : orderIdx === 1 ? "nd" : "rd")) : "-") + "</div>";
                   html += "<div class='fw-bold'>" + (p ? escapeHtml(p.playerName) : "Waiting") + "</div>";
                   html += "<div class='small-note'>" + (p ? ("Longest " + formatScore(p.longestStreak || 0) + " • Current " + formatScore(p.currentStreak || p.streak || 0)) : "") + "</div>";
+                  html += "</div>";
+                });
+                html += "</div>";
+              }
+
+              html += "<div class='fw-bold mb-1'>Top 3 Most Correct Answers</div>";
+              if (!mostCorrectAnswers.length || Number(mostCorrectAnswers[0].correctAnswers || 0) === 0) {
+                html += "<div class='stats-empty mb-3'>No correct answers were recorded.</div>";
+              } else {
+                html += "<div class='podium mb-3'>";
+                [1, 0, 2].forEach((orderIdx, slot) => {
+                  const p = mostCorrectAnswers[orderIdx] || null;
+                  const cls = slot === 1 ? "first" : slot === 0 ? "second" : "third";
+                  html += "<div class='podium-card " + cls + "'>";
+                  html += "<div>" + (p ? ((orderIdx + 1) + (orderIdx === 0 ? "st" : orderIdx === 1 ? "nd" : "rd")) : "-") + "</div>";
+                  html += "<div class='fw-bold'>" + (p ? escapeHtml(p.playerName) : "Waiting") + "</div>";
+                  html += "<div class='small-note'>" + (p ? ("✅ " + formatScore(p.correctAnswers || 0) + " correct") : "") + "</div>";
                   html += "</div>";
                 });
                 html += "</div>";
@@ -2677,6 +2716,8 @@
             if (sortLbScoreBtn) sortLbScoreBtn.addEventListener("click", () => handlers.onSortLeaderboard("score"));
             const sortLbCurrentStreakBtn = document.getElementById("sortLbCurrentStreakBtn");
             if (sortLbCurrentStreakBtn) sortLbCurrentStreakBtn.addEventListener("click", () => handlers.onSortLeaderboard("currentStreak"));
+            const sortLbCorrectAnswersBtn = document.getElementById("sortLbCorrectAnswersBtn");
+            if (sortLbCorrectAnswersBtn) sortLbCorrectAnswersBtn.addEventListener("click", () => handlers.onSortLeaderboard("correctAnswers"));
             const sortLbLongestStreakBtn = document.getElementById("sortLbLongestStreakBtn");
             if (sortLbLongestStreakBtn) sortLbLongestStreakBtn.addEventListener("click", () => handlers.onSortLeaderboard("longestStreak"));
             const sortLbQuickBtn = document.getElementById("sortLbQuickBtn");
@@ -3292,6 +3333,12 @@
           });
         }
 
+        endGameEarly() {
+          if (!this.game.activeGame) return;
+          if (!confirm("End this game now and show final results to all students?")) return;
+          this.finishGame();
+        }
+
         playAgain() {
           if (!this.game.activeGame) return;
           const quiz = this.quizLibrary.getById(this.game.activeGame.quizId);
@@ -3367,6 +3414,7 @@
             onShowLeaderboard: () => this.showLeaderboard(),
             onNextQuestion: () => this.nextQuestion(),
             onFinishGame: () => this.finishGame(),
+            onEndGameEarly: () => this.endGameEarly(),
             onPlayAgain: () => this.playAgain(),
             onReturnLibrary: () => this.returnToLibrary(),
             onSortLeaderboard: (key) => {
