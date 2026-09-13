@@ -1061,6 +1061,26 @@
           query.textContent = model.question.query || "";
           wrap.appendChild(query);
 
+          const grid = document.createElement("div");
+          grid.className = "options-grid mb-3";
+          (model.question.options || []).forEach((o) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "ans-btn c-" + o.color + " focus-ring";
+            btn.innerHTML = "<span class='letter'>" + o.letter + "</span><span>" + safeText(o.text) + "</span>";
+            const isCorrect = (rv.correctOptionIds || []).includes(o.id);
+            if (isCorrect) {
+              btn.classList.add("reveal-correct");
+              btn.addEventListener("mouseenter", () => this.spawnConfetti(btn));
+              btn.addEventListener("focus", () => this.spawnConfetti(btn));
+            } else {
+              btn.classList.add("reveal-wrong");
+            }
+            btn.disabled = true;
+            grid.appendChild(btn);
+          });
+          wrap.appendChild(grid);
+
           const answerHtml = typeof rv.answerHtml === "string" ? rv.answerHtml : "";
           if (answerHtml) {
             const ansCard = document.createElement("div");
@@ -1134,26 +1154,6 @@
             notice.textContent = model.streakPrizeNotice;
             wrap.appendChild(notice);
           }
-
-          const grid = document.createElement("div");
-          grid.className = "options-grid mb-3";
-          (model.question.options || []).forEach((o) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "ans-btn c-" + o.color + " focus-ring";
-            btn.innerHTML = "<span class='letter'>" + o.letter + "</span><span>" + safeText(o.text) + "</span>";
-            const isCorrect = (rv.correctOptionIds || []).includes(o.id);
-            if (isCorrect) {
-              btn.classList.add("reveal-correct");
-              btn.addEventListener("mouseenter", () => this.spawnConfetti(btn));
-              btn.addEventListener("focus", () => this.spawnConfetti(btn));
-            } else {
-              btn.classList.add("reveal-wrong");
-            }
-            btn.disabled = true;
-            grid.appendChild(btn);
-          });
-          wrap.appendChild(grid);
 
           const ddWrap = document.createElement("div");
           ddWrap.className = "mt-3";
