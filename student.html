@@ -995,7 +995,7 @@
           };
 
           const inPlayIcons =
-            iconGroup(doubleDownCount, "ready", "<i class='lni lni-dice'></i>", "Double Down in play")
+            iconGroup(doubleDownCount, "ready", "<span aria-hidden='true'>x2</span>", "Double Down in play")
             + iconGroup(shieldCount, "shield", "<i class='lni lni-shield'></i>", "Shield in play")
             + iconGroup(reflectiveShieldCount, "shield", "✨", "Reflective shield in play")
             + iconGroup(strikeCount, "rocket", "💥", "Shadow Strike in play");
@@ -1229,13 +1229,13 @@
           if (!model.hasNextQuestion) {
             ddBtn.textContent = "No Next Question";
           } else if (model.doubleDownArmed) {
-            ddBtn.innerHTML = "Double Down Armed For Next Question <i class='lni lni-dice ms-1'></i>";
+            ddBtn.innerHTML = "Double Down Armed For Next Question <span class='ms-1' aria-hidden='true'>x2</span>";
           } else if (model.rank === 1) {
-            ddBtn.innerHTML = "1st Place: Double Down Disabled <i class='lni lni-dice ms-1'></i>";
+            ddBtn.innerHTML = "1st Place: Double Down Disabled <span class='ms-1' aria-hidden='true'>x2</span>";
           } else if (!model.doubleDownEligible) {
-            ddBtn.innerHTML = "Double Down Disabled <i class='lni lni-dice ms-1'></i>";
+            ddBtn.innerHTML = "Double Down Disabled <span class='ms-1' aria-hidden='true'>x2</span>";
           } else {
-            ddBtn.innerHTML = "Double Down On Next Question <i class='lni lni-dice ms-1'></i>";
+            ddBtn.innerHTML = "Double Down On Next Question <span class='ms-1' aria-hidden='true'>x2</span>";
           }
           ddBtn.disabled = !!model.doubleDownArmed || !model.hasNextQuestion || !model.doubleDownEligible;
           ddCol.appendChild(ddBtn);
@@ -1252,7 +1252,7 @@
             const buyBtn = document.createElement("button");
             buyBtn.id = "buyDoubleDownBtn";
             buyBtn.className = "btn moon-btn focus-ring";
-            buyBtn.innerHTML = "Buy 1 Double Down for " + formatScore(model.doubleDownBuyCost || 3000) + " pts <i class='lni lni-dice ms-1'></i>";
+            buyBtn.innerHTML = "Buy 1 Double Down for " + formatScore(model.doubleDownBuyCost || 3000) + " pts <span class='ms-1' aria-hidden='true'>x2</span>";
             ddCol.appendChild(buyBtn);
           }
 
