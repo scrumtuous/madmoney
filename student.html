@@ -551,6 +551,27 @@
     .leaderboard-view {
       background: rgba(60, 40, 78, 0.9);
       border-color: rgba(255, 230, 241, 0.34);
+      position: relative;
+      overflow: hidden;
+      color: #e8e8e8;
+    }
+
+    .leaderboard-view::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("fight-landing-bg.svg");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .leaderboard-view > * {
+      position: relative;
+      z-index: 1;
     }
 
     .leaderboard-view .stats-table-wrap {
@@ -559,11 +580,22 @@
     }
 
     .leaderboard-view .stats-table th {
-      color: #f7e3f0;
+      color: #efefef;
     }
 
     .leaderboard-view .stats-table td {
-      color: #fff2f8;
+      color: #ededed;
+    }
+
+    .leaderboard-view .fw-bold,
+    .leaderboard-view .small-note,
+    .leaderboard-view .title-font,
+    .leaderboard-view .score-box,
+    .leaderboard-view .score-box .small-note,
+    .leaderboard-view .score-box .fw-bold,
+    .leaderboard-view .double-down-note,
+    .leaderboard-view .streak-prize-note {
+      color: #e8e8e8;
     }
 
     .leaderboard-view .podium-card {
@@ -573,7 +605,7 @@
 
     .leaderboard-view .stats-empty {
       background: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 241, 249, 0.94);
+      color: #ececec;
       border-color: rgba(255, 230, 241, 0.4);
     }
 
