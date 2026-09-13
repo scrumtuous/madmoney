@@ -548,6 +548,47 @@
     .podium-card.second { box-shadow: 0 0 12px rgba(214, 214, 225, 0.25); }
     .podium-card.third { box-shadow: 0 0 12px rgba(214, 168, 148, 0.25); }
 
+    .leaderboard-view {
+      background: rgba(60, 40, 78, 0.9);
+      border-color: rgba(255, 230, 241, 0.34);
+    }
+
+    .leaderboard-view .stats-table-wrap {
+      background: rgba(88, 62, 111, 0.56);
+      border-color: rgba(255, 230, 241, 0.3);
+    }
+
+    .leaderboard-view .stats-table th {
+      color: #f7e3f0;
+    }
+
+    .leaderboard-view .stats-table td {
+      color: #fff2f8;
+    }
+
+    .leaderboard-view .podium-card {
+      background: rgba(95, 68, 119, 0.76);
+      border-color: rgba(255, 230, 241, 0.34);
+    }
+
+    .leaderboard-view .stats-empty {
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 241, 249, 0.94);
+      border-color: rgba(255, 230, 241, 0.4);
+    }
+
+    .leaderboard-view .sort-btn {
+      background: rgba(126, 85, 158, 0.72);
+      color: #fff3fa;
+      border-color: rgba(255, 230, 241, 0.4);
+    }
+
+    .leaderboard-view .sort-btn:hover,
+    .leaderboard-view .sort-btn:focus-visible {
+      background: rgba(150, 100, 188, 0.8);
+      color: #fff;
+    }
+
     .final-action-summary {
       border-radius: 14px;
       border: 1px solid rgba(255, 231, 142, 0.58);
@@ -1450,7 +1491,7 @@
         renderLeaderboard(model, quoteSet) {
           this.app.innerHTML = "";
           const wrap = document.createElement("section");
-          wrap.className = "glass p-3";
+          wrap.className = "glass p-3 leaderboard-view";
           const title = document.createElement("div");
           title.className = "title-font fs-2 mb-2";
           title.textContent = quoteSet && quoteSet.title ? quoteSet.title : (model.phase === PHASES.FINISHED ? "Final Results" : "Leaderboard");
@@ -1642,7 +1683,7 @@
               }
               detailsHtml += "<tr>";
               detailsHtml += "<td>#" + Number(row.rank || 0) + "</td>";
-              detailsHtml += "<td>" + safeText(row.playerName || "") + iconHtml + "</td>";
+              detailsHtml += "<td>" + iconHtml + safeText(row.playerName || "") + "</td>";
               detailsHtml += "<td>" + formatScore(row.score || 0) + "</td>";
               detailsHtml += "<td>" + formatScore(row.currentStreak || row.streak || 0) + "</td>";
               detailsHtml += "<td>" + formatScore(row.longestStreak || 0) + "</td>";

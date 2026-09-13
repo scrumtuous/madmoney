@@ -272,7 +272,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.28rem;
-      margin-left: 0.4rem;
+      margin-right: 0.4rem;
       flex-wrap: wrap;
     }
 
@@ -2549,7 +2549,7 @@
               leaderboardRows.forEach((row) => {
                 html += "<tr>";
                 html += "<td>#" + row.rank + "</td>";
-                html += "<td>" + escapeHtml(row.playerName) + powerIcons(row) + "</td>";
+                html += "<td>" + powerIcons(row) + escapeHtml(row.playerName) + "</td>";
                 html += "<td>" + formatScore(row.score) + "</td>";
                 html += "<td>" + formatScore(row.currentStreak || row.streak || 0) + "</td>";
                 html += "<td>" + formatScore(row.longestStreak || 0) + "</td>";
