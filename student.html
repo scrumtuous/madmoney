@@ -2415,6 +2415,10 @@
           if (msg.senderRole !== "instructor") return;
           if (!this.identity.gameId) return;
           if (this.identity.gameId && msg.gameId !== this.identity.gameId) return;
+          if (msg.type === MSG.INSTRUCTOR_PRESENT) {
+            this.lastInstructorSeenAt = nowTs();
+            return;
+          }
 
           this.lastInstructorSeenAt = nowTs();
 
@@ -2451,8 +2455,6 @@
               break;
             case MSG.PLAYER_REMOVED:
               this.handlePlayerRemoved(msg.payload);
-              break;
-            case MSG.INSTRUCTOR_PRESENT:
               break;
             case MSG.DOUBLE_DOWN_SET:
               this.handleDoubleDownSet(msg.payload);

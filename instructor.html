@@ -577,7 +577,7 @@
       const DOUBLE_DOWN_BUY_COST = 3000;
       const POINT_SHIELD_COST = 2500;
       const REFLECTIVE_SHIELD_COST = 4000;
-      const STREAK_PRIZE_LEVELS = [1, 2, 3, 5, 8, 13, 21, 34, 55];
+      const STREAK_PRIZE_LEVELS = [1, 2, 5, 8, 13, 21, 34, 55];
       const STREAK_PRIZE_FAKE_TURNS = 3;
       const STREAK_PRIZE_SELF_BONUS = 2000;
       const STREAK_PRIZE_TARGET_PENALTY = 1000;
@@ -1093,6 +1093,7 @@
           if (typeof player.streakPrizeUsed !== "boolean") player.streakPrizeUsed = false;
           if (typeof player.streakPrizeUses !== "number") player.streakPrizeUses = 0;
           if (typeof player.streakPrizeNextIndex !== "number") player.streakPrizeNextIndex = 0;
+          if (typeof player.streakPrizeRun !== "number") player.streakPrizeRun = 0;
           if (typeof player.streakPrizeAction !== "string") player.streakPrizeAction = "";
           if (typeof player.fakeScoreTurnsRemaining !== "number") player.fakeScoreTurnsRemaining = 0;
           if (typeof player.fakeScorePrimed !== "boolean") player.fakeScorePrimed = false;
@@ -1121,9 +1122,10 @@
           const idx = Math.max(0, Number(player.streakPrizeNextIndex || 0));
           const threshold = STREAK_PRIZE_LEVELS[idx];
           if (typeof threshold !== "number") return false;
-          if (Number(player.correctStreak || 0) < threshold) return false;
+          if (Number(player.streakPrizeRun || 0) < threshold) return false;
           player.streakPrizeAvailable = true;
           player.streakPrizeNextIndex = idx + 1;
+          player.streakPrizeRun = 0;
           return true;
         }
 
@@ -1264,6 +1266,7 @@
               streakPrizeUsed: false,
               streakPrizeUses: 0,
               streakPrizeNextIndex: 0,
+              streakPrizeRun: 0,
               fakeScoreTurnsRemaining: 0,
               fakeScorePrimed: false,
               correctStreak: 0,
@@ -1317,6 +1320,7 @@
           p.streakPrizeUsed = false;
           p.streakPrizeUses = 0;
           p.streakPrizeNextIndex = 0;
+          p.streakPrizeRun = 0;
           p.streakPrizeAction = "";
           p.fakeScoreTurnsRemaining = 0;
           p.fakeScorePrimed = false;
@@ -1579,7 +1583,7 @@
             const idx = Math.max(0, Number(actor.streakPrizeNextIndex || 0));
             const needed = STREAK_PRIZE_LEVELS[idx];
             const neededText = typeof needed === "number" ? String(needed) : "a higher";
-            return { ok: false, playerId, reason: "Reach a " + neededText + "-question streak to unlock the next prize." };
+            return { ok: false, playerId, reason: "Reach " + neededText + " consecutive correct answers in this prize run to unlock the next prize." };
           }
 
           const chosen = String(action || "").toUpperCase();
@@ -1873,8 +1877,10 @@
             if (correct) {
               p.correctStreak = Number(p.correctStreak || 0) + 1;
               p.correctAnswers = Number(p.correctAnswers || 0) + 1;
+              p.streakPrizeRun = Number(p.streakPrizeRun || 0) + 1;
             } else {
               p.correctStreak = 0;
+              p.streakPrizeRun = 0;
             }
             p.longestStreak = Math.max(Number(p.longestStreak || 0), Number(p.correctStreak || 0));
 
@@ -2922,7 +2928,7 @@
                 questionIndex: this.game.activeGame.questionIndex
               });
             }
-          }, 7000);
+          }, 90000);
         }
 
         onSocketState(state) {
