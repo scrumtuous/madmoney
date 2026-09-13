@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
   <style>
@@ -31,7 +31,7 @@
     }
 
     body {
-      font-family: "Barlow Condensed", sans-serif;
+      font-family: "Poppins", sans-serif;
       color: var(--soft-pink);
       min-height: 100vh;
       background:
@@ -57,12 +57,13 @@
     }
 
     .title-font {
-      font-family: "Teko", sans-serif;
-      letter-spacing: 0.08em;
+      font-family: "Poppins", sans-serif;
+      letter-spacing: 0.01em;
+      font-weight: 700;
     }
 
     .shell {
-      max-width: 1280px;
+      max-width: 1460px;
       margin: 0 auto;
       padding: 1.25rem;
     }
@@ -84,6 +85,24 @@
       font-size: 0.9rem;
       background: rgba(213, 212, 219, 0.12);
       border: 1px solid rgba(213, 212, 219, 0.3);
+    }
+
+    .new-fight-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(243, 215, 229, 0.42);
+      background: rgba(74, 48, 96, 0.72);
+      color: #ffe9f2;
+      font-weight: 700;
+      padding: 0.32rem 0.8rem;
+      font-size: 0.85rem;
+      line-height: 1.2;
+    }
+
+    .new-fight-pill:hover,
+    .new-fight-pill:focus-visible {
+      color: #fff;
+      border-color: rgba(243, 215, 229, 0.65);
+      background: rgba(104, 67, 134, 0.82);
     }
 
     .status-dot {
@@ -196,7 +215,7 @@
     .timer-pill {
       display: inline-flex;
       align-items: center;
-      font-family: "Cinzel", serif;
+      font-family: "Poppins", sans-serif;
       font-size: 2rem;
       line-height: 1;
       background: rgba(0, 0, 0, 0.4);
@@ -417,6 +436,7 @@
         <div class="small-note">On a long enough timeline, the survival rate for every quiz drops to zero.</div>
       </div>
       <div class="d-flex align-items-center gap-2">
+        <button id="newFightBtn" class="btn new-fight-pill focus-ring d-none" type="button">New Fight</button>
         <span id="phaseBadge" class="badge-phase">LOBBY</span>
         <span class="header-ribbon"><span id="socketDot" class="status-dot disconnected"></span><span id="socketText">Connecting...</span></span>
       </div>
@@ -446,7 +466,7 @@
     </div>
 
     <main class="row g-3">
-      <section class="col-12 col-lg-5">
+      <section class="col-12 col-xl-4">
         <div class="glass p-3 mb-3">
           <div class="section-title">Quiz Import</div>
           <label class="form-label" for="quizTitleInput">Quiz Title</label>
@@ -469,44 +489,10 @@
         </div>
       </section>
 
-      <section class="col-12 col-lg-7">
-        <div class="glass p-3 mb-3">
-          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
-            <div>
-              <div class="section-title mb-1">Game Lobby</div>
-              <div class="small-note">Start a game from your library, share the code, and scan-to-join.</div>
-            </div>
-            <div class="text-end">
-              <div class="small-note">Game Code</div>
-              <div id="gameCodeText" class="title-font fs-3">------</div>
-            </div>
-          </div>
-          <div class="row g-3 mt-1">
-            <div class="col-12 col-md-6">
-              <div class="glass p-2 h-100">
-                <div class="small-note mb-1">Scan to Join</div>
-                <div id="qrcode" class="d-flex justify-content-center align-items-center" style="min-height:140px"></div>
-                <div id="joinUrlText" class="small-note text-break mt-2"></div>
-              </div>
-            </div>
-            <div class="col-12 col-md-6">
-              <div class="glass p-2 h-100">
-                <div class="small-note">Players</div>
-                <div class="title-font fs-4" id="playerCountText">0 Players Joined</div>
-                <div class="small-note">Only one instructor is active. Students reconnect using the same player ID.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <section class="col-12 col-xl-8">
         <div id="phaseStage" class="glass p-3 mb-3">
           <div class="section-title">Stage</div>
           <div id="stageContent" class="small-note">Start or resume a game to begin.</div>
-        </div>
-
-        <div class="glass p-3 mb-3">
-          <div class="section-title">Players</div>
-          <div id="playerGrid" class="row g-2"></div>
         </div>
 
         <div class="glass p-3">
@@ -516,6 +502,47 @@
           <div id="debugPanel" class="collapse mt-2">
             <div class="question-points-list">
               <div id="debugStats" class="small-note"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="col-12">
+        <div class="row g-3">
+          <div class="col-12 col-xl-4">
+            <div class="glass p-3 h-100">
+              <div class="section-title">Players</div>
+              <div id="playerGrid" class="row g-2"></div>
+            </div>
+          </div>
+          <div class="col-12 col-xl-8">
+            <div class="glass p-3 h-100">
+              <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                <div>
+                  <div class="section-title mb-1">Game Lobby</div>
+                  <div class="small-note">Share this code and QR to onboard players quickly.</div>
+                </div>
+                <div class="text-end">
+                  <div class="small-note">Game Code</div>
+                  <div id="gameCodeText" class="title-font fs-3">------</div>
+                </div>
+              </div>
+              <div class="row g-3 mt-1">
+                <div class="col-12 col-md-5">
+                  <div class="glass p-2 h-100">
+                    <div class="small-note mb-1">Scan to Join</div>
+                    <div id="qrcode" class="d-flex justify-content-center align-items-center" style="min-height:140px"></div>
+                    <div id="joinUrlText" class="small-note text-break mt-2"></div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-7">
+                  <div class="glass p-2 h-100">
+                    <div class="small-note">Players</div>
+                    <div class="title-font fs-4" id="playerCountText">0 Players Joined</div>
+                    <div class="small-note">Only one instructor is active. Students reconnect using the same player ID.</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -549,8 +576,9 @@
       const DOUBLE_DOWN_BASE_USES = 3;
       const DOUBLE_DOWN_BUY_COST = 3000;
       const POINT_SHIELD_COST = 2500;
-      const STREAK_PRIZE_STREAK = 5;
-      const STREAK_PRIZE_FAKE_TURNS = 5;
+      const REFLECTIVE_SHIELD_COST = 4000;
+      const STREAK_PRIZE_LEVELS = [1, 2, 3, 5, 8, 13, 21, 34, 55];
+      const STREAK_PRIZE_FAKE_TURNS = 3;
       const STREAK_PRIZE_SELF_BONUS = 2000;
       const STREAK_PRIZE_TARGET_PENALTY = 1000;
       const STREAK_ACTION = {
@@ -1051,9 +1079,13 @@
           if (typeof player.doubleDownPurchasedCredits !== "number") player.doubleDownPurchasedCredits = 0;
           if (typeof player.pointShieldNext !== "boolean") player.pointShieldNext = false;
           if (typeof player.pointShieldQuestionIndex !== "number") player.pointShieldQuestionIndex = null;
+          if (typeof player.pointShieldMode !== "string") player.pointShieldMode = "NORMAL";
+          if (typeof player.pointShieldActiveMode !== "string") player.pointShieldActiveMode = "NONE";
           if (typeof player.incomingStrikeCount !== "number") player.incomingStrikeCount = 0;
           if (typeof player.streakPrizeAvailable !== "boolean") player.streakPrizeAvailable = false;
           if (typeof player.streakPrizeUsed !== "boolean") player.streakPrizeUsed = false;
+          if (typeof player.streakPrizeUses !== "number") player.streakPrizeUses = 0;
+          if (typeof player.streakPrizeNextIndex !== "number") player.streakPrizeNextIndex = 0;
           if (typeof player.streakPrizeAction !== "string") player.streakPrizeAction = "";
           if (typeof player.fakeScoreTurnsRemaining !== "number") player.fakeScoreTurnsRemaining = 0;
           if (typeof player.fakeScorePrimed !== "boolean") player.fakeScorePrimed = false;
@@ -1072,6 +1104,18 @@
             return Math.trunc(Number(player.score || 0) / 2);
           }
           return Number(player.score || 0);
+        }
+
+        maybeUnlockStreakPrize(player) {
+          this.normalizePlayerState(player);
+          if (player.streakPrizeAvailable) return false;
+          const idx = Math.max(0, Number(player.streakPrizeNextIndex || 0));
+          const threshold = STREAK_PRIZE_LEVELS[idx];
+          if (typeof threshold !== "number") return false;
+          if (Number(player.correctStreak || 0) < threshold) return false;
+          player.streakPrizeAvailable = true;
+          player.streakPrizeNextIndex = idx + 1;
+          return true;
         }
 
         getDoubleDownPolicy(playerId, opts) {
@@ -1198,9 +1242,13 @@
               doubleDownPurchasedCredits: 0,
               pointShieldNext: false,
               pointShieldQuestionIndex: null,
+              pointShieldMode: "NORMAL",
+              pointShieldActiveMode: "NONE",
               incomingStrikeCount: 0,
               streakPrizeAvailable: false,
               streakPrizeUsed: false,
+              streakPrizeUses: 0,
+              streakPrizeNextIndex: 0,
               fakeScoreTurnsRemaining: 0,
               fakeScorePrimed: false,
               correctStreak: 0,
@@ -1233,18 +1281,20 @@
         resetScore(playerId) {
           const p = this.activeGame.players[playerId];
           if (!p || p.removed) return false;
-          const alreadyUsedPrize = !!p.streakPrizeUsed;
-          const usedAction = String(p.streakPrizeAction || "");
           p.score = 0;
           p.doubleDownNext = false;
           p.doubleDownUses = 0;
           p.doubleDownPurchasedCredits = 0;
           p.pointShieldNext = false;
           p.pointShieldQuestionIndex = null;
+          p.pointShieldMode = "NORMAL";
+          p.pointShieldActiveMode = "NONE";
           p.incomingStrikeCount = 0;
           p.streakPrizeAvailable = false;
-          p.streakPrizeUsed = alreadyUsedPrize;
-          p.streakPrizeAction = alreadyUsedPrize ? usedAction : "";
+          p.streakPrizeUsed = false;
+          p.streakPrizeUses = 0;
+          p.streakPrizeNextIndex = 0;
+          p.streakPrizeAction = "";
           p.fakeScoreTurnsRemaining = 0;
           p.fakeScorePrimed = false;
           p.correctStreak = 0;
@@ -1374,7 +1424,9 @@
           };
         }
 
-        getPointShieldPolicy(playerId, opts) {
+        getPointShieldPolicy(playerId, opts, mode) {
+          const shieldMode = String(mode || "NORMAL").toUpperCase() === "REFLECTIVE" ? "REFLECTIVE" : "NORMAL";
+          const cost = shieldMode === "REFLECTIVE" ? REFLECTIVE_SHIELD_COST : POINT_SHIELD_COST;
           if (!this.activeGame) {
             return {
               allowed: false,
@@ -1382,7 +1434,8 @@
               playerId,
               hasNextQuestion: false,
               nextQuestionIndex: null,
-              cost: POINT_SHIELD_COST,
+              cost,
+              mode: shieldMode,
               pointShieldNext: false
             };
           }
@@ -1395,7 +1448,8 @@
               playerId,
               hasNextQuestion: false,
               nextQuestionIndex: null,
-              cost: POINT_SHIELD_COST,
+              cost,
+              mode: shieldMode,
               pointShieldNext: false
             };
           }
@@ -1423,9 +1477,9 @@
             reason = "Shield is already armed for the next question.";
           }
 
-          if (allowed && Number(player.score || 0) < POINT_SHIELD_COST) {
+          if (allowed && Number(player.score || 0) < cost) {
             allowed = false;
-            reason = "Need at least " + formatScore(POINT_SHIELD_COST) + " points to arm a shield.";
+            reason = "Need at least " + formatScore(cost) + " points to arm a shield.";
           }
 
           return {
@@ -1434,45 +1488,54 @@
             playerId,
             hasNextQuestion,
             nextQuestionIndex: hasNextQuestion ? nextQuestionIndex : null,
-            cost: POINT_SHIELD_COST,
+            cost,
+            mode: shieldMode,
             pointShieldNext: !!player.pointShieldNext
           };
         }
 
-        purchasePointShield(playerId) {
-          if (!this.activeGame) return { ok: false, playerId, reason: "No active game", cost: POINT_SHIELD_COST };
+        purchasePointShield(playerId, mode) {
+          const shieldMode = String(mode || "NORMAL").toUpperCase() === "REFLECTIVE" ? "REFLECTIVE" : "NORMAL";
+          const cost = shieldMode === "REFLECTIVE" ? REFLECTIVE_SHIELD_COST : POINT_SHIELD_COST;
+          if (!this.activeGame) return { ok: false, playerId, reason: "No active game", cost, mode: shieldMode };
           const p = this.activeGame.players[playerId];
-          if (!p || p.removed) return { ok: false, playerId, reason: "Unknown player", cost: POINT_SHIELD_COST };
+          if (!p || p.removed) return { ok: false, playerId, reason: "Unknown player", cost, mode: shieldMode };
 
-          const policy = this.getPointShieldPolicy(playerId, { enforcePhase: true, requireNextQuestion: true });
+          const policy = this.getPointShieldPolicy(playerId, { enforcePhase: true, requireNextQuestion: true }, shieldMode);
           if (!policy.allowed) {
             return {
               ok: false,
               playerId,
               reason: policy.reason,
-              cost: POINT_SHIELD_COST,
+              cost,
+              mode: shieldMode,
               pointShieldNext: !!p.pointShieldNext,
               hasNextQuestion: policy.hasNextQuestion,
               nextQuestionIndex: policy.nextQuestionIndex
             };
           }
 
-          p.score = Number(p.score || 0) - POINT_SHIELD_COST;
+          p.score = Number(p.score || 0) - cost;
           p.pointShieldNext = true;
+          p.pointShieldMode = shieldMode;
           p.lastSeenAt = nowTs();
           this.saveGame();
 
-          const nextPolicy = this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
+          const nextPolicy = this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true }, shieldMode);
           return {
             ok: true,
             playerId,
-            reason: "Point shield armed for the next question.",
+            reason: shieldMode === "REFLECTIVE"
+              ? "Reflective shield armed for the next question."
+              : "Point shield armed for the next question.",
             score: Number(p.score || 0),
-            cost: POINT_SHIELD_COST,
+            cost,
+            mode: shieldMode,
             pointShieldNext: !!p.pointShieldNext,
             hasNextQuestion: nextPolicy.hasNextQuestion,
             nextQuestionIndex: nextPolicy.nextQuestionIndex,
-            canBuyPointShield: !!nextPolicy.allowed
+            canBuyPointShield: !!this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true }, "NORMAL").allowed,
+            canBuyReflectiveShield: !!this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true }, "REFLECTIVE").allowed
           };
         }
 
@@ -1486,16 +1549,12 @@
           if (!actor || actor.removed) return { ok: false, playerId, reason: "Unknown player" };
           this.normalizePlayerState(actor);
 
-          if (actor.streakPrizeUsed) {
-            return { ok: false, playerId, reason: "This prize can only be used once per game." };
-          }
-
-          if (!actor.streakPrizeAvailable && Number(actor.correctStreak || 0) < STREAK_PRIZE_STREAK) {
-            return { ok: false, playerId, reason: "You need a 5-question correct streak to unlock this prize." };
-          }
-
-          if (!actor.streakPrizeAvailable && Number(actor.correctStreak || 0) >= STREAK_PRIZE_STREAK) {
-            actor.streakPrizeAvailable = true;
+          this.maybeUnlockStreakPrize(actor);
+          if (!actor.streakPrizeAvailable) {
+            const idx = Math.max(0, Number(actor.streakPrizeNextIndex || 0));
+            const needed = STREAK_PRIZE_LEVELS[idx];
+            const neededText = typeof needed === "number" ? String(needed) : "a higher";
+            return { ok: false, playerId, reason: "Reach a " + neededText + "-question streak to unlock the next prize." };
           }
 
           const chosen = String(action || "").toUpperCase();
@@ -1518,7 +1577,10 @@
             this.normalizePlayerState(target);
             target.incomingStrikeCount = Number(target.incomingStrikeCount || 0) + 1;
             targetShielded = Number(target.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex);
-            if (!targetShielded) {
+            const reflective = targetShielded && String(target.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE";
+            if (reflective) {
+              actor.score = Number(actor.score || 0) - STREAK_PRIZE_TARGET_PENALTY;
+            } else if (!targetShielded) {
               target.score = Number(target.score || 0) - STREAK_PRIZE_TARGET_PENALTY;
             }
             target.lastSeenAt = nowTs();
@@ -1533,7 +1595,8 @@
             actor.fakeScorePrimed = true;
           }
 
-          actor.streakPrizeUsed = true;
+          actor.streakPrizeUsed = false;
+          actor.streakPrizeUses = Number(actor.streakPrizeUses || 0) + 1;
           actor.streakPrizeAvailable = false;
           actor.streakPrizeAction = chosen;
           actor.lastSeenAt = nowTs();
@@ -1542,9 +1605,11 @@
 
           const displayedScore = this.getDisplayedScore(actor);
           let reason = "";
-          if (chosen === STREAK_ACTION.MASK) reason = "Streak prize activated: your leaderboard score is masked for 5 turns.";
+          if (chosen === STREAK_ACTION.MASK) reason = "Streak prize activated: your leaderboard score is masked for 3 turns.";
           else if (chosen === STREAK_ACTION.STEAL) reason = targetShielded
-            ? "Streak prize activated: strike launched, but the target's shield blocked the point loss."
+            ? (String(target && target.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE"
+              ? "Streak prize reflected: your own score lost " + formatScore(STREAK_PRIZE_TARGET_PENALTY) + " points."
+              : "Streak prize activated: strike launched, but the target's shield blocked the point loss.")
             : "Streak prize activated: target loses " + formatScore(STREAK_PRIZE_TARGET_PENALTY) + " points.";
           else reason = "Streak prize activated: you gained " + formatScore(STREAK_PRIZE_SELF_BONUS) + " points.";
 
@@ -1561,6 +1626,8 @@
             fakeScorePrimed: !!actor.fakeScorePrimed,
             streakPrizeAvailable: !!actor.streakPrizeAvailable,
             streakPrizeUsed: !!actor.streakPrizeUsed,
+            streakPrizeUses: Number(actor.streakPrizeUses || 0),
+            streakPrizeNextIndex: Number(actor.streakPrizeNextIndex || 0),
             streakPrizeAction: actor.streakPrizeAction,
             targetShielded,
             targetIncomingStrikeCount: target ? Number(target.incomingStrikeCount || 0) : 0,
@@ -1584,9 +1651,12 @@
 
             if (p.pointShieldNext) {
               p.pointShieldQuestionIndex = nextIndex;
+              p.pointShieldActiveMode = String(p.pointShieldMode || "NORMAL").toUpperCase() === "REFLECTIVE" ? "REFLECTIVE" : "NORMAL";
+              p.pointShieldMode = "NORMAL";
               p.pointShieldNext = false;
             } else if (typeof p.pointShieldQuestionIndex === "number" && p.pointShieldQuestionIndex < nextIndex) {
               p.pointShieldQuestionIndex = null;
+              p.pointShieldActiveMode = "NONE";
             }
 
             if (p.fakeScoreTurnsRemaining > 0) {
@@ -1708,9 +1778,7 @@
             if (correct) p.correctStreak = Number(p.correctStreak || 0) + 1;
             else p.correctStreak = 0;
 
-            if (!p.streakPrizeUsed && !p.streakPrizeAvailable && p.correctStreak >= STREAK_PRIZE_STREAK) {
-              p.streakPrizeAvailable = true;
-            }
+            this.maybeUnlockStreakPrize(p);
 
             p.score += earned;
             p.doubleDownNext = false;
@@ -1760,10 +1828,13 @@
               playerName: p.name,
               score: this.getDisplayedScore(p),
               streak: Number(p.correctStreak || 0),
-              streakPrizeReady: !!p.streakPrizeAvailable && !p.streakPrizeUsed,
+              streakPrizeReady: !!p.streakPrizeAvailable,
               canBuyPointShield: hasNextQuestion && phaseAllowsShield && !p.pointShieldNext && Number(p.score || 0) >= POINT_SHIELD_COST,
+              canBuyReflectiveShield: hasNextQuestion && phaseAllowsShield && !p.pointShieldNext && Number(p.score || 0) >= REFLECTIVE_SHIELD_COST,
               pointShieldNext: !!p.pointShieldNext,
+              pointShieldMode: String(p.pointShieldMode || "NORMAL"),
               shieldActive: Number(p.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex),
+              shieldReflectiveActive: Number(p.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex) && String(p.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE",
               incomingStrikeCount: Number(p.incomingStrikeCount || 0),
               quickDrawWins: Number(p.quickDrawWins || 0),
               avgResponseMs: Number(p.responseCount || 0) > 0 ? Math.round(Number(p.responseTotalMs || 0) / Number(p.responseCount || 0)) : null,
@@ -1786,7 +1857,9 @@
             p.fakeScoreTurnsRemaining = 0;
             p.fakeScorePrimed = false;
             p.pointShieldNext = false;
+            p.pointShieldMode = "NORMAL";
             p.pointShieldQuestionIndex = null;
+            p.pointShieldActiveMode = "NONE";
             p.incomingStrikeCount = 0;
           });
           this.activeGame.phase = PHASES.FINISHED;
@@ -1828,7 +1901,8 @@
           const board = this.getLeaderboard();
           const rankObj = board.find((r) => r.playerId === playerId);
           const ddPolicy = this.getDoubleDownPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
-          const shieldPolicy = this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true });
+          const shieldPolicy = this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true }, "NORMAL");
+          const reflectiveShieldPolicy = this.getPointShieldPolicy(playerId, { enforcePhase: false, requireNextQuestion: true }, "REFLECTIVE");
           const displayedScore = player ? this.getDisplayedScore(player) : 0;
           const prizeTargets = Object.values(this.activeGame.players || {})
             .filter((p) => p && !p.removed && p.id !== playerId)
@@ -1857,6 +1931,8 @@
               correctStreak: player ? Number(player.correctStreak || 0) : 0,
               streakPrizeAvailable: player ? !!player.streakPrizeAvailable : false,
               streakPrizeUsed: player ? !!player.streakPrizeUsed : false,
+              streakPrizeUses: player ? Number(player.streakPrizeUses || 0) : 0,
+              streakPrizeNextIndex: player ? Number(player.streakPrizeNextIndex || 0) : 0,
               streakPrizeAction: player ? String(player.streakPrizeAction || "") : "",
               prizeTargets,
               rank: rankObj ? rankObj.rank : null,
@@ -1873,10 +1949,14 @@
               doubleDownBuyCost: Number(ddPolicy.buyCost || DOUBLE_DOWN_BUY_COST),
               doubleDownBuyBlockedReason: ddPolicy.buyBlockedReason || "",
               pointShieldNext: player ? !!player.pointShieldNext : false,
+              pointShieldMode: player ? String(player.pointShieldMode || "NORMAL") : "NORMAL",
               pointShieldArmedForQuestionIndex: player && typeof player.pointShieldQuestionIndex === "number" ? Number(player.pointShieldQuestionIndex) : null,
+              pointShieldActiveMode: player ? String(player.pointShieldActiveMode || "NONE") : "NONE",
               incomingStrikeCount: player ? Number(player.incomingStrikeCount || 0) : 0,
               canBuyPointShield: !!shieldPolicy.allowed,
               pointShieldCost: Number(shieldPolicy.cost || POINT_SHIELD_COST),
+              canBuyReflectiveShield: !!reflectiveShieldPolicy.allowed,
+              reflectiveShieldCost: Number(reflectiveShieldPolicy.cost || REFLECTIVE_SHIELD_COST),
               pointShieldReason: shieldPolicy.reason || ""
             },
             leaderboard: board.slice(0, 10)
@@ -1931,6 +2011,7 @@
             activeControls: document.getElementById("activeControls"),
             activeControlsMeta: document.getElementById("activeControlsMeta"),
             activeControlsButtons: document.getElementById("activeControlsButtons"),
+            newFightBtn: document.getElementById("newFightBtn"),
             hostFooterQuote: document.getElementById("hostFooterQuote")
           };
         }
@@ -1943,6 +2024,12 @@
         setSocketState(state) {
           this.el.socketDot.className = "status-dot " + (state === "connected" ? "connected" : state === "reconnecting" ? "reconnecting" : "disconnected");
           this.el.socketText.textContent = state === "connected" ? "WebSocket Connected" : state === "reconnecting" ? "Reconnecting..." : "Disconnected";
+        }
+
+        setNewFightVisible(visible, onClick) {
+          if (!this.el.newFightBtn) return;
+          this.el.newFightBtn.classList.toggle("d-none", !visible);
+          this.el.newFightBtn.onclick = visible && typeof onClick === "function" ? onClick : null;
         }
 
         showImportStatus(text, isError) {
@@ -2285,6 +2372,9 @@
               }
               if (row.canBuyPointShield || row.pointShieldNext || row.shieldActive) {
                 out += "<span class='power-icon shield' title='Point shield'><i class='lni lni-shield'></i></span>";
+              }
+              if (row.canBuyReflectiveShield || (row.pointShieldNext && String(row.pointShieldMode || "").toUpperCase() === "REFLECTIVE") || row.shieldReflectiveActive) {
+                out += "<span class='power-icon shield' title='Reflective shield'><i class='lni lni-diamond'></i></span>";
               }
               const rockets = Math.max(0, Number(row.incomingStrikeCount || 0));
               if (rockets > 0) {
@@ -2753,19 +2843,23 @@
           if (!this.game.activeGame) return;
           const payload = msg.payload || {};
           const playerId = String(payload.playerId || "");
+          const mode = String(payload.mode || "NORMAL").toUpperCase();
           if (!playerId) return;
 
-          const result = this.game.purchasePointShield(playerId);
+          const result = this.game.purchasePointShield(playerId, mode);
           this.send(MSG.POINT_SHIELD_BUY_RESULT, this.game.activeGame.gameId, "instructor-main", {
             ok: !!result.ok,
             playerId,
             reason: String(result.reason || ""),
             score: result.score == null ? null : Number(result.score),
             cost: Number(result.cost || POINT_SHIELD_COST),
+            mode: String(result.mode || mode || "NORMAL"),
             pointShieldNext: !!result.pointShieldNext,
             nextQuestionIndex: result.nextQuestionIndex == null ? null : Number(result.nextQuestionIndex),
             hasNextQuestion: !!result.hasNextQuestion,
-            canBuyPointShield: !!result.canBuyPointShield
+            canBuyPointShield: !!result.canBuyPointShield,
+            canBuyReflectiveShield: !!result.canBuyReflectiveShield,
+            reflectiveShieldCost: REFLECTIVE_SHIELD_COST
           });
 
           if (result.ok) {
@@ -2797,6 +2891,8 @@
             fakeScorePrimed: !!result.fakeScorePrimed,
             streakPrizeAvailable: !!result.streakPrizeAvailable,
             streakPrizeUsed: !!result.streakPrizeUsed,
+            streakPrizeUses: Number(result.streakPrizeUses || 0),
+            streakPrizeNextIndex: Number(result.streakPrizeNextIndex || 0),
             streakPrizeAction: String(result.streakPrizeAction || ""),
             targetShielded: !!result.targetShielded
           });
@@ -3021,7 +3117,6 @@
 
         resetPlayer(playerId) {
           if (!this.game.resetScore(playerId)) return;
-          const p = this.game.activeGame.players[playerId];
           this.send(MSG.SCORE_RESET, this.game.activeGame.gameId, "instructor-main", {
             playerId,
             doubleDownUses: 0,
@@ -3029,10 +3124,14 @@
             purchasedCredits: 0,
             buyCost: DOUBLE_DOWN_BUY_COST,
             pointShieldNext: false,
+            pointShieldMode: "NORMAL",
             pointShieldArmedForQuestionIndex: null,
             pointShieldCost: POINT_SHIELD_COST,
+            reflectiveShieldCost: REFLECTIVE_SHIELD_COST,
             streakPrizeAvailable: false,
-            streakPrizeUsed: !!(p && p.streakPrizeUsed),
+            streakPrizeUsed: false,
+            streakPrizeUses: 0,
+            streakPrizeNextIndex: 0,
             fakeScoreTurnsRemaining: 0
           });
           this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
@@ -3083,6 +3182,10 @@
           };
 
           this.ui.updateLobby(g);
+          this.ui.setNewFightVisible(!!g, () => {
+            if (this.game.activeGame && !confirm("Start a new fight and return to the quiz library?")) return;
+            this.returnToLibrary();
+          });
           this.ui.setPhase(g ? g.phase : PHASES.LOBBY);
           this.ui.renderActiveControls(g, handlers);
 

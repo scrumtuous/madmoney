@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
   <style>
@@ -32,7 +32,7 @@
       min-height: 100vh;
       margin: 0;
       color: var(--pink);
-      font-family: "Nunito Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background:
         radial-gradient(circle at 15% 10%, rgba(211, 146, 178, 0.28), transparent 28%),
         radial-gradient(circle at 82% 24%, rgba(200, 175, 217, 0.23), transparent 30%),
@@ -50,9 +50,9 @@
     }
 
     .title-font {
-      font-family: "Nunito Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       font-weight: 800;
-      letter-spacing: 0.01em;
+      letter-spacing: 0;
     }
 
     .glass {
@@ -107,6 +107,24 @@
       align-items: center;
       gap: 0.4rem;
       font-size: 0.85rem;
+    }
+
+    .new-fight-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(247, 221, 233, 0.4);
+      background: rgba(60, 36, 79, 0.7);
+      color: #ffe7f0;
+      font-weight: 700;
+      padding: 0.28rem 0.75rem;
+      font-size: 0.84rem;
+      line-height: 1.2;
+    }
+
+    .new-fight-pill:hover,
+    .new-fight-pill:focus-visible {
+      color: #fff;
+      border-color: rgba(247, 221, 233, 0.6);
+      background: rgba(93, 56, 122, 0.8);
     }
 
     .dot {
@@ -168,7 +186,7 @@
     }
 
     .timer {
-      font-family: "Nunito Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       font-weight: 700;
       font-size: clamp(2.1rem, 7vw, 3.5rem);
       text-align: center;
@@ -496,6 +514,23 @@
       background: rgba(112, 44, 66, 0.34);
     }
 
+    .power-action-row {
+      display: grid;
+      gap: 0.65rem;
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+
+    @media (min-width: 860px) {
+      .power-action-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .power-action-col {
+      max-width: 420px;
+    }
+
     @keyframes rise {
       from { transform: translateY(6px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
@@ -536,7 +571,10 @@
       <div>
         <div class="small-note">If this is your first time at Fight Quiz, you have to fight.</div>
       </div>
-      <div class="conn-badge"><span id="connDot" class="dot disconnected"></span><span id="connText">Connecting...</span></div>
+      <div class="d-flex align-items-center gap-2">
+        <button id="newFightBtn" class="btn new-fight-pill focus-ring d-none" type="button">New Fight</button>
+        <div class="conn-badge"><span id="connDot" class="dot disconnected"></span><span id="connText">Connecting...</span></div>
+      </div>
     </header>
 
     <main id="app"></main>
@@ -827,6 +865,7 @@
           this.connDot = document.getElementById("connDot");
           this.connText = document.getElementById("connText");
           this.footerQuote = document.getElementById("pageFooterQuote");
+          this.newFightBtn = document.getElementById("newFightBtn");
         }
 
         setFooterQuote(text) {
@@ -837,6 +876,12 @@
         setConn(state) {
           this.connDot.className = "dot " + (state === "connected" ? "connected" : state === "reconnecting" ? "reconnecting" : "disconnected");
           this.connText.textContent = state === "connected" ? "Connected" : state === "reconnecting" ? "Reconnecting..." : "Disconnected";
+        }
+
+        setNewFightVisible(visible, onClick) {
+          if (!this.newFightBtn) return;
+          this.newFightBtn.classList.toggle("d-none", !visible);
+          this.newFightBtn.onclick = visible && typeof onClick === "function" ? onClick : null;
         }
 
         renderJoin(prefillGameId, savedName, handlers, stateMsg, quoteSet) {
@@ -870,7 +915,6 @@
             + "<div class='title-font fs-3 mb-1'>Waiting for the instructor...</div>"
             + "<div class='small-note'>" + text + "</div>"
             + "<div class='fight-creed mt-3 text-start'>" + safeText(quoteSet && quoteSet.main ? quoteSet.main : "") + "</div>"
-            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Fight?</button></div>"
             + "</section>";
         }
 
@@ -879,7 +923,6 @@
             + "<section class='glass p-3 text-center shake'>"
             + "<div class='title-font fs-3 mb-1'>You have been removed from this fight.</div>"
             + "<div class='small-note'>Ask the instructor if you should rejoin with a new entry.</div>"
-            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Fight?</button></div>"
             + "</section>";
         }
 
@@ -898,7 +941,6 @@
             + maskedLine
             + "<div class='small-note mt-3'>Hold tight. The next question is coming soon.</div>"
             + "<div class='fight-creed mt-3 text-start'>" + safeText(quoteSet && quoteSet.main ? quoteSet.main : "") + "</div>"
-            + "<div class='mt-3'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Fight?</button></div>"
             + "</section>";
         }
 
@@ -921,8 +963,7 @@
             + "<div id='multiHint' class='small-note mb-2'></div>"
             + "<div id='optionsGrid' class='options-grid mb-2'></div>"
             + "<div id='questionStatus' class='small-note mb-2' aria-live='polite'></div>"
-            + "<div id='submitWrap'></div>"
-            + "<div class='mt-3 text-center'><button id='joinAnotherGameBtn' class='btn outline-moon focus-ring'>Join Another Fight</button></div>";
+            + "<div id='submitWrap'></div>";
           this.app.appendChild(wrap);
 
           const grid = document.getElementById("optionsGrid");
@@ -1006,6 +1047,36 @@
           delta.textContent = (earned >= 0 ? "+" : "") + formatScore(earned) + " points";
           wrap.appendChild(delta);
 
+          const corr = document.createElement("div");
+          corr.className = "small-note mb-2";
+          const labels = (rv.correctOptionIds || []).map((id) => {
+            const opt = model.question.options.find((o) => o.id === id);
+            return opt ? opt.letter : id;
+          });
+          corr.textContent = "Correct answer: " + labels.join(", ");
+          wrap.appendChild(corr);
+
+          const query = document.createElement("div");
+          query.className = "fw-bold mb-2";
+          query.textContent = model.question.query || "";
+          wrap.appendChild(query);
+
+          const answerHtml = typeof rv.answerHtml === "string" ? rv.answerHtml : "";
+          if (answerHtml) {
+            const ansCard = document.createElement("div");
+            ansCard.className = "glass p-2 mb-2";
+            ansCard.innerHTML = "<div class='small-note'>Answer</div><div>" + answerHtml + "</div>";
+            wrap.appendChild(ansCard);
+          }
+
+          const tipHtml = typeof rv.tipHtml === "string" ? rv.tipHtml : "";
+          if (tipHtml) {
+            const tip = document.createElement("div");
+            tip.className = "glass p-2 mb-3";
+            tip.innerHTML = "<div class='small-note'>Tip</div><div>" + tipHtml + "</div>";
+            wrap.appendChild(tip);
+          }
+
           const scoreBox = document.createElement("div");
           scoreBox.className = "score-box mb-3";
           scoreBox.innerHTML = "<div class='small-note'>Your Score</div><div id='countingScore' class='fs-2 fw-bold'>" + formatScore(model.playerScoreBeforeReveal || 0) + "</div>";
@@ -1018,7 +1089,7 @@
             wrap.appendChild(masked);
           }
 
-          if (model.streakPrizeAvailable && !model.streakPrizeUsed) {
+          if (model.streakPrizeAvailable) {
             const strip = document.createElement("div");
             strip.className = "power-strip";
             strip.innerHTML = ""
@@ -1028,7 +1099,7 @@
             wrap.appendChild(strip);
           }
 
-          if (model.streakPrizeAvailable && !model.streakPrizeUsed) {
+          if (model.streakPrizeAvailable) {
             const prize = document.createElement("div");
             prize.className = "streak-prize";
             const targetOptions = (model.prizeTargets || []).map((t) => {
@@ -1037,11 +1108,11 @@
 
             prize.innerHTML = ""
               + "<div class='streak-prize-title mb-1'><i class='lni lni-gift me-1'></i>Fight Quiz Streak Prize Unlocked</div>"
-              + "<div class='streak-prize-note mb-2'>Choose one action now or later: fog your score for 5 turns, steal 1,000 from one player, or gain 2,000 instantly.</div>"
+              + "<div class='streak-prize-note mb-2'>Choose one action now or later: fog your score for 3 turns, steal 1,000 from one player, or gain 2,000 instantly.</div>"
               + "<div class='d-grid gap-2'>"
               + "<select id='streakPrizeAction' class='form-control join-input'>"
               + "<option value=''>Select prize action...</option>"
-              + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 5 turns</option>"
+              + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 3 turns</option>"
               + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: another player loses 1,000</option>"
               + "<option value='" + STREAK_ACTION.BONUS + "'>Moon Boost: gain 2,000 points</option>"
               + "</select>"
@@ -1064,20 +1135,6 @@
             wrap.appendChild(notice);
           }
 
-          const corr = document.createElement("div");
-          corr.className = "small-note mb-2";
-          const labels = (rv.correctOptionIds || []).map((id) => {
-            const opt = model.question.options.find((o) => o.id === id);
-            return opt ? opt.letter : id;
-          });
-          corr.textContent = "Correct answer: " + labels.join(", ");
-          wrap.appendChild(corr);
-
-          const query = document.createElement("div");
-          query.className = "fw-bold mb-2";
-          query.textContent = model.question.query || "";
-          wrap.appendChild(query);
-
           const grid = document.createElement("div");
           grid.className = "options-grid mb-3";
           (model.question.options || []).forEach((o) => {
@@ -1098,38 +1155,29 @@
           });
           wrap.appendChild(grid);
 
-          const answerHtml = typeof rv.answerHtml === "string" ? rv.answerHtml : "";
-          if (answerHtml) {
-            const ansCard = document.createElement("div");
-            ansCard.className = "glass p-2 mb-2";
-            ansCard.innerHTML = "<div class='small-note'>Answer</div><div>" + answerHtml + "</div>";
-            wrap.appendChild(ansCard);
-          }
-
-          const tipHtml = typeof rv.tipHtml === "string" ? rv.tipHtml : "";
-          if (tipHtml) {
-            const tip = document.createElement("div");
-            tip.className = "glass p-2";
-            tip.innerHTML = "<div class='small-note'>Tip</div><div>" + tipHtml + "</div>";
-            wrap.appendChild(tip);
-          }
-
           const ddWrap = document.createElement("div");
-          ddWrap.className = "mt-3 d-grid gap-2";
+          ddWrap.className = "mt-3";
+          const actionRow = document.createElement("div");
+          actionRow.className = "power-action-row";
+
+          const ddCol = document.createElement("div");
+          ddCol.className = "power-action-col d-grid gap-2";
           const ddBtn = document.createElement("button");
           ddBtn.id = "doubleDownBtn";
-          ddBtn.className = "btn moon-btn btn-lg focus-ring";
+          ddBtn.className = "btn moon-btn focus-ring";
           if (!model.hasNextQuestion) {
             ddBtn.textContent = "No Next Question";
           } else if (model.doubleDownArmed) {
-            ddBtn.textContent = "Double Down Armed For Next Question";
+            ddBtn.innerHTML = "Double Down Armed For Next Question <i class='lni lni-dice ms-1'></i>";
+          } else if (model.rank === 1) {
+            ddBtn.innerHTML = "1st Place: Double Down Disabled <i class='lni lni-dice ms-1'></i>";
           } else if (!model.doubleDownEligible) {
-            ddBtn.textContent = "Double Down Disabled";
+            ddBtn.innerHTML = "Double Down Disabled <i class='lni lni-dice ms-1'></i>";
           } else {
-            ddBtn.textContent = "Double Down On Next Question";
+            ddBtn.innerHTML = "Double Down On Next Question <i class='lni lni-dice ms-1'></i>";
           }
           ddBtn.disabled = !!model.doubleDownArmed || !model.hasNextQuestion || !model.doubleDownEligible;
-          ddWrap.appendChild(ddBtn);
+          ddCol.appendChild(ddBtn);
 
           const ddNote = document.createElement("div");
           let ddStateClass = "";
@@ -1137,47 +1185,56 @@
           else ddStateClass = " bad";
           ddNote.className = "double-down-note" + ddStateClass;
           ddNote.textContent = model.doubleDownStatusText || "";
-          ddWrap.appendChild(ddNote);
+          if (model.rank !== 1) ddCol.appendChild(ddNote);
 
           if (!model.doubleDownArmed && !model.doubleDownEligible && model.canBuyDoubleDown && model.hasNextQuestion) {
             const buyBtn = document.createElement("button");
             buyBtn.id = "buyDoubleDownBtn";
-            buyBtn.className = "btn moon-btn btn-lg focus-ring";
-            buyBtn.textContent = "Buy 1 Double Down for " + formatScore(model.doubleDownBuyCost || 3000) + " pts";
-            ddWrap.appendChild(buyBtn);
+            buyBtn.className = "btn moon-btn focus-ring";
+            buyBtn.innerHTML = "Buy 1 Double Down for " + formatScore(model.doubleDownBuyCost || 3000) + " pts <i class='lni lni-dice ms-1'></i>";
+            ddCol.appendChild(buyBtn);
           }
 
-          if (model.doubleDownDisabledReason && !model.doubleDownEligible) {
-            const why = document.createElement("div");
-            why.className = "small-note";
-            why.textContent = model.doubleDownDisabledReason;
-            ddWrap.appendChild(why);
-          }
-
-          if (model.doubleDownBuyBlockedReason && !model.canBuyDoubleDown && !model.doubleDownEligible && model.hasNextQuestion) {
-            const buyWhy = document.createElement("div");
-            buyWhy.className = "small-note";
-            buyWhy.textContent = model.doubleDownBuyBlockedReason;
-            ddWrap.appendChild(buyWhy);
-          }
+          actionRow.appendChild(ddCol);
 
           if (model.hasNextQuestion) {
+            const shieldCol = document.createElement("div");
+            shieldCol.className = "power-action-col d-grid gap-2";
             const shieldBtn = document.createElement("button");
             shieldBtn.id = "buyPointShieldBtn";
-            shieldBtn.className = "btn moon-btn btn-lg focus-ring";
+            shieldBtn.className = "btn moon-btn focus-ring";
             if (model.pointShieldNext) {
-              shieldBtn.textContent = "Shield Armed For Next Question";
+              shieldBtn.innerHTML = "Shield Armed For Next Question <i class='lni lni-shield ms-1'></i>";
             } else {
-              shieldBtn.textContent = "Shield Next Question for " + formatScore(model.pointShieldCost || 2500) + " pts";
+              shieldBtn.innerHTML = "Shield Next Question for " + formatScore(model.pointShieldCost || 2500) + " pts <i class='lni lni-shield ms-1'></i>";
             }
             shieldBtn.disabled = !!model.pointShieldNext || !model.canBuyPointShield;
-            ddWrap.appendChild(shieldBtn);
+            shieldCol.appendChild(shieldBtn);
+
+            const reflectiveBtn = document.createElement("button");
+            reflectiveBtn.id = "buyReflectiveShieldBtn";
+            reflectiveBtn.className = "btn moon-btn focus-ring";
+            if (model.pointShieldNext && String(model.pointShieldMode || "").toUpperCase() === "REFLECTIVE") {
+              reflectiveBtn.innerHTML = "Reflective Shield Armed <i class='lni lni-diamond ms-1'></i>";
+            } else {
+              reflectiveBtn.innerHTML = "Reflective Shield for " + formatScore(model.reflectiveShieldCost || 4000) + " pts <i class='lni lni-diamond ms-1'></i>";
+            }
+            reflectiveBtn.disabled = !!model.pointShieldNext || !model.canBuyReflectiveShield;
+            shieldCol.appendChild(reflectiveBtn);
 
             const shieldState = document.createElement("div");
             shieldState.className = "double-down-note" + ((model.canBuyPointShield || model.pointShieldNext) ? " ok" : " bad");
             shieldState.textContent = model.pointShieldStatusText || "";
-            ddWrap.appendChild(shieldState);
+            shieldCol.appendChild(shieldState);
+
+            const reflectiveState = document.createElement("div");
+            reflectiveState.className = "double-down-note" + ((model.canBuyReflectiveShield || (model.pointShieldNext && String(model.pointShieldMode || "").toUpperCase() === "REFLECTIVE")) ? " ok" : " bad");
+            reflectiveState.textContent = model.reflectiveShieldStatusText || "";
+            shieldCol.appendChild(reflectiveState);
+            actionRow.appendChild(shieldCol);
           }
+
+          ddWrap.appendChild(actionRow);
 
           if (model.pointShieldNotice) {
             const shieldNote = document.createElement("div");
@@ -1186,11 +1243,6 @@
             ddWrap.appendChild(shieldNote);
           }
 
-          const joinBtn = document.createElement("button");
-          joinBtn.id = "joinAnotherGameBtn";
-          joinBtn.className = "btn outline-moon focus-ring";
-          joinBtn.textContent = "Join Another Game";
-          ddWrap.appendChild(joinBtn);
           wrap.appendChild(ddWrap);
 
           this.app.appendChild(wrap);
@@ -1199,7 +1251,9 @@
           const buyAction = document.getElementById("buyDoubleDownBtn");
           if (buyAction) buyAction.addEventListener("click", () => model.onBuyDoubleDown());
           const shieldAction = document.getElementById("buyPointShieldBtn");
-          if (shieldAction) shieldAction.addEventListener("click", () => model.onBuyPointShield());
+          if (shieldAction) shieldAction.addEventListener("click", () => model.onBuyPointShield("NORMAL"));
+          const reflectiveShieldAction = document.getElementById("buyReflectiveShieldBtn");
+          if (reflectiveShieldAction) reflectiveShieldAction.addEventListener("click", () => model.onBuyPointShield("REFLECTIVE"));
           const claimAction = document.getElementById("claimStreakPrizeBtn");
           if (claimAction) {
             const actionEl = document.getElementById("streakPrizeAction");
@@ -1281,14 +1335,14 @@
             wrap.appendChild(masked);
           }
 
-          if (model.phase === PHASES.FINISHED && model.streakPrizeUsed && model.streakPrizeAction) {
+          if (model.phase === PHASES.FINISHED && Number(model.streakPrizeUses || 0) > 0 && model.streakPrizeAction) {
             const actionCard = document.createElement("div");
             actionCard.className = "final-action-summary";
             let icon = "lni-gift";
             let text = "Streak prize used.";
             if (model.streakPrizeAction === STREAK_ACTION.MASK) {
               icon = "lni-lock-alt";
-              text = "Fog Cloak used: your score was hidden for 5 turns.";
+              text = "Fog Cloak used: your score was hidden for 3 turns.";
             } else if (model.streakPrizeAction === STREAK_ACTION.STEAL) {
               icon = "lni-target";
               text = "Shadow Strike used: an opponent took a 1,000 point hit.";
@@ -1302,7 +1356,7 @@
 
           if (model.phase !== PHASES.FINISHED) {
             const hasNextQuestion = !!(model.question && model.question.questionNumber < model.question.questionCount);
-            const canUseStreakPrize = !!(model.streakPrizeAvailable && !model.streakPrizeUsed);
+            const canUseStreakPrize = !!model.streakPrizeAvailable;
             if (canUseStreakPrize || hasNextQuestion || model.streakPrizeNotice || model.pointShieldNotice) {
               const actions = document.createElement("div");
               actions.className = "streak-prize mb-3";
@@ -1317,11 +1371,11 @@
                   + "<span class='power-pill ready'><i class='lni lni-target'></i>Shadow Strike Ready</span>"
                   + "<span class='power-pill ready'><i class='lni lni-bolt'></i>Moon Boost Ready</span>"
                   + "</div>";
-                html += "<div class='streak-prize-note mb-2'>Your 5-streak prize is still available. Use it now or save it for later questions.</div>";
+                html += "<div class='streak-prize-note mb-2'>Your streak prize is available. Use it now or save it for a later question.</div>";
                 html += "<div class='d-grid gap-2 mb-2'>"
                   + "<select id='lbStreakPrizeAction' class='form-control join-input'>"
                   + "<option value=''>Select prize action...</option>"
-                  + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 5 turns</option>"
+                  + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 3 turns</option>"
                   + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: another player loses 1,000</option>"
                   + "<option value='" + STREAK_ACTION.BONUS + "'>Moon Boost: gain 2,000 points</option>"
                   + "</select>"
@@ -1336,6 +1390,7 @@
               if (hasNextQuestion) {
                 html += "<div class='power-strip'>"
                   + "<span class='power-pill shield'><i class='lni lni-shield'></i>Point Shield</span>"
+                  + "<span class='power-pill shield'><i class='lni lni-diamond'></i>Reflective Shield</span>"
                   + "</div>";
                 html += "<button id='lbBuyPointShieldBtn' class='btn moon-btn btn-lg focus-ring w-100 mb-2'"
                   + (model.pointShieldNext ? " disabled" : (!model.canBuyPointShield ? " disabled" : ""))
@@ -1346,6 +1401,15 @@
                   + "</button>";
                 html += "<div class='double-down-note " + ((model.pointShieldNext || model.canBuyPointShield) ? "ok" : "bad") + " mb-2'>"
                   + safeText(model.pointShieldStatusText || "") + "</div>";
+                html += "<button id='lbBuyReflectiveShieldBtn' class='btn moon-btn btn-lg focus-ring w-100 mb-2'"
+                  + (model.pointShieldNext ? " disabled" : (!model.canBuyReflectiveShield ? " disabled" : ""))
+                  + ">"
+                  + ((model.pointShieldNext && String(model.pointShieldMode || "").toUpperCase() === "REFLECTIVE")
+                    ? "Reflective Shield Armed"
+                    : "Reflective Shield for " + formatScore(model.reflectiveShieldCost || 4000) + " pts")
+                  + " <i class='lni lni-diamond ms-1'></i></button>";
+                html += "<div class='double-down-note " + (((model.pointShieldNext && String(model.pointShieldMode || "").toUpperCase() === "REFLECTIVE") || model.canBuyReflectiveShield) ? "ok" : "bad") + " mb-2'>"
+                  + safeText(model.reflectiveShieldStatusText || "") + "</div>";
               }
 
               if (model.streakPrizeNotice) {
@@ -1371,6 +1435,9 @@
             if (row.canBuyPointShield || row.pointShieldNext || row.shieldActive) {
               iconHtml += "<span class='power-pill shield ms-1'><i class='lni lni-shield'></i></span>";
             }
+            if (row.canBuyReflectiveShield || (row.pointShieldNext && String(row.pointShieldMode || "").toUpperCase() === "REFLECTIVE") || row.shieldReflectiveActive) {
+              iconHtml += "<span class='power-pill shield ms-1'><i class='lni lni-diamond'></i></span>";
+            }
             const rockets = Math.max(0, Number(row.incomingStrikeCount || 0));
             if (rockets > 0) {
               for (let i = 0; i < rockets; i += 1) {
@@ -1390,12 +1457,6 @@
             below.textContent = quoteSet.below;
             wrap.appendChild(below);
           }
-
-          const joinBtn = document.createElement("button");
-          joinBtn.id = "joinAnotherGameBtn";
-          joinBtn.className = "btn outline-moon focus-ring mt-2";
-          joinBtn.textContent = "Join Another Game";
-          wrap.appendChild(joinBtn);
 
           this.app.appendChild(wrap);
 
@@ -1430,7 +1491,11 @@
 
           const shieldBtn = document.getElementById("lbBuyPointShieldBtn");
           if (shieldBtn && typeof model.onBuyPointShield === "function") {
-            shieldBtn.addEventListener("click", () => model.onBuyPointShield());
+            shieldBtn.addEventListener("click", () => model.onBuyPointShield("NORMAL"));
+          }
+          const reflectiveBtn = document.getElementById("lbBuyReflectiveShieldBtn");
+          if (reflectiveBtn && typeof model.onBuyPointShield === "function") {
+            reflectiveBtn.addEventListener("click", () => model.onBuyPointShield("REFLECTIVE"));
           }
         }
 
@@ -1494,9 +1559,12 @@
             doubleDownBuyCost: 3000,
             doubleDownBuyBlockedReason: "",
             pointShieldNext: false,
+            pointShieldMode: "NORMAL",
             pointShieldArmedForQuestionIndex: null,
             canBuyPointShield: false,
             pointShieldCost: 2500,
+            canBuyReflectiveShield: false,
+            reflectiveShieldCost: 4000,
             pointShieldNotice: "",
             incomingStrikeCount: 0,
             playerDisplayedScore: 0,
@@ -1506,6 +1574,8 @@
             correctStreak: 0,
             streakPrizeAvailable: false,
             streakPrizeUsed: false,
+            streakPrizeUses: 0,
+            streakPrizeNextIndex: 0,
             streakPrizeAction: "",
             streakPrizeNotice: "",
             prizeTargets: []
@@ -1537,9 +1607,12 @@
           if (typeof this.game.doubleDownBuyCost !== "number") this.game.doubleDownBuyCost = 3000;
           if (typeof this.game.doubleDownBuyBlockedReason !== "string") this.game.doubleDownBuyBlockedReason = "";
           if (typeof this.game.pointShieldNext !== "boolean") this.game.pointShieldNext = false;
+          if (typeof this.game.pointShieldMode !== "string") this.game.pointShieldMode = "NORMAL";
           if (typeof this.game.pointShieldArmedForQuestionIndex !== "number") this.game.pointShieldArmedForQuestionIndex = null;
           if (typeof this.game.canBuyPointShield !== "boolean") this.game.canBuyPointShield = false;
           if (typeof this.game.pointShieldCost !== "number") this.game.pointShieldCost = 2500;
+          if (typeof this.game.canBuyReflectiveShield !== "boolean") this.game.canBuyReflectiveShield = false;
+          if (typeof this.game.reflectiveShieldCost !== "number") this.game.reflectiveShieldCost = 4000;
           if (typeof this.game.pointShieldNotice !== "string") this.game.pointShieldNotice = "";
           if (typeof this.game.incomingStrikeCount !== "number") this.game.incomingStrikeCount = 0;
           if (typeof this.game.playerDisplayedScore !== "number") this.game.playerDisplayedScore = Number(this.game.playerScore || 0);
@@ -1549,6 +1622,8 @@
           if (typeof this.game.correctStreak !== "number") this.game.correctStreak = 0;
           if (typeof this.game.streakPrizeAvailable !== "boolean") this.game.streakPrizeAvailable = false;
           if (typeof this.game.streakPrizeUsed !== "boolean") this.game.streakPrizeUsed = false;
+          if (typeof this.game.streakPrizeUses !== "number") this.game.streakPrizeUses = 0;
+          if (typeof this.game.streakPrizeNextIndex !== "number") this.game.streakPrizeNextIndex = 0;
           if (typeof this.game.streakPrizeAction !== "string") this.game.streakPrizeAction = "";
           if (typeof this.game.streakPrizeNotice !== "string") this.game.streakPrizeNotice = "";
           if (!Array.isArray(this.game.prizeTargets)) this.game.prizeTargets = [];
@@ -1647,12 +1722,26 @@
             return "No next question remains, so point shield is unavailable.";
           }
           if (this.game.pointShieldNext) {
+            if (String(this.game.pointShieldMode || "NORMAL").toUpperCase() === "REFLECTIVE") {
+              return "Reflective shield is armed. Point deductions bounce back to the attacker.";
+            }
             return "Point shield is armed for the next question.";
           }
           if (Number(this.game.playerScore || 0) < cost) {
             return "Need at least " + formatScore(cost) + " points to arm point shield.";
           }
           return "Spend " + formatScore(cost) + " points to protect against point deductions on the next question.";
+        }
+
+        getReflectiveShieldStatusText(hasNextQuestion) {
+          const cost = Math.max(1, Number(this.game.reflectiveShieldCost || 4000));
+          if (!hasNextQuestion) return "No next question remains, so reflective shield is unavailable.";
+          if (this.game.pointShieldNext && String(this.game.pointShieldMode || "NORMAL").toUpperCase() === "REFLECTIVE") {
+            return "Reflective shield armed: attackers take their own deduction on impact.";
+          }
+          if (this.game.pointShieldNext) return "A shield is already armed for the next question.";
+          if (Number(this.game.playerScore || 0) < cost) return "Need at least " + formatScore(cost) + " points to arm reflective shield.";
+          return "Spend " + formatScore(cost) + " points to arm reflective shield with blowback.";
         }
 
         init() {
@@ -1754,9 +1843,12 @@
           this.game.doubleDownBuyCost = 3000;
           this.game.doubleDownBuyBlockedReason = "";
           this.game.pointShieldNext = false;
+          this.game.pointShieldMode = "NORMAL";
           this.game.pointShieldArmedForQuestionIndex = null;
           this.game.canBuyPointShield = false;
           this.game.pointShieldCost = 2500;
+          this.game.canBuyReflectiveShield = false;
+          this.game.reflectiveShieldCost = 4000;
           this.game.pointShieldNotice = "";
           this.game.incomingStrikeCount = 0;
           this.game.playerDisplayedScore = Number(this.game.playerScore || 0);
@@ -1766,6 +1858,8 @@
           this.game.correctStreak = 0;
           this.game.streakPrizeAvailable = false;
           this.game.streakPrizeUsed = false;
+          this.game.streakPrizeUses = 0;
+          this.game.streakPrizeNextIndex = 0;
           this.game.streakPrizeAction = "";
           this.game.streakPrizeNotice = "";
           this.game.prizeTargets = [];
@@ -1882,10 +1976,13 @@
             this.game.doubleDownBuyCost = Number(snapshot.player.doubleDownBuyCost || this.game.doubleDownBuyCost || 3000);
             this.game.doubleDownBuyBlockedReason = String(snapshot.player.doubleDownBuyBlockedReason || this.game.doubleDownBuyBlockedReason || "");
             this.game.pointShieldNext = !!snapshot.player.pointShieldNext;
+            this.game.pointShieldMode = String(snapshot.player.pointShieldMode || this.game.pointShieldMode || "NORMAL");
             this.game.pointShieldArmedForQuestionIndex = snapshot.player.pointShieldArmedForQuestionIndex == null ? null : Number(snapshot.player.pointShieldArmedForQuestionIndex);
             this.game.incomingStrikeCount = Number(snapshot.player.incomingStrikeCount || 0);
             this.game.canBuyPointShield = !!snapshot.player.canBuyPointShield;
             this.game.pointShieldCost = Number(snapshot.player.pointShieldCost || this.game.pointShieldCost || 2500);
+            this.game.canBuyReflectiveShield = !!snapshot.player.canBuyReflectiveShield;
+            this.game.reflectiveShieldCost = Number(snapshot.player.reflectiveShieldCost || this.game.reflectiveShieldCost || 4000);
             this.game.pointShieldNotice = "";
             this.game.playerDisplayedScore = Number(snapshot.player.displayedScore != null ? snapshot.player.displayedScore : this.game.playerDisplayedScore || this.game.playerScore || 0);
             this.game.isScoreMasked = !!snapshot.player.isScoreMasked;
@@ -1894,6 +1991,8 @@
             this.game.correctStreak = Number(snapshot.player.correctStreak || this.game.correctStreak || 0);
             this.game.streakPrizeAvailable = !!snapshot.player.streakPrizeAvailable;
             this.game.streakPrizeUsed = !!snapshot.player.streakPrizeUsed;
+            this.game.streakPrizeUses = Number(snapshot.player.streakPrizeUses || this.game.streakPrizeUses || 0);
+            this.game.streakPrizeNextIndex = Number(snapshot.player.streakPrizeNextIndex || this.game.streakPrizeNextIndex || 0);
             this.game.streakPrizeAction = String(snapshot.player.streakPrizeAction || this.game.streakPrizeAction || "");
             this.game.prizeTargets = Array.isArray(snapshot.player.prizeTargets) ? snapshot.player.prizeTargets : [];
             this.game.totalPlayers = Number(snapshot.player.totalPlayers || this.game.totalPlayers || 0);
@@ -1939,6 +2038,7 @@
           }
 
           this.game.canBuyPointShield = false;
+          this.game.canBuyReflectiveShield = false;
 
           if (Number(this.game.fakeScoreTurnsRemaining || 0) > 0) {
             if (this.game.fakeScorePrimed) {
@@ -1983,10 +2083,7 @@
               : Number(this.game.playerScore || 0);
 
             this.game.correctStreak = Number(mine.streak || this.game.correctStreak || 0);
-            if (!this.game.streakPrizeUsed && Number(this.game.correctStreak || 0) >= 5) {
-              this.game.streakPrizeAvailable = true;
-            }
-            if (this.game.streakPrizeAvailable && !this.game.streakPrizeUsed) {
+            if (this.game.streakPrizeAvailable) {
               this.game.streakPrizeNotice = "Fight Quiz Streak Prize unlocked.";
             }
             this.game.doubleDownArmed = false;
@@ -2029,10 +2126,13 @@
           this.game.pointShieldNotice = payload.reason ? String(payload.reason) : "";
           if (payload.score != null) this.game.playerScore = Number(payload.score);
           if (payload.cost != null) this.game.pointShieldCost = Number(payload.cost);
+          if (payload.mode != null) this.game.pointShieldMode = String(payload.mode || "NORMAL");
           if (payload.pointShieldNext != null) this.game.pointShieldNext = !!payload.pointShieldNext;
           if (payload.nextQuestionIndex != null) this.game.pointShieldArmedForQuestionIndex = Number(payload.nextQuestionIndex);
           if (payload.hasNextQuestion === false) this.game.pointShieldArmedForQuestionIndex = null;
           if (payload.canBuyPointShield != null) this.game.canBuyPointShield = !!payload.canBuyPointShield;
+          if (payload.canBuyReflectiveShield != null) this.game.canBuyReflectiveShield = !!payload.canBuyReflectiveShield;
+          if (payload.reflectiveShieldCost != null) this.game.reflectiveShieldCost = Number(payload.reflectiveShieldCost);
           this.refreshDoubleDownPolicy(this.game.doubleDownNotice || "");
         }
 
@@ -2046,6 +2146,8 @@
           this.game.fakeScorePrimed = !!payload.fakeScorePrimed;
           this.game.streakPrizeAvailable = !!payload.streakPrizeAvailable;
           this.game.streakPrizeUsed = !!payload.streakPrizeUsed;
+          this.game.streakPrizeUses = Number(payload.streakPrizeUses || this.game.streakPrizeUses || 0);
+          this.game.streakPrizeNextIndex = Number(payload.streakPrizeNextIndex || this.game.streakPrizeNextIndex || 0);
           this.game.streakPrizeAction = String(payload.streakPrizeAction || payload.action || this.game.streakPrizeAction || "");
           this.refreshDoubleDownPolicy();
           this.persist();
@@ -2065,8 +2167,10 @@
             this.game.playerDisplayedScore = Number(mine.score || this.game.playerDisplayedScore || this.game.playerScore || 0);
             this.game.incomingStrikeCount = Number(mine.incomingStrikeCount || 0);
             this.game.canBuyPointShield = !!mine.canBuyPointShield;
+            this.game.canBuyReflectiveShield = !!mine.canBuyReflectiveShield;
             if (mine.pointShieldNext != null) this.game.pointShieldNext = !!mine.pointShieldNext;
-            if (!this.game.streakPrizeUsed && mine.streakPrizeReady != null) this.game.streakPrizeAvailable = !!mine.streakPrizeReady;
+            if (mine.pointShieldMode != null) this.game.pointShieldMode = String(mine.pointShieldMode);
+            if (mine.streakPrizeReady != null) this.game.streakPrizeAvailable = !!mine.streakPrizeReady;
             if (!mine.shieldActive && this.game.pointShieldArmedForQuestionIndex != null && this.game.question && Number(this.game.pointShieldArmedForQuestionIndex) <= Number(this.game.question.questionIndex || 0)) {
               this.game.pointShieldArmedForQuestionIndex = null;
             }
@@ -2092,8 +2196,10 @@
             this.game.playerDisplayedScore = Number(mine.score || this.game.playerDisplayedScore || this.game.playerScore || 0);
             this.game.incomingStrikeCount = Number(mine.incomingStrikeCount || 0);
             this.game.canBuyPointShield = !!mine.canBuyPointShield;
+            this.game.canBuyReflectiveShield = !!mine.canBuyReflectiveShield;
             if (mine.pointShieldNext != null) this.game.pointShieldNext = !!mine.pointShieldNext;
-            if (!this.game.streakPrizeUsed && mine.streakPrizeReady != null) this.game.streakPrizeAvailable = !!mine.streakPrizeReady;
+            if (mine.pointShieldMode != null) this.game.pointShieldMode = String(mine.pointShieldMode);
+            if (mine.streakPrizeReady != null) this.game.streakPrizeAvailable = !!mine.streakPrizeReady;
             if (!this.game.isScoreMasked) {
               this.game.playerScore = Number(mine.score || this.game.playerScore || 0);
             }
@@ -2117,9 +2223,12 @@
           if (payload.purchasedCredits != null) this.game.doubleDownPurchasedCredits = Number(payload.purchasedCredits);
           if (payload.buyCost != null) this.game.doubleDownBuyCost = Number(payload.buyCost);
           if (payload.pointShieldNext != null) this.game.pointShieldNext = !!payload.pointShieldNext;
+          if (payload.pointShieldMode != null) this.game.pointShieldMode = String(payload.pointShieldMode || "NORMAL");
           if (payload.pointShieldArmedForQuestionIndex != null) this.game.pointShieldArmedForQuestionIndex = Number(payload.pointShieldArmedForQuestionIndex);
           if (payload.pointShieldCost != null) this.game.pointShieldCost = Number(payload.pointShieldCost);
+          if (payload.reflectiveShieldCost != null) this.game.reflectiveShieldCost = Number(payload.reflectiveShieldCost);
           this.game.canBuyPointShield = false;
+          this.game.canBuyReflectiveShield = false;
           this.game.pointShieldNotice = "";
           this.game.incomingStrikeCount = 0;
           this.refreshDoubleDownPolicy();
@@ -2141,8 +2250,10 @@
           this.game.fakeScoreTurnsRemaining = 0;
           this.game.fakeScorePrimed = false;
           this.game.pointShieldNext = false;
+          this.game.pointShieldMode = "NORMAL";
           this.game.pointShieldArmedForQuestionIndex = null;
           this.game.canBuyPointShield = false;
+          this.game.canBuyReflectiveShield = false;
           this.refreshDoubleDownPolicy();
         }
 
@@ -2234,10 +2345,13 @@
           });
         }
 
-        onBuyPointShield() {
+        onBuyPointShield(mode) {
+          const shieldMode = String(mode || "NORMAL").toUpperCase() === "REFLECTIVE" ? "REFLECTIVE" : "NORMAL";
           if (!this.identity.gameId) return;
           const hasNextQuestion = this.game.question && this.game.question.questionNumber < this.game.question.questionCount;
-          const cost = Math.max(1, Number(this.game.pointShieldCost || 2500));
+          const cost = shieldMode === "REFLECTIVE"
+            ? Math.max(1, Number(this.game.reflectiveShieldCost || 4000))
+            : Math.max(1, Number(this.game.pointShieldCost || 2500));
 
           if (!hasNextQuestion) {
             this.game.pointShieldNotice = "No next question remains for shield activation.";
@@ -2253,6 +2367,20 @@
             return;
           }
 
+          if (shieldMode === "REFLECTIVE" && !this.game.canBuyReflectiveShield) {
+            this.game.pointShieldNotice = this.getReflectiveShieldStatusText(true);
+            this.persist();
+            this.render();
+            return;
+          }
+
+          if (shieldMode !== "REFLECTIVE" && !this.game.canBuyPointShield) {
+            this.game.pointShieldNotice = this.getPointShieldStatusText(true);
+            this.persist();
+            this.render();
+            return;
+          }
+
           if (Number(this.game.playerScore || 0) < cost) {
             this.game.pointShieldNotice = "Need at least " + formatScore(cost) + " points to arm shield.";
             this.persist();
@@ -2262,13 +2390,14 @@
 
           this.game.pointShieldNotice = "";
           this.send(MSG.POINT_SHIELD_BUY, this.identity.gameId, {
-            playerId: this.identity.playerId
+            playerId: this.identity.playerId,
+            mode: shieldMode
           });
         }
 
         onClaimStreakPrize(action, targetPlayerId) {
           if (!this.identity.gameId) return;
-          if (!this.game.streakPrizeAvailable || this.game.streakPrizeUsed) {
+          if (!this.game.streakPrizeAvailable) {
             this.game.streakPrizeNotice = "This prize is unavailable.";
             this.persist();
             this.render();
@@ -2321,9 +2450,12 @@
           this.game.doubleDownBuyCost = 3000;
           this.game.doubleDownBuyBlockedReason = "";
           this.game.pointShieldNext = false;
+          this.game.pointShieldMode = "NORMAL";
           this.game.pointShieldArmedForQuestionIndex = null;
           this.game.canBuyPointShield = false;
           this.game.pointShieldCost = 2500;
+          this.game.canBuyReflectiveShield = false;
+          this.game.reflectiveShieldCost = 4000;
           this.game.pointShieldNotice = "";
           this.game.incomingStrikeCount = 0;
           this.game.playerDisplayedScore = 0;
@@ -2333,6 +2465,8 @@
           this.game.correctStreak = 0;
           this.game.streakPrizeAvailable = false;
           this.game.streakPrizeUsed = false;
+          this.game.streakPrizeUses = 0;
+          this.game.streakPrizeNextIndex = 0;
           this.game.streakPrizeAction = "";
           this.game.streakPrizeNotice = "";
           this.game.prizeTargets = [];
@@ -2367,13 +2501,14 @@
 
           if (this.game.playerRemoved) {
             this.ui.setFooterQuote(quoteSet.footer);
+            this.ui.setNewFightVisible(true, () => this.joinAnotherGame());
             this.ui.renderRemoved();
-            this.bindJoinAnotherGameButton();
             return;
           }
 
           if (!this.identity.playerName || !this.identity.gameId) {
             this.ui.setFooterQuote("");
+            this.ui.setNewFightVisible(false);
             this.ui.renderJoin(this.joinDraft.gameId || this.game.gameId || readQueryGame(), this.joinDraft.playerName || this.identity.playerName || "", {
               onJoin: this.onJoin.bind(this),
               onJoinInputChange: this.onJoinInputChange.bind(this)
@@ -2383,19 +2518,20 @@
 
           if (this.currentConnState !== "connected" && this.game.phase !== PHASES.QUESTION) {
             this.ui.setFooterQuote(quoteSet.footer);
+            this.ui.setNewFightVisible(true, () => this.joinAnotherGame());
             this.ui.renderWaiting("Your connection was interrupted. Reconnecting...", quoteSet);
-            this.bindJoinAnotherGameButton();
             return;
           }
 
           switch (this.game.phase) {
             case PHASES.LOBBY:
               this.ui.setFooterQuote(quoteSet.footer);
+              this.ui.setNewFightVisible(true, () => this.joinAnotherGame());
               this.ui.renderLobby(this.game, quoteSet);
-              this.bindJoinAnotherGameButton();
               break;
             case PHASES.QUESTION:
               this.ui.setFooterQuote(quoteSet.footer);
+              this.ui.setNewFightVisible(true, () => this.joinAnotherGame());
               if (!this.game.question) {
                 this.ui.renderWaiting("Waiting for the current question...", quoteSet);
                 break;
@@ -2412,10 +2548,10 @@
                 onOptionClick: this.onOptionClick.bind(this),
                 onSubmitMulti: this.onSubmitMulti.bind(this)
               });
-              this.bindJoinAnotherGameButton();
               break;
             case PHASES.ANSWER_REVEAL:
               this.ui.setFooterQuote(quoteSet.footer);
+              this.ui.setNewFightVisible(true, () => this.joinAnotherGame());
               if (!this.game.question || !this.game.reveal) {
                 this.ui.renderWaiting("Answer reveal incoming...", quoteSet);
                 break;
@@ -2441,26 +2577,31 @@
                 doubleDownStatusText: this.getDoubleDownStatusText(hasNextQuestion),
                 doubleDownUses: Number(this.game.doubleDownUses || 0),
                 doubleDownCap: Number(this.game.doubleDownCap || 3),
+                rank: this.game.rank,
                 canBuyDoubleDown: !!this.game.canBuyDoubleDown,
                 doubleDownBuyCost: Number(this.game.doubleDownBuyCost || 3000),
                 doubleDownBuyBlockedReason: this.game.doubleDownBuyBlockedReason || "",
                 pointShieldNext: !!this.game.pointShieldNext,
+                pointShieldMode: String(this.game.pointShieldMode || "NORMAL"),
                 canBuyPointShield: !!this.game.canBuyPointShield,
                 pointShieldCost: Number(this.game.pointShieldCost || 2500),
+                canBuyReflectiveShield: !!this.game.canBuyReflectiveShield,
+                reflectiveShieldCost: Number(this.game.reflectiveShieldCost || 4000),
                 pointShieldNotice: this.game.pointShieldNotice || "",
                 incomingStrikeCount: Number(this.game.incomingStrikeCount || 0),
                 pointShieldStatusText: this.getPointShieldStatusText(hasNextQuestion),
+                reflectiveShieldStatusText: this.getReflectiveShieldStatusText(hasNextQuestion),
                 hasNextQuestion,
                 onDoubleDown: this.onDoubleDown.bind(this),
                 onBuyDoubleDown: this.onBuyDoubleDown.bind(this),
                 onBuyPointShield: this.onBuyPointShield.bind(this),
                 onClaimStreakPrize: this.onClaimStreakPrize.bind(this)
               });
-              this.bindJoinAnotherGameButton();
               break;
             case PHASES.LEADERBOARD:
             case PHASES.FINISHED:
               this.ui.setFooterQuote(quoteSet.footer);
+              this.ui.setNewFightVisible(true, () => this.joinAnotherGame());
               const hasNextFromBoard = !!(this.game.question && this.game.question.questionNumber < this.game.question.questionCount);
               this.ui.renderLeaderboard({
                 phase: this.game.phase,
@@ -2471,32 +2612,30 @@
                 isScoreMasked: this.game.isScoreMasked,
                 fakeScoreTurnsRemaining: this.game.fakeScoreTurnsRemaining,
                 streakPrizeUsed: this.game.streakPrizeUsed,
+                streakPrizeUses: Number(this.game.streakPrizeUses || 0),
                 streakPrizeAction: this.game.streakPrizeAction,
                 streakPrizeAvailable: this.game.streakPrizeAvailable,
                 streakPrizeNotice: this.game.streakPrizeNotice || "",
                 prizeTargets: Array.isArray(this.game.prizeTargets) ? this.game.prizeTargets : [],
                 pointShieldNext: !!this.game.pointShieldNext,
+                pointShieldMode: String(this.game.pointShieldMode || "NORMAL"),
                 canBuyPointShield: !!this.game.canBuyPointShield,
                 pointShieldCost: Number(this.game.pointShieldCost || 2500),
+                canBuyReflectiveShield: !!this.game.canBuyReflectiveShield,
+                reflectiveShieldCost: Number(this.game.reflectiveShieldCost || 4000),
                 pointShieldNotice: this.game.pointShieldNotice || "",
                 pointShieldStatusText: this.getPointShieldStatusText(hasNextFromBoard),
+                reflectiveShieldStatusText: this.getReflectiveShieldStatusText(hasNextFromBoard),
                 question: this.game.question,
                 onBuyPointShield: this.onBuyPointShield.bind(this),
                 onClaimStreakPrize: this.onClaimStreakPrize.bind(this)
               }, quoteSet);
-              this.bindJoinAnotherGameButton();
               break;
             default:
               this.ui.setFooterQuote(quoteSet.footer);
+              this.ui.setNewFightVisible(true, () => this.joinAnotherGame());
               this.ui.renderWaiting("Waiting for the instructor...", quoteSet);
-              this.bindJoinAnotherGameButton();
           }
-        }
-
-        bindJoinAnotherGameButton() {
-          const btn = document.getElementById("joinAnotherGameBtn");
-          if (!btn) return;
-          btn.addEventListener("click", () => this.joinAnotherGame(), { once: true });
         }
 
         startTicker() {
@@ -2505,7 +2644,6 @@
               this.ui.refreshTimer(this.game.question);
               if (nowTs() > this.game.question.endsAt + 1200 && !this.game.reveal) {
                 this.ui.renderWaiting("Question closed. Waiting for answer reveal...");
-                this.bindJoinAnotherGameButton();
               }
             }
           }, 300);
