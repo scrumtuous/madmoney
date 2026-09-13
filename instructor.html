@@ -2481,7 +2481,7 @@
                 out += "<span class='power-icon shield' title='Point shield'><i class='lni lni-shield'></i></span>";
               }
               if (row.canBuyReflectiveShield || (row.pointShieldNext && String(row.pointShieldMode || "").toUpperCase() === "REFLECTIVE") || row.shieldReflectiveActive) {
-                out += "<span class='power-icon shield' title='Reflective shield'><i class='lni lni-diamond'></i></span>";
+                out += "<span class='power-icon shield' title='Reflective shield'>✨</span>";
               }
               const rockets = Math.max(0, Number(row.incomingStrikeCount || 0));
               if (rockets > 0) {
@@ -2494,9 +2494,9 @@
               } else if (String(row.strikeOutcome || "") === "SHIELD_BLOCK") {
                 out += "<span class='power-icon shield' title='Shield blocked Shadow Strike'><i class='lni lni-shield'></i></span>";
               } else if (String(row.strikeOutcome || "") === "REFLECTED_BLOCK") {
-                out += "<span class='power-icon shield' title='Reflective shield bounced Shadow Strike'><i class='lni lni-diamond'></i></span>";
+                out += "<span class='power-icon shield' title='Reflective shield bounced Shadow Strike'>✨</span>";
               } else if (String(row.strikeOutcome || "") === "REFLECTED_HIT") {
-                out += "<span class='power-icon rocket' title='Your Shadow Strike was reflected'><i class='lni lni-diamond'></i></span>";
+                out += "<span class='power-icon rocket' title='Your Shadow Strike was reflected'>✨</span>";
               }
               return out ? "<span class='power-icons'>" + out + "</span>" : "";
             };

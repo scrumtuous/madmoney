@@ -997,7 +997,7 @@
           const inPlayIcons =
             iconGroup(doubleDownCount, "ready", "<i class='lni lni-dice'></i>", "Double Down in play")
             + iconGroup(shieldCount, "shield", "<i class='lni lni-shield'></i>", "Shield in play")
-            + iconGroup(reflectiveShieldCount, "shield", "<i class='lni lni-diamond'></i>", "Reflective shield in play")
+            + iconGroup(reflectiveShieldCount, "shield", "✨", "Reflective shield in play")
             + iconGroup(strikeCount, "rocket", "💥", "Shadow Strike in play");
 
           const wrap = document.createElement("section");
@@ -1010,12 +1010,12 @@
             + "<div id='timerView' class='timer " + timerClass + " mb-3'>" + formatTime(rem) + "</div>"
             + (model.strikeNotice ? "<div class='double-down-note warn mb-2'>" + safeText(model.strikeNotice) + "</div>" : "")
             + "<div class='fw-bold mb-2'>" + safeText(q.query) + "</div>"
-            + (inPlayIcons
-              ? "<div class='in-play-strip'><div class='small-note mb-1'>Powers In Play This Question</div><div class='in-play-icons'>" + inPlayIcons + "</div></div>"
-              : "")
             + "<div id='doubleDownBanner'></div>"
             + "<div id='multiHint' class='small-note mb-2'></div>"
             + "<div id='optionsGrid' class='options-grid mb-2'></div>"
+            + (inPlayIcons
+              ? "<div class='in-play-strip'><div class='small-note mb-1'>Powers In Play This Question</div><div class='in-play-icons'>" + inPlayIcons + "</div></div>"
+              : "")
             + "<div id='questionStatus' class='small-note mb-2' aria-live='polite'></div>"
             + "<div id='submitWrap'></div>";
           this.app.appendChild(wrap);
@@ -1276,9 +1276,9 @@
             reflectiveBtn.id = "buyReflectiveShieldBtn";
             reflectiveBtn.className = "btn moon-btn focus-ring";
             if (model.pointShieldNext && String(model.pointShieldMode || "").toUpperCase() === "REFLECTIVE") {
-              reflectiveBtn.innerHTML = "Reflective Shield Armed <i class='lni lni-diamond ms-1'></i>";
+              reflectiveBtn.innerHTML = "Reflective Shield Armed <span class='ms-1'>✨</span>";
             } else {
-              reflectiveBtn.innerHTML = "Reflective Shield for " + formatScore(model.reflectiveShieldCost || 4000) + " pts <i class='lni lni-diamond ms-1'></i>";
+              reflectiveBtn.innerHTML = "Reflective Shield for " + formatScore(model.reflectiveShieldCost || 4000) + " pts <span class='ms-1'>✨</span>";
             }
             reflectiveBtn.disabled = !!model.pointShieldNext || !model.canBuyReflectiveShield;
             shieldCol.appendChild(reflectiveBtn);
@@ -1458,7 +1458,7 @@
               if (hasNextQuestion) {
                 html += "<div class='power-strip'>"
                   + "<span class='power-pill shield'><i class='lni lni-shield'></i>Point Shield</span>"
-                  + "<span class='power-pill shield'><i class='lni lni-diamond'></i>Reflective Shield</span>"
+                  + "<span class='power-pill shield'>✨ Reflective Shield</span>"
                   + "</div>";
                 html += "<button id='lbBuyPointShieldBtn' class='btn moon-btn btn-lg focus-ring w-100 mb-2'"
                   + (model.pointShieldNext ? " disabled" : (!model.canBuyPointShield ? " disabled" : ""))
@@ -1475,7 +1475,7 @@
                   + ((model.pointShieldNext && String(model.pointShieldMode || "").toUpperCase() === "REFLECTIVE")
                     ? "Reflective Shield Armed"
                     : "Reflective Shield for " + formatScore(model.reflectiveShieldCost || 4000) + " pts")
-                  + " <i class='lni lni-diamond ms-1'></i></button>";
+                  + " <span class='ms-1'>✨</span></button>";
                 html += "<div class='double-down-note " + (((model.pointShieldNext && String(model.pointShieldMode || "").toUpperCase() === "REFLECTIVE") || model.canBuyReflectiveShield) ? "ok" : "bad") + " mb-2'>"
                   + safeText(model.reflectiveShieldStatusText || "") + "</div>";
               }
@@ -1504,7 +1504,7 @@
               iconHtml += "<span class='power-pill shield ms-1'><i class='lni lni-shield'></i></span>";
             }
             if (row.canBuyReflectiveShield || (row.pointShieldNext && String(row.pointShieldMode || "").toUpperCase() === "REFLECTIVE") || row.shieldReflectiveActive) {
-              iconHtml += "<span class='power-pill shield ms-1'><i class='lni lni-diamond'></i></span>";
+              iconHtml += "<span class='power-pill shield ms-1'>✨</span>";
             }
             const rockets = Math.max(0, Number(row.incomingStrikeCount || 0));
             if (rockets > 0) {
@@ -1517,7 +1517,7 @@
             } else if (String(row.strikeOutcome || "") === "SHIELD_BLOCK") {
               iconHtml += "<span class='power-pill shield ms-1' title='Shield blocked Shadow Strike'><i class='lni lni-shield'></i></span>";
             } else if (String(row.strikeOutcome || "") === "REFLECTED_BLOCK") {
-              iconHtml += "<span class='power-pill shield ms-1' title='Reflective shield bounced Shadow Strike'><i class='lni lni-diamond'></i></span>";
+              iconHtml += "<span class='power-pill shield ms-1' title='Reflective shield bounced Shadow Strike'>✨</span>";
             } else if (String(row.strikeOutcome || "") === "REFLECTED_HIT") {
               iconHtml += "<span class='power-pill rocket ms-1' title='Your Shadow Strike was reflected'>💥</span>";
             }
