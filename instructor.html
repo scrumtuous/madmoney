@@ -1059,6 +1059,7 @@
             questions: JSON.parse(JSON.stringify(quiz.questions)),
             players: {},
             submissions: {},
+            currentQuestionPowerSummary: null,
             revealedAnswer: null,
             updatedAt: nowTs()
           };
@@ -1082,6 +1083,11 @@
           if (typeof player.pointShieldMode !== "string") player.pointShieldMode = "NORMAL";
           if (typeof player.pointShieldActiveMode !== "string") player.pointShieldActiveMode = "NONE";
           if (typeof player.incomingStrikeCount !== "number") player.incomingStrikeCount = 0;
+          if (!Array.isArray(player.pendingIncomingStrikes)) player.pendingIncomingStrikes = [];
+          if (typeof player.strikeOutcome !== "string") player.strikeOutcome = "";
+          if (typeof player.strikeDelta !== "number") player.strikeDelta = 0;
+          if (typeof player.strikeCount !== "number") player.strikeCount = 0;
+          if (typeof player.strikeNotice !== "string") player.strikeNotice = "";
           if (typeof player.streakPrizeAvailable !== "boolean") player.streakPrizeAvailable = false;
           if (typeof player.streakPrizeUsed !== "boolean") player.streakPrizeUsed = false;
           if (typeof player.streakPrizeUses !== "number") player.streakPrizeUses = 0;
@@ -1245,6 +1251,11 @@
               pointShieldMode: "NORMAL",
               pointShieldActiveMode: "NONE",
               incomingStrikeCount: 0,
+              pendingIncomingStrikes: [],
+              strikeOutcome: "",
+              strikeDelta: 0,
+              strikeCount: 0,
+              strikeNotice: "",
               streakPrizeAvailable: false,
               streakPrizeUsed: false,
               streakPrizeUses: 0,
@@ -1290,6 +1301,11 @@
           p.pointShieldMode = "NORMAL";
           p.pointShieldActiveMode = "NONE";
           p.incomingStrikeCount = 0;
+          p.pendingIncomingStrikes = [];
+          p.strikeOutcome = "";
+          p.strikeDelta = 0;
+          p.strikeCount = 0;
+          p.strikeNotice = "";
           p.streakPrizeAvailable = false;
           p.streakPrizeUsed = false;
           p.streakPrizeUses = 0;
@@ -1575,14 +1591,8 @@
               return { ok: false, playerId, reason: "Target player is unavailable." };
             }
             this.normalizePlayerState(target);
-            target.incomingStrikeCount = Number(target.incomingStrikeCount || 0) + 1;
-            targetShielded = Number(target.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex);
-            const reflective = targetShielded && String(target.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE";
-            if (reflective) {
-              actor.score = Number(actor.score || 0) - STREAK_PRIZE_TARGET_PENALTY;
-            } else if (!targetShielded) {
-              target.score = Number(target.score || 0) - STREAK_PRIZE_TARGET_PENALTY;
-            }
+            target.pendingIncomingStrikes.push(actor.id);
+            target.incomingStrikeCount = Number(target.pendingIncomingStrikes.length || 0);
             target.lastSeenAt = nowTs();
           }
 
@@ -1606,11 +1616,7 @@
           const displayedScore = this.getDisplayedScore(actor);
           let reason = "";
           if (chosen === STREAK_ACTION.MASK) reason = "Streak prize activated: your leaderboard score is masked for 3 turns.";
-          else if (chosen === STREAK_ACTION.STEAL) reason = targetShielded
-            ? (String(target && target.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE"
-              ? "Streak prize reflected: your own score lost " + formatScore(STREAK_PRIZE_TARGET_PENALTY) + " points."
-              : "Streak prize activated: strike launched, but the target's shield blocked the point loss.")
-            : "Streak prize activated: target loses " + formatScore(STREAK_PRIZE_TARGET_PENALTY) + " points.";
+          else if (chosen === STREAK_ACTION.STEAL) reason = "Streak prize activated: Shadow Strike queued for next question.";
           else reason = "Streak prize activated: you gained " + formatScore(STREAK_PRIZE_SELF_BONUS) + " points.";
 
           return {
@@ -1645,9 +1651,25 @@
           const nextIndex = this.activeGame.phase === PHASES.LOBBY ? this.activeGame.questionIndex + 1 : this.activeGame.questionIndex + 1;
           if (nextIndex >= this.activeGame.questions.length) return null;
 
-          Object.values(this.activeGame.players).forEach((p) => {
+          const playerMap = this.activeGame.players || {};
+          const powerSummary = {
+            doubleDownCount: 0,
+            shieldCount: 0,
+            reflectiveShieldCount: 0,
+            strikeCount: 0
+          };
+          const appendNotice = (player, text) => {
+            if (!text) return;
+            if (!player.strikeNotice) player.strikeNotice = text;
+            else player.strikeNotice += " " + text;
+          };
+
+          Object.values(playerMap).forEach((p) => {
             this.normalizePlayerState(p);
-            p.incomingStrikeCount = 0;
+            p.strikeOutcome = "";
+            p.strikeDelta = 0;
+            p.strikeCount = 0;
+            p.strikeNotice = "";
 
             if (p.pointShieldNext) {
               p.pointShieldQuestionIndex = nextIndex;
@@ -1668,6 +1690,69 @@
             }
           });
 
+          Object.values(playerMap).forEach((target) => {
+            this.normalizePlayerState(target);
+            const pending = Array.isArray(target.pendingIncomingStrikes) ? target.pendingIncomingStrikes.slice() : [];
+            target.pendingIncomingStrikes = [];
+            target.incomingStrikeCount = 0;
+            if (!pending.length) return;
+            powerSummary.strikeCount += pending.length;
+
+            const shieldActive = Number(target.pointShieldQuestionIndex) === Number(nextIndex);
+            const reflective = shieldActive && String(target.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE";
+
+            if (reflective) {
+              pending.forEach((attackerIdRaw) => {
+                const attackerId = String(attackerIdRaw || "");
+                const attacker = playerMap[attackerId];
+                if (!attacker || attacker.removed) return;
+                this.normalizePlayerState(attacker);
+                attacker.score = Number(attacker.score || 0) - STREAK_PRIZE_TARGET_PENALTY;
+                attacker.strikeOutcome = "REFLECTED_HIT";
+                attacker.strikeDelta = Number(attacker.strikeDelta || 0) - STREAK_PRIZE_TARGET_PENALTY;
+                attacker.strikeCount = Number(attacker.strikeCount || 0) + 1;
+                attacker.lastSeenAt = nowTs();
+                appendNotice(attacker, "Your Shadow Strike was reflected for " + formatScore(STREAK_PRIZE_TARGET_PENALTY) + " points.");
+              });
+
+              if (!target.strikeOutcome) target.strikeOutcome = "REFLECTED_BLOCK";
+              target.strikeCount = Number(target.strikeCount || 0) + pending.length;
+              appendNotice(target, "Reflective shield bounced " + pending.length + " incoming strike" + (pending.length === 1 ? "" : "s") + ".");
+              target.lastSeenAt = nowTs();
+              return;
+            }
+
+            if (shieldActive) {
+              if (!target.strikeOutcome) target.strikeOutcome = "SHIELD_BLOCK";
+              target.strikeCount = Number(target.strikeCount || 0) + pending.length;
+              appendNotice(target, "Shield blocked " + pending.length + " incoming strike" + (pending.length === 1 ? "" : "s") + ".");
+              target.lastSeenAt = nowTs();
+              return;
+            }
+
+            const loss = pending.length * STREAK_PRIZE_TARGET_PENALTY;
+            target.score = Number(target.score || 0) - loss;
+            target.strikeOutcome = "STRUCK";
+            target.strikeDelta = Number(target.strikeDelta || 0) - loss;
+            target.strikeCount = Number(target.strikeCount || 0) + pending.length;
+            appendNotice(target, "Shadow Strike hit: you lost " + formatScore(loss) + " points.");
+            target.lastSeenAt = nowTs();
+          });
+
+          Object.values(playerMap).forEach((p) => {
+            this.normalizePlayerState(p);
+            if (p.doubleDownNext) powerSummary.doubleDownCount += 1;
+            if (Number(p.pointShieldQuestionIndex) === Number(nextIndex)) {
+              if (String(p.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE") {
+                powerSummary.reflectiveShieldCount += 1;
+              } else {
+                powerSummary.shieldCount += 1;
+              }
+            }
+          });
+
+          this.activeGame.currentQuestionPowerSummary = powerSummary;
+
           this.activeGame.questionIndex = nextIndex;
           this.activeGame.phase = PHASES.QUESTION;
           this.activeGame.questionStartedAt = nowTs();
@@ -1675,7 +1760,7 @@
           this.activeGame.revealedAnswer = null;
           const key = String(nextIndex);
           if (!this.activeGame.submissions[key]) this.activeGame.submissions[key] = {};
-          Object.values(this.activeGame.players).forEach((p) => {
+          Object.values(playerMap).forEach((p) => {
             p.currentSubmission = null;
           });
           this.saveGame();
@@ -1836,6 +1921,9 @@
               shieldActive: Number(p.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex),
               shieldReflectiveActive: Number(p.pointShieldQuestionIndex) === Number(this.activeGame.questionIndex) && String(p.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE",
               incomingStrikeCount: Number(p.incomingStrikeCount || 0),
+              strikeOutcome: String(p.strikeOutcome || ""),
+              strikeDelta: Number(p.strikeDelta || 0),
+              strikeCount: Number(p.strikeCount || 0),
               quickDrawWins: Number(p.quickDrawWins || 0),
               avgResponseMs: Number(p.responseCount || 0) > 0 ? Math.round(Number(p.responseTotalMs || 0) / Number(p.responseCount || 0)) : null,
               fastestResponseMs: p.fastestResponseMs == null ? null : Number(p.fastestResponseMs),
@@ -1861,7 +1949,13 @@
             p.pointShieldQuestionIndex = null;
             p.pointShieldActiveMode = "NONE";
             p.incomingStrikeCount = 0;
+            p.pendingIncomingStrikes = [];
+            p.strikeOutcome = "";
+            p.strikeDelta = 0;
+            p.strikeCount = 0;
+            p.strikeNotice = "";
           });
+          this.activeGame.currentQuestionPowerSummary = null;
           this.activeGame.phase = PHASES.FINISHED;
           this.saveGame();
         }
@@ -1876,6 +1970,9 @@
           const q = this.getQuestion(qIndex);
           if (!q) return null;
           const correctCount = q.options.filter((o) => o.correct).length;
+          const summary = this.activeGame && this.activeGame.currentQuestionPowerSummary
+            ? this.activeGame.currentQuestionPowerSummary
+            : { doubleDownCount: 0, shieldCount: 0, reflectiveShieldCount: 0, strikeCount: 0 };
           return {
             questionIndex: qIndex,
             questionNumber: qIndex + 1,
@@ -1885,6 +1982,12 @@
             isMultiSelect: correctCount > 1,
             startedAt: this.activeGame.questionStartedAt,
             endsAt: this.activeGame.questionEndsAt,
+            powerInPlay: {
+              doubleDownCount: Number(summary.doubleDownCount || 0),
+              shieldCount: Number(summary.shieldCount || 0),
+              reflectiveShieldCount: Number(summary.reflectiveShieldCount || 0),
+              strikeCount: Number(summary.strikeCount || 0)
+            },
             options: q.options.map((o) => ({
               id: o.id,
               letter: o.letter,
@@ -1953,6 +2056,10 @@
               pointShieldArmedForQuestionIndex: player && typeof player.pointShieldQuestionIndex === "number" ? Number(player.pointShieldQuestionIndex) : null,
               pointShieldActiveMode: player ? String(player.pointShieldActiveMode || "NONE") : "NONE",
               incomingStrikeCount: player ? Number(player.incomingStrikeCount || 0) : 0,
+              strikeOutcome: player ? String(player.strikeOutcome || "") : "",
+              strikeDelta: player ? Number(player.strikeDelta || 0) : 0,
+              strikeCount: player ? Number(player.strikeCount || 0) : 0,
+              strikeNotice: player ? String(player.strikeNotice || "") : "",
               canBuyPointShield: !!shieldPolicy.allowed,
               pointShieldCost: Number(shieldPolicy.cost || POINT_SHIELD_COST),
               canBuyReflectiveShield: !!reflectiveShieldPolicy.allowed,
@@ -2381,6 +2488,15 @@
                 for (let i = 0; i < rockets; i += 1) {
                   out += "<span class='power-icon rocket' title='Incoming strike'><i class='lni lni-rocket'></i></span>";
                 }
+              }
+              if (String(row.strikeOutcome || "") === "STRUCK") {
+                out += "<span class='power-icon rocket' title='Lost points from Shadow Strike'><i class='lni lni-bolt'></i></span>";
+              } else if (String(row.strikeOutcome || "") === "SHIELD_BLOCK") {
+                out += "<span class='power-icon shield' title='Shield blocked Shadow Strike'><i class='lni lni-shield'></i></span>";
+              } else if (String(row.strikeOutcome || "") === "REFLECTED_BLOCK") {
+                out += "<span class='power-icon shield' title='Reflective shield bounced Shadow Strike'><i class='lni lni-diamond'></i></span>";
+              } else if (String(row.strikeOutcome || "") === "REFLECTED_HIT") {
+                out += "<span class='power-icon rocket' title='Your Shadow Strike was reflected'><i class='lni lni-diamond'></i></span>";
               }
               return out ? "<span class='power-icons'>" + out + "</span>" : "";
             };
@@ -3043,6 +3159,9 @@
             if (!question) return;
             const payload = this.game.getPublicQuestionPayload(this.game.activeGame.questionIndex);
             this.send(MSG.QUESTION_STARTED, this.game.activeGame.gameId, "instructor-main", payload);
+            this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
+              leaderboard: this.game.getLeaderboard()
+            });
             this.renderAll();
           });
         }

@@ -50,7 +50,7 @@
       background-repeat: no-repeat;
       background-position: center;
       background-size: cover;
-      opacity: 0.08;
+      opacity: 0.12;
       pointer-events: none;
       z-index: 0;
     }
@@ -377,6 +377,7 @@
       padding: 0.55rem 0.65rem;
       font-size: 0.9rem;
       line-height: 1.3;
+      text-align: center;
     }
 
     .double-down-note.warn {
@@ -526,6 +527,21 @@
       border-color: rgba(255, 141, 160, 0.62);
       color: #ffd4dd;
       background: rgba(112, 44, 66, 0.34);
+    }
+
+    .in-play-strip {
+      border-radius: 12px;
+      border: 1px solid rgba(247, 221, 233, 0.24);
+      background: rgba(0, 0, 0, 0.22);
+      padding: 0.55rem 0.65rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .in-play-icons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
     }
 
     .power-action-row {
@@ -963,6 +979,26 @@
           const q = model.question;
           const rem = Math.max(0, q.endsAt - nowTs());
           const timerClass = rem <= 10000 ? "danger" : rem <= 30000 ? "warn" : "";
+          const power = q.powerInPlay || {};
+          const strikeCount = Math.max(0, Number(power.strikeCount || 0));
+          const shieldCount = Math.max(0, Number(power.shieldCount || 0));
+          const reflectiveShieldCount = Math.max(0, Number(power.reflectiveShieldCount || 0));
+          const doubleDownCount = Math.max(0, Number(power.doubleDownCount || 0));
+
+          const iconGroup = (count, cls, iconHtml, label) => {
+            if (!count) return "";
+            let out = "";
+            for (let i = 0; i < count; i += 1) {
+              out += "<span class='power-pill " + cls + "' title='" + label + "'>" + iconHtml + "</span>";
+            }
+            return out;
+          };
+
+          const inPlayIcons =
+            iconGroup(doubleDownCount, "ready", "<i class='lni lni-dice'></i>", "Double Down in play")
+            + iconGroup(shieldCount, "shield", "<i class='lni lni-shield'></i>", "Shield in play")
+            + iconGroup(reflectiveShieldCount, "shield", "<i class='lni lni-diamond'></i>", "Reflective shield in play")
+            + iconGroup(strikeCount, "rocket", "💥", "Shadow Strike in play");
 
           const wrap = document.createElement("section");
           wrap.className = "glass p-3";
@@ -972,7 +1008,11 @@
             + "<div class='score-box'><div class='small-note'>Your Score</div><div id='scoreValue' class='fw-bold fs-5'>" + formatScore(model.playerScore) + "</div></div>"
             + "</div>"
             + "<div id='timerView' class='timer " + timerClass + " mb-3'>" + formatTime(rem) + "</div>"
+            + (model.strikeNotice ? "<div class='double-down-note warn mb-2'>" + safeText(model.strikeNotice) + "</div>" : "")
             + "<div class='fw-bold mb-2'>" + safeText(q.query) + "</div>"
+            + (inPlayIcons
+              ? "<div class='in-play-strip'><div class='small-note mb-1'>Powers In Play This Question</div><div class='in-play-icons'>" + inPlayIcons + "</div></div>"
+              : "")
             + "<div id='doubleDownBanner'></div>"
             + "<div id='multiHint' class='small-note mb-2'></div>"
             + "<div id='optionsGrid' class='options-grid mb-2'></div>"
@@ -1123,6 +1163,13 @@
             wrap.appendChild(masked);
           }
 
+          if (model.strikeNotice) {
+            const strikeNote = document.createElement("div");
+            strikeNote.className = "double-down-note warn mb-3";
+            strikeNote.textContent = model.strikeNotice;
+            wrap.appendChild(strikeNote);
+          }
+
           if (model.streakPrizeAvailable) {
             const strip = document.createElement("div");
             strip.className = "power-strip";
@@ -1142,12 +1189,12 @@
 
             prize.innerHTML = ""
               + "<div class='streak-prize-title mb-1'><i class='lni lni-gift me-1'></i>Fight Quiz Streak Prize Unlocked</div>"
-              + "<div class='streak-prize-note mb-2'>Choose one action now or later: fog your score for 3 turns, steal 1,000 from one player, or gain 2,000 instantly.</div>"
+              + "<div class='streak-prize-note mb-2'>Choose one action now or later: fog your score for 3 turns, queue a 1,000-point strike for next question, or gain 2,000 instantly.</div>"
               + "<div class='d-grid gap-2'>"
               + "<select id='streakPrizeAction' class='form-control join-input'>"
               + "<option value=''>Select prize action...</option>"
               + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 3 turns</option>"
-              + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: another player loses 1,000</option>"
+              + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: queue 1,000-point strike for next question</option>"
               + "<option value='" + STREAK_ACTION.BONUS + "'>Smelling Salts: gain 2,000 points</option>"
               + "</select>"
               + "<div id='streakPrizeTargetWrap' class='d-none'>"
@@ -1342,6 +1389,13 @@
           me.innerHTML = "<div class='small-note'>You're #" + (model.rank || "-") + "</div><div class='fs-2 fw-bold'>" + formatScore(model.playerScore) + " points</div>";
           wrap.appendChild(me);
 
+          if (model.strikeNotice) {
+            const strikeNote = document.createElement("div");
+            strikeNote.className = "double-down-note warn mb-3";
+            strikeNote.textContent = model.strikeNotice;
+            wrap.appendChild(strikeNote);
+          }
+
           if (model.isScoreMasked) {
             const masked = document.createElement("div");
             masked.className = "double-down-note warn mb-3";
@@ -1359,7 +1413,7 @@
               text = "Fog Cloak used: your score was hidden for 3 turns.";
             } else if (model.streakPrizeAction === STREAK_ACTION.STEAL) {
               icon = "lni-target";
-              text = "Shadow Strike used: an opponent took a 1,000 point hit.";
+              text = "Shadow Strike used: 1,000-point strike was queued for the next question.";
             } else if (model.streakPrizeAction === STREAK_ACTION.BONUS) {
               icon = "lni-bolt";
               text = "Smelling Salts used: you gained 2,000 points.";
@@ -1390,7 +1444,7 @@
                   + "<select id='lbStreakPrizeAction' class='form-control join-input'>"
                   + "<option value=''>Select prize action...</option>"
                   + "<option value='" + STREAK_ACTION.MASK + "'>Fog Cloak: hide your leaderboard score for 3 turns</option>"
-                  + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: another player loses 1,000</option>"
+                  + "<option value='" + STREAK_ACTION.STEAL + "'>Shadow Strike: queue 1,000-point strike for next question</option>"
                   + "<option value='" + STREAK_ACTION.BONUS + "'>Smelling Salts: gain 2,000 points</option>"
                   + "</select>"
                   + "<div id='lbStreakPrizeTargetWrap' class='d-none'>"
@@ -1457,6 +1511,15 @@
               for (let i = 0; i < rockets; i += 1) {
                 iconHtml += "<span class='power-pill rocket ms-1' role='img' aria-label='Incoming strike'>💥</span>";
               }
+            }
+            if (String(row.strikeOutcome || "") === "STRUCK") {
+              iconHtml += "<span class='power-pill rocket ms-1' title='Lost points from Shadow Strike'>💥</span>";
+            } else if (String(row.strikeOutcome || "") === "SHIELD_BLOCK") {
+              iconHtml += "<span class='power-pill shield ms-1' title='Shield blocked Shadow Strike'><i class='lni lni-shield'></i></span>";
+            } else if (String(row.strikeOutcome || "") === "REFLECTED_BLOCK") {
+              iconHtml += "<span class='power-pill shield ms-1' title='Reflective shield bounced Shadow Strike'><i class='lni lni-diamond'></i></span>";
+            } else if (String(row.strikeOutcome || "") === "REFLECTED_HIT") {
+              iconHtml += "<span class='power-pill rocket ms-1' title='Your Shadow Strike was reflected'>💥</span>";
             }
             const div = document.createElement("div");
             div.className = "rank-row d-flex justify-content-between align-items-center";
@@ -1581,6 +1644,10 @@
             reflectiveShieldCost: 4000,
             pointShieldNotice: "",
             incomingStrikeCount: 0,
+            strikeOutcome: "",
+            strikeDelta: 0,
+            strikeCount: 0,
+            strikeNotice: "",
             playerDisplayedScore: 0,
             isScoreMasked: false,
             fakeScoreTurnsRemaining: 0,
@@ -1629,6 +1696,10 @@
           if (typeof this.game.reflectiveShieldCost !== "number") this.game.reflectiveShieldCost = 4000;
           if (typeof this.game.pointShieldNotice !== "string") this.game.pointShieldNotice = "";
           if (typeof this.game.incomingStrikeCount !== "number") this.game.incomingStrikeCount = 0;
+          if (typeof this.game.strikeOutcome !== "string") this.game.strikeOutcome = "";
+          if (typeof this.game.strikeDelta !== "number") this.game.strikeDelta = 0;
+          if (typeof this.game.strikeCount !== "number") this.game.strikeCount = 0;
+          if (typeof this.game.strikeNotice !== "string") this.game.strikeNotice = "";
           if (typeof this.game.playerDisplayedScore !== "number") this.game.playerDisplayedScore = Number(this.game.playerScore || 0);
           if (typeof this.game.isScoreMasked !== "boolean") this.game.isScoreMasked = false;
           if (typeof this.game.fakeScoreTurnsRemaining !== "number") this.game.fakeScoreTurnsRemaining = 0;
@@ -1758,6 +1829,24 @@
           return "Spend " + formatScore(cost) + " points to arm reflective shield with blowback.";
         }
 
+        buildStrikeNotice(outcome, delta, count) {
+          const strikeCount = Math.max(0, Number(count || 0));
+          const amount = Math.abs(Number(delta || 0));
+          if (outcome === "STRUCK") {
+            return "You were hit by " + strikeCount + " Shadow Strike" + (strikeCount === 1 ? "" : "s") + " and lost " + formatScore(amount || (strikeCount * 1000)) + " points.";
+          }
+          if (outcome === "SHIELD_BLOCK") {
+            return "Your shield blocked " + strikeCount + " Shadow Strike" + (strikeCount === 1 ? "" : "s") + ".";
+          }
+          if (outcome === "REFLECTED_BLOCK") {
+            return "Your reflective shield bounced " + strikeCount + " Shadow Strike" + (strikeCount === 1 ? "" : "s") + " back.";
+          }
+          if (outcome === "REFLECTED_HIT") {
+            return "Your Shadow Strike was reflected and you lost " + formatScore(amount || (strikeCount * 1000)) + " points.";
+          }
+          return "";
+        }
+
         init() {
           if (!this.identity || !this.identity.playerId) {
             this.identity = {
@@ -1865,6 +1954,10 @@
           this.game.reflectiveShieldCost = 4000;
           this.game.pointShieldNotice = "";
           this.game.incomingStrikeCount = 0;
+          this.game.strikeOutcome = "";
+          this.game.strikeDelta = 0;
+          this.game.strikeCount = 0;
+          this.game.strikeNotice = "";
           this.game.playerDisplayedScore = Number(this.game.playerScore || 0);
           this.game.isScoreMasked = false;
           this.game.fakeScoreTurnsRemaining = 0;
@@ -1993,11 +2086,15 @@
             this.game.pointShieldMode = String(snapshot.player.pointShieldMode || this.game.pointShieldMode || "NORMAL");
             this.game.pointShieldArmedForQuestionIndex = snapshot.player.pointShieldArmedForQuestionIndex == null ? null : Number(snapshot.player.pointShieldArmedForQuestionIndex);
             this.game.incomingStrikeCount = Number(snapshot.player.incomingStrikeCount || 0);
+            this.game.strikeOutcome = String(snapshot.player.strikeOutcome || "");
+            this.game.strikeDelta = Number(snapshot.player.strikeDelta || 0);
+            this.game.strikeCount = Number(snapshot.player.strikeCount || 0);
             this.game.canBuyPointShield = !!snapshot.player.canBuyPointShield;
             this.game.pointShieldCost = Number(snapshot.player.pointShieldCost || this.game.pointShieldCost || 2500);
             this.game.canBuyReflectiveShield = !!snapshot.player.canBuyReflectiveShield;
             this.game.reflectiveShieldCost = Number(snapshot.player.reflectiveShieldCost || this.game.reflectiveShieldCost || 4000);
             this.game.pointShieldNotice = "";
+            this.game.strikeNotice = String(snapshot.player.strikeNotice || this.buildStrikeNotice(this.game.strikeOutcome, this.game.strikeDelta, this.game.strikeCount));
             this.game.playerDisplayedScore = Number(snapshot.player.displayedScore != null ? snapshot.player.displayedScore : this.game.playerDisplayedScore || this.game.playerScore || 0);
             this.game.isScoreMasked = !!snapshot.player.isScoreMasked;
             this.game.fakeScoreTurnsRemaining = Number(snapshot.player.fakeScoreTurnsRemaining || 0);
@@ -2041,6 +2138,10 @@
           this.game.streakPrizeNotice = "";
           this.game.pointShieldNotice = "";
           this.game.incomingStrikeCount = 0;
+          this.game.strikeOutcome = "";
+          this.game.strikeDelta = 0;
+          this.game.strikeCount = 0;
+          this.game.strikeNotice = "";
 
           if (this.game.pointShieldNext) {
             this.game.pointShieldArmedForQuestionIndex = Number(payload.questionIndex);
@@ -2180,6 +2281,10 @@
           if (mine) {
             this.game.playerDisplayedScore = Number(mine.score || this.game.playerDisplayedScore || this.game.playerScore || 0);
             this.game.incomingStrikeCount = Number(mine.incomingStrikeCount || 0);
+            this.game.strikeOutcome = String(mine.strikeOutcome || "");
+            this.game.strikeDelta = Number(mine.strikeDelta || 0);
+            this.game.strikeCount = Number(mine.strikeCount || 0);
+            this.game.strikeNotice = this.buildStrikeNotice(this.game.strikeOutcome, this.game.strikeDelta, this.game.strikeCount);
             this.game.canBuyPointShield = !!mine.canBuyPointShield;
             this.game.canBuyReflectiveShield = !!mine.canBuyReflectiveShield;
             if (mine.pointShieldNext != null) this.game.pointShieldNext = !!mine.pointShieldNext;
@@ -2209,6 +2314,10 @@
             this.game.rank = mine.rank;
             this.game.playerDisplayedScore = Number(mine.score || this.game.playerDisplayedScore || this.game.playerScore || 0);
             this.game.incomingStrikeCount = Number(mine.incomingStrikeCount || 0);
+            this.game.strikeOutcome = String(mine.strikeOutcome || "");
+            this.game.strikeDelta = Number(mine.strikeDelta || 0);
+            this.game.strikeCount = Number(mine.strikeCount || 0);
+            this.game.strikeNotice = this.buildStrikeNotice(this.game.strikeOutcome, this.game.strikeDelta, this.game.strikeCount);
             this.game.canBuyPointShield = !!mine.canBuyPointShield;
             this.game.canBuyReflectiveShield = !!mine.canBuyReflectiveShield;
             if (mine.pointShieldNext != null) this.game.pointShieldNext = !!mine.pointShieldNext;
@@ -2245,6 +2354,10 @@
           this.game.canBuyReflectiveShield = false;
           this.game.pointShieldNotice = "";
           this.game.incomingStrikeCount = 0;
+          this.game.strikeOutcome = "";
+          this.game.strikeDelta = 0;
+          this.game.strikeCount = 0;
+          this.game.strikeNotice = "";
           this.refreshDoubleDownPolicy();
         }
 
@@ -2268,6 +2381,10 @@
           this.game.pointShieldArmedForQuestionIndex = null;
           this.game.canBuyPointShield = false;
           this.game.canBuyReflectiveShield = false;
+          this.game.strikeOutcome = "";
+          this.game.strikeDelta = 0;
+          this.game.strikeCount = 0;
+          this.game.strikeNotice = "";
           this.refreshDoubleDownPolicy();
         }
 
@@ -2472,6 +2589,10 @@
           this.game.reflectiveShieldCost = 4000;
           this.game.pointShieldNotice = "";
           this.game.incomingStrikeCount = 0;
+          this.game.strikeOutcome = "";
+          this.game.strikeDelta = 0;
+          this.game.strikeCount = 0;
+          this.game.strikeNotice = "";
           this.game.playerDisplayedScore = 0;
           this.game.isScoreMasked = false;
           this.game.fakeScoreTurnsRemaining = 0;
@@ -2555,6 +2676,7 @@
                 hasSubmitted: this.game.hasSubmitted,
                 selectedIds: this.game.selectedIds,
                 playerScore: this.game.playerScore,
+                strikeNotice: this.game.strikeNotice || "",
                 playerId: this.identity.playerId,
                 isMulti: this.isLikelyMultiSelect(),
                 doubleDownActive: this.game.doubleDownArmed
@@ -2580,6 +2702,7 @@
                 playerDisplayedScore: this.game.playerDisplayedScore,
                 isScoreMasked: !!this.game.isScoreMasked,
                 fakeScoreTurnsRemaining: Number(this.game.fakeScoreTurnsRemaining || 0),
+                strikeNotice: this.game.strikeNotice || "",
                 playerScoreBeforeReveal: this.game.playerScoreBeforeReveal,
                 streakPrizeAvailable: !!this.game.streakPrizeAvailable,
                 streakPrizeUsed: !!this.game.streakPrizeUsed,
@@ -2625,6 +2748,7 @@
                 playerDisplayedScore: this.game.playerDisplayedScore,
                 isScoreMasked: this.game.isScoreMasked,
                 fakeScoreTurnsRemaining: this.game.fakeScoreTurnsRemaining,
+                strikeNotice: this.game.strikeNotice || "",
                 streakPrizeUsed: this.game.streakPrizeUsed,
                 streakPrizeUses: Number(this.game.streakPrizeUses || 0),
                 streakPrizeAction: this.game.streakPrizeAction,
