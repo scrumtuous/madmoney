@@ -654,7 +654,7 @@
       </section>
     </main>
 
-    <footer class="host-footer"><div id="hostFooterQuote">Quote loading...</div><div>This project has no association with the movie Fight Club.</div></footer>
+    <footer class="host-footer"><div id="hostFooterQuote">Quote loading...</div></footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -664,9 +664,9 @@
       "use strict";
 
       const SOCKET_CHOICES = [
-        { id: "primary", name: "Primary", url: "wss://websockets.theserverside.com" },
+        { id: "primary", name: "TheServerSide", url: "wss://websockets.theserverside.com" },
         { id: "internal", name: "Internal", url: "ws://internal.theserverside.com:8099/madmoney" },
-        { id: "legacy", name: "Legacy", url: "ws://10.23.131.137:8099/madmoney" }
+        { id: "legacy", name: "Cameron's VM", url: "ws://10.23.131.137:8099/madmoney" }
       ];
       const STORAGE_KEYS = {
         QUIZZES: "gothicQuiz.quizzes.v1",
@@ -687,6 +687,7 @@
       const DOUBLE_DOWN_BUY_COST = 3000;
       const POINT_SHIELD_COST = 2500;
       const REFLECTIVE_SHIELD_COST = 4000;
+      const FIFTY_FIFTY_COST = 1000;
       const STREAK_PRIZE_LEVELS = [1, 2, 5, 8, 13, 21, 34, 55];
       const STREAK_PRIZE_FAKE_TURNS = 3;
       const STREAK_PRIZE_SELF_BONUS = 2000;
@@ -795,6 +796,8 @@
         GAME_STARTED: "GAME_STARTED",
         QUESTION_STARTED: "QUESTION_STARTED",
         ANSWER_SUBMITTED: "ANSWER_SUBMITTED",
+        FIFTY_FIFTY: "FIFTY_FIFTY",
+        FIFTY_FIFTY_RESULT: "FIFTY_FIFTY_RESULT",
         QUESTION_ENDED: "QUESTION_ENDED",
         ANSWER_REVEALED: "ANSWER_REVEALED",
         SCORE_UPDATED: "SCORE_UPDATED",
@@ -1294,12 +1297,16 @@
           if (typeof player.pointShieldQuestionIndex !== "number") player.pointShieldQuestionIndex = null;
           if (typeof player.pointShieldMode !== "string") player.pointShieldMode = "NORMAL";
           if (typeof player.pointShieldActiveMode !== "string") player.pointShieldActiveMode = "NONE";
+          if (typeof player.fiftyFiftyQuestionIndex !== "number") player.fiftyFiftyQuestionIndex = null;
+          if (!Array.isArray(player.fiftyFiftyRemovedOptionIds)) player.fiftyFiftyRemovedOptionIds = [];
+          if (typeof player.fiftyFiftyUsed !== "boolean") player.fiftyFiftyUsed = false;
           if (typeof player.incomingStrikeCount !== "number") player.incomingStrikeCount = 0;
           if (typeof player.attackedCount !== "number") player.attackedCount = 0;
           if (!Array.isArray(player.pendingIncomingStrikes)) player.pendingIncomingStrikes = [];
           if (typeof player.strikeOutcome !== "string") player.strikeOutcome = "";
           if (typeof player.strikeDelta !== "number") player.strikeDelta = 0;
           if (typeof player.strikeCount !== "number") player.strikeCount = 0;
+          if (!Array.isArray(player.strikeAttackers)) player.strikeAttackers = [];
           if (typeof player.strikeNotice !== "string") player.strikeNotice = "";
           if (typeof player.streakPrizeAvailable !== "boolean") player.streakPrizeAvailable = false;
           if (typeof player.streakPrizeUsed !== "boolean") player.streakPrizeUsed = false;
@@ -1467,12 +1474,16 @@
               pointShieldQuestionIndex: null,
               pointShieldMode: "NORMAL",
               pointShieldActiveMode: "NONE",
+              fiftyFiftyQuestionIndex: null,
+              fiftyFiftyRemovedOptionIds: [],
+              fiftyFiftyUsed: false,
               incomingStrikeCount: 0,
               attackedCount: 0,
               pendingIncomingStrikes: [],
               strikeOutcome: "",
               strikeDelta: 0,
               strikeCount: 0,
+              strikeAttackers: [],
               strikeNotice: "",
               streakPrizeAvailable: false,
               streakPrizeUsed: false,
@@ -1521,12 +1532,16 @@
           p.pointShieldQuestionIndex = null;
           p.pointShieldMode = "NORMAL";
           p.pointShieldActiveMode = "NONE";
+          p.fiftyFiftyQuestionIndex = null;
+          p.fiftyFiftyRemovedOptionIds = [];
+          p.fiftyFiftyUsed = false;
           p.incomingStrikeCount = 0;
           p.attackedCount = 0;
           p.pendingIncomingStrikes = [];
           p.strikeOutcome = "";
           p.strikeDelta = 0;
           p.strikeCount = 0;
+          p.strikeAttackers = [];
           p.strikeNotice = "";
           p.streakPrizeAvailable = false;
           p.streakPrizeUsed = false;
@@ -1802,6 +1817,9 @@
           if (chosen !== STREAK_ACTION.MASK && chosen !== STREAK_ACTION.STEAL && chosen !== STREAK_ACTION.BONUS) {
             return { ok: false, playerId, reason: "Choose a valid prize action." };
           }
+          if (chosen === STREAK_ACTION.STEAL && this.activeGame.questionIndex + 1 >= this.activeGame.questions.length) {
+            return { ok: false, playerId, reason: "No next question remains for this attack." };
+          }
 
           let targetId = null;
           let target = null;
@@ -1895,7 +1913,11 @@
             p.strikeOutcome = "";
             p.strikeDelta = 0;
             p.strikeCount = 0;
+            p.strikeAttackers = [];
             p.strikeNotice = "";
+            p.fiftyFiftyQuestionIndex = null;
+            p.fiftyFiftyRemovedOptionIds = [];
+            p.fiftyFiftyUsed = false;
 
             if (p.pointShieldNext) {
               p.pointShieldQuestionIndex = nextIndex;
@@ -1919,19 +1941,32 @@
           Object.values(playerMap).forEach((target) => {
             this.normalizePlayerState(target);
             const pending = Array.isArray(target.pendingIncomingStrikes) ? target.pendingIncomingStrikes.slice() : [];
+            const validAttackerIds = pending
+              .map((attackerId) => String(attackerId || ""))
+              .filter((attackerId) => {
+                const attacker = playerMap[attackerId];
+                return !!(attacker && !attacker.removed);
+              });
+            const attackerNames = [];
+            validAttackerIds.forEach((attackerId) => {
+              const attacker = playerMap[attackerId];
+              const nm = sanitizeName(attacker.name || "");
+              if (!nm) return;
+              if (attackerNames.includes(nm)) return;
+              attackerNames.push(nm);
+            });
             target.pendingIncomingStrikes = [];
             target.incomingStrikeCount = 0;
-            if (!pending.length) return;
-            powerSummary.strikeCount += pending.length;
+            if (!validAttackerIds.length) return;
+            target.strikeAttackers = attackerNames;
+            powerSummary.strikeCount += validAttackerIds.length;
 
             const shieldActive = Number(target.pointShieldQuestionIndex) === Number(nextIndex);
             const reflective = shieldActive && String(target.pointShieldActiveMode || "").toUpperCase() === "REFLECTIVE";
 
             if (reflective) {
-              pending.forEach((attackerIdRaw) => {
-                const attackerId = String(attackerIdRaw || "");
+              validAttackerIds.forEach((attackerId) => {
                 const attacker = playerMap[attackerId];
-                if (!attacker || attacker.removed) return;
                 this.normalizePlayerState(attacker);
                 attacker.score = Number(attacker.score || 0) - STREAK_PRIZE_TARGET_PENALTY;
                 attacker.strikeOutcome = "REFLECTED_HIT";
@@ -1942,25 +1977,25 @@
               });
 
               if (!target.strikeOutcome) target.strikeOutcome = "REFLECTED_BLOCK";
-              target.strikeCount = Number(target.strikeCount || 0) + pending.length;
-              appendNotice(target, "Reflective shield bounced " + pending.length + " incoming strike" + (pending.length === 1 ? "" : "s") + ".");
+              target.strikeCount = Number(target.strikeCount || 0) + validAttackerIds.length;
+              appendNotice(target, "Reflective shield bounced " + validAttackerIds.length + " incoming strike" + (validAttackerIds.length === 1 ? "" : "s") + ".");
               target.lastSeenAt = nowTs();
               return;
             }
 
             if (shieldActive) {
               if (!target.strikeOutcome) target.strikeOutcome = "SHIELD_BLOCK";
-              target.strikeCount = Number(target.strikeCount || 0) + pending.length;
-              appendNotice(target, "Shield blocked " + pending.length + " incoming strike" + (pending.length === 1 ? "" : "s") + ".");
+              target.strikeCount = Number(target.strikeCount || 0) + validAttackerIds.length;
+              appendNotice(target, "Shield blocked " + validAttackerIds.length + " incoming strike" + (validAttackerIds.length === 1 ? "" : "s") + ".");
               target.lastSeenAt = nowTs();
               return;
             }
 
-            const loss = pending.length * STREAK_PRIZE_TARGET_PENALTY;
+            const loss = validAttackerIds.length * STREAK_PRIZE_TARGET_PENALTY;
             target.score = Number(target.score || 0) - loss;
             target.strikeOutcome = "STRUCK";
             target.strikeDelta = Number(target.strikeDelta || 0) - loss;
-            target.strikeCount = Number(target.strikeCount || 0) + pending.length;
+            target.strikeCount = Number(target.strikeCount || 0) + validAttackerIds.length;
             appendNotice(target, "Shadow Strike hit: you lost " + formatScore(loss) + " points.");
             target.lastSeenAt = nowTs();
           });
@@ -2015,8 +2050,10 @@
           const selected = Array.isArray(payload.selectedOptionIds) ? payload.selectedOptionIds.map(String) : [];
           const q = this.getQuestion(qIndex);
           const validIds = new Set(q.options.map((o) => o.id));
+          const removedIds = new Set(Array.isArray(player.fiftyFiftyRemovedOptionIds) ? player.fiftyFiftyRemovedOptionIds.map(String) : []);
           if (selected.length < 1) return { ok: false, reason: "No option selected" };
           if (selected.some((id) => !validIds.has(id))) return { ok: false, reason: "Invalid option id" };
+          if (selected.some((id) => removedIds.has(id))) return { ok: false, reason: "Option removed by 50/50" };
 
           const key = String(qIndex);
           const submissionMap = this.activeGame.submissions[key] || {};
@@ -2035,6 +2072,68 @@
           player.lastSeenAt = nowTs();
           this.saveGame();
           return { ok: true, submission: record };
+        }
+
+        handleFiftyFifty(msg) {
+          if (!this.activeGame || this.activeGame.phase !== PHASES.QUESTION) {
+            return { ok: false, reason: "Not in question phase" };
+          }
+          if (!this.isSubmissionOpen()) {
+            return { ok: false, reason: "Question closed" };
+          }
+
+          const payload = msg.payload || {};
+          const playerId = String(payload.playerId || "");
+          const player = this.activeGame.players[playerId];
+          if (!player || player.removed) return { ok: false, playerId, reason: "Unknown player" };
+
+          const qIndex = this.activeGame.questionIndex;
+          if (Number(payload.questionIndex) !== qIndex) {
+            return { ok: false, playerId, reason: "Wrong question index" };
+          }
+
+          this.normalizePlayerState(player);
+          if (Number(player.fiftyFiftyQuestionIndex) === Number(qIndex) && Array.isArray(player.fiftyFiftyRemovedOptionIds) && player.fiftyFiftyRemovedOptionIds.length >= 2) {
+            return { ok: false, playerId, reason: "50/50 already used for this question" };
+          }
+
+          if (Number(player.score || 0) < FIFTY_FIFTY_COST) {
+            return { ok: false, playerId, reason: "Need at least " + formatScore(FIFTY_FIFTY_COST) + " points for 50/50" };
+          }
+
+          const question = this.getQuestion(qIndex);
+          const incorrectIds = (question && Array.isArray(question.options) ? question.options : [])
+            .filter((option) => !option.correct)
+            .map((option) => option.id);
+
+          if (incorrectIds.length < 2) {
+            return { ok: false, playerId, reason: "Not enough incorrect answers to remove." };
+          }
+
+          const pool = incorrectIds.slice();
+          for (let i = pool.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = pool[i];
+            pool[i] = pool[j];
+            pool[j] = tmp;
+          }
+
+          const removedOptionIds = pool.slice(0, 2);
+          player.score = Number(player.score || 0) - FIFTY_FIFTY_COST;
+          player.fiftyFiftyQuestionIndex = qIndex;
+          player.fiftyFiftyRemovedOptionIds = removedOptionIds.slice();
+          player.fiftyFiftyUsed = true;
+          player.lastSeenAt = nowTs();
+          this.saveGame();
+
+          return {
+            ok: true,
+            playerId,
+            questionIndex: qIndex,
+            score: Number(player.score || 0),
+            removedOptionIds,
+            reason: "50/50 used: two incorrect answers were removed."
+          };
         }
 
         endQuestion() {
@@ -2076,14 +2175,14 @@
                 earned = calculateScore(question.pointValue, this.activeGame.questionEndsAt, sub.submittedAt);
                 if (usedDoubleDown) earned = earned * 2;
               } else if (usedDoubleDown) {
-                earned = -question.pointValue * 5;
+                earned = -question.pointValue;
               }
               sub.selectedOptionIds.forEach((id) => {
                 const stat = optionStats.find((x) => x.id === id);
                 if (stat) stat.count += 1;
               });
             } else if (usedDoubleDown) {
-              earned = -question.pointValue * 5;
+              earned = -question.pointValue;
             }
 
             if (correct) {
@@ -2100,6 +2199,10 @@
 
             p.score += earned;
             p.doubleDownNext = false;
+            if (Number(p.pointShieldQuestionIndex) === Number(qIndex)) {
+              p.pointShieldQuestionIndex = null;
+              p.pointShieldActiveMode = "NONE";
+            }
             playerOutcomes[p.id] = {
               playerId: p.id,
               correct,
@@ -2161,6 +2264,7 @@
               strikeOutcome: String(p.strikeOutcome || ""),
               strikeDelta: Number(p.strikeDelta || 0),
               strikeCount: Number(p.strikeCount || 0),
+              strikeAttackers: Array.isArray(p.strikeAttackers) ? p.strikeAttackers.slice() : [],
               quickDrawWins: Number(p.quickDrawWins || 0),
               avgResponseMs: Number(p.responseCount || 0) > 0 ? Math.round(Number(p.responseTotalMs || 0) / Number(p.responseCount || 0)) : null,
               fastestResponseMs: p.fastestResponseMs == null ? null : Number(p.fastestResponseMs),
@@ -2190,6 +2294,7 @@
             p.strikeOutcome = "";
             p.strikeDelta = 0;
             p.strikeCount = 0;
+            p.strikeAttackers = [];
             p.strikeNotice = "";
           });
           this.activeGame.currentQuestionPowerSummary = null;
@@ -2293,11 +2398,15 @@
               pointShieldMode: player ? String(player.pointShieldMode || "NORMAL") : "NORMAL",
               pointShieldArmedForQuestionIndex: player && typeof player.pointShieldQuestionIndex === "number" ? Number(player.pointShieldQuestionIndex) : null,
               pointShieldActiveMode: player ? String(player.pointShieldActiveMode || "NONE") : "NONE",
+              fiftyFiftyQuestionIndex: player && typeof player.fiftyFiftyQuestionIndex === "number" ? Number(player.fiftyFiftyQuestionIndex) : null,
+              fiftyFiftyRemovedOptionIds: player && Array.isArray(player.fiftyFiftyRemovedOptionIds) ? player.fiftyFiftyRemovedOptionIds.slice() : [],
+              fiftyFiftyUsed: !!(player && Number(player.fiftyFiftyQuestionIndex) === Number(this.activeGame.questionIndex) && Array.isArray(player.fiftyFiftyRemovedOptionIds) && player.fiftyFiftyRemovedOptionIds.length >= 2),
               incomingStrikeCount: player ? Number(player.incomingStrikeCount || 0) : 0,
               attackedCount: player ? Number(player.attackedCount || 0) : 0,
               strikeOutcome: player ? String(player.strikeOutcome || "") : "",
               strikeDelta: player ? Number(player.strikeDelta || 0) : 0,
               strikeCount: player ? Number(player.strikeCount || 0) : 0,
+              strikeAttackers: player && Array.isArray(player.strikeAttackers) ? player.strikeAttackers.slice() : [],
               strikeNotice: player ? String(player.strikeNotice || "") : "",
               canBuyPointShield: !!shieldPolicy.allowed,
               pointShieldCost: Number(shieldPolicy.cost || POINT_SHIELD_COST),
@@ -2405,7 +2514,7 @@
 
           this.el.socketModeOptions.innerHTML = ""
             + "<div class='d-flex justify-content-between align-items-center gap-2 mb-1 mt-1'>"
-            + "<button id='socketStrictToggleBtn' type='button' class='btn btn-sm " + (strictMode ? "danger-btn" : "outline-moon") + " focus-ring'>"
+            + "<button id='socketStrictToggleBtn' type='button' class='btn btn-sm outline-moon focus-ring'>"
             + "Strict Mode: " + (strictMode ? "On" : "Off")
             + "</button>"
             + "</div>"
@@ -3052,7 +3161,7 @@
 
       function buildStudentJoinUrl(gameId) {
         const url = new URL(window.location.href);
-        const basePath = url.pathname.replace(/instructor\.html?$/i, "student.html");
+        const basePath = url.pathname.replace(/instructor\.html?$/i, "index.html");
         const out = url.origin + basePath + "?game=" + encodeURIComponent(gameId);
         return out;
       }
@@ -3162,7 +3271,7 @@
             if (!target || target.id !== "socketStrictToggleBtn") return;
             this.socketPrefs.strictMode = !this.socketPrefs.strictMode;
             this.saveSocketPrefs();
-            this.refreshSocketMenuState(this.socketPrefs.strictMode ? "Strict mode enabled. Reconnecting..." : "Strict mode disabled. Reconnecting...");
+            this.refreshSocketMenuState();
             this.reconnectSocket();
           });
 
@@ -3373,6 +3482,20 @@
             case MSG.ANSWER_SUBMITTED:
               this.handleAnswerSubmitted(msg);
               break;
+            case MSG.FIFTY_FIFTY:
+              {
+                const trustedMsg = this.getTrustedPlayerMessage(msg);
+                const result = trustedMsg ? this.game.handleFiftyFifty(trustedMsg) : null;
+                if (result) {
+                  this.send(MSG.FIFTY_FIFTY_RESULT, this.game.activeGame.gameId, "instructor-main", result);
+                  if (result.ok) {
+                    this.send(MSG.SCORE_UPDATED, this.game.activeGame.gameId, "instructor-main", {
+                      leaderboard: this.game.getLeaderboard()
+                    });
+                  }
+                }
+              }
+              break;
             case MSG.DOUBLE_DOWN_NEXT:
               this.handleDoubleDown(msg);
               break;
@@ -3391,6 +3514,16 @@
           this.renderAll();
         }
 
+        getTrustedPlayerMessage(msg) {
+          const senderId = String(msg && msg.senderId || "").trim();
+          const payload = msg && msg.payload ? msg.payload : {};
+          const claimedPlayerId = String(payload.playerId || "").trim();
+          if (!senderId || (claimedPlayerId && claimedPlayerId !== senderId)) return null;
+          return Object.assign({}, msg, {
+            payload: Object.assign({}, payload, { playerId: senderId })
+          });
+        }
+
         send(type, gameId, senderId, payload) {
           const message = {
             type,
@@ -3405,7 +3538,9 @@
         }
 
         handleJoin(msg) {
-          const payload = msg.payload || {};
+          const trustedMsg = this.getTrustedPlayerMessage(msg);
+          if (!trustedMsg) return;
+          const payload = trustedMsg.payload;
           const result = this.game.joinOrRejoinPlayer(payload);
           if (!result.ok) {
             if (result.reason === "Removed") {
@@ -3423,8 +3558,9 @@
         }
 
         handleSyncRequest(msg) {
-          const playerId = String((msg.payload || {}).playerId || "");
-          if (!playerId) return;
+          const trustedMsg = this.getTrustedPlayerMessage(msg);
+          if (!trustedMsg) return;
+          const playerId = trustedMsg.payload.playerId;
           const snapshot = this.game.buildSnapshotForPlayer(playerId);
           if (snapshot) {
             this.send(MSG.STATE_SNAPSHOT, this.game.activeGame.gameId, "instructor-main", snapshot);
@@ -3432,7 +3568,9 @@
         }
 
         handleAnswerSubmitted(msg) {
-          const accepted = this.game.acceptSubmission(msg);
+          const trustedMsg = this.getTrustedPlayerMessage(msg);
+          if (!trustedMsg) return;
+          const accepted = this.game.acceptSubmission(trustedMsg);
           if (!accepted.ok) return;
 
           this.send(MSG.ANSWER_SUBMITTED, this.game.activeGame.gameId, "instructor-main", {
@@ -3446,9 +3584,9 @@
 
         handleDoubleDown(msg) {
           if (!this.game.activeGame) return;
-          const payload = msg.payload || {};
-          const playerId = String(payload.playerId || "");
-          if (!playerId) return;
+          const trustedMsg = this.getTrustedPlayerMessage(msg);
+          if (!trustedMsg) return;
+          const playerId = trustedMsg.payload.playerId;
           const result = this.game.setDoubleDownNext(playerId);
           this.send(MSG.DOUBLE_DOWN_SET, this.game.activeGame.gameId, "instructor-main", {
             playerId: result.playerId || playerId,
@@ -3470,9 +3608,9 @@
 
         handleDoubleDownPurchase(msg) {
           if (!this.game.activeGame) return;
-          const payload = msg.payload || {};
-          const playerId = String(payload.playerId || "");
-          if (!playerId) return;
+          const trustedMsg = this.getTrustedPlayerMessage(msg);
+          if (!trustedMsg) return;
+          const playerId = trustedMsg.payload.playerId;
 
           const result = this.game.purchaseDoubleDown(playerId);
           this.send(MSG.DOUBLE_DOWN_BUY_RESULT, this.game.activeGame.gameId, "instructor-main", {
@@ -3501,10 +3639,11 @@
 
         handlePointShieldPurchase(msg) {
           if (!this.game.activeGame) return;
-          const payload = msg.payload || {};
-          const playerId = String(payload.playerId || "");
+          const trustedMsg = this.getTrustedPlayerMessage(msg);
+          if (!trustedMsg) return;
+          const payload = trustedMsg.payload;
+          const playerId = payload.playerId;
           const mode = String(payload.mode || "NORMAL").toUpperCase();
-          if (!playerId) return;
 
           const result = this.game.purchasePointShield(playerId, mode);
           this.send(MSG.POINT_SHIELD_BUY_RESULT, this.game.activeGame.gameId, "instructor-main", {
@@ -3531,11 +3670,12 @@
 
         handleStreakPrizeClaim(msg) {
           if (!this.game.activeGame) return;
-          const payload = msg.payload || {};
-          const playerId = String(payload.playerId || "");
+          const trustedMsg = this.getTrustedPlayerMessage(msg);
+          if (!trustedMsg) return;
+          const payload = trustedMsg.payload;
+          const playerId = payload.playerId;
           const action = String(payload.action || "").toUpperCase();
           const targetPlayerId = String(payload.targetPlayerId || "");
-          if (!playerId) return;
 
           const result = this.game.claimStreakPrize(playerId, action, targetPlayerId);
           this.send(MSG.STREAK_PRIZE_RESULT, this.game.activeGame.gameId, "instructor-main", {
@@ -3602,35 +3742,102 @@
         loadDemoQuiz() {
           const demo = [
             {
-              query: "Which AWS service stores container images?",
+              query: "What do you call a fish without an eye?",
               type: "multiple-choice",
               options: [
-                { text: "Amazon ECS", explanation: "Runs containers, but not an image registry.", correct: false },
-                { text: "Amazon ECR", explanation: "Managed container image registry.", correct: true },
-                { text: "AWS Fargate", explanation: "Compute engine for containers.", correct: false },
-                { text: "Amazon EKS", explanation: "Managed Kubernetes service.", correct: false }
+                { text: "Blinky", explanation: "Blinky is a reasonable name for a fish, but it is not the punchline.", correct: false },
+                { text: "One eye fish", explanation: "This describes the fish, but it misses the wordplay.", correct: false },
+                { text: "fsh", explanation: "Remove the letter 'i', which sounds like 'eye', from 'fish' and you get 'fsh'.", correct: true },
+                { text: "Fishy", explanation: "Fishy sounds appropriate, but it is not the answer to the joke.", correct: false }
               ],
-              answer: "<p>The correct option is <b>Amazon ECR</b>.</p>",
-              tip: "<p>Look for the service focused on image repositories.</p>"
+              answer: "<p>The correct answer is <b>fsh</b>.</p><p>Take the 'i', or 'eye', out of the word <b>fish</b> and you are left with <b>fsh</b>.</p>",
+              tip: "<p>Think about what happens if you literally remove an 'eye' from the word fish.</p>",
+              reference: "Dad Joke Collection."
             },
             {
-              query: "Which are managed orchestration services?",
+              query: "What do you call a deer with no eyes?",
               type: "multiple-choice",
               options: [
-                { text: "Amazon ECS", explanation: "Yes, managed container orchestration.", correct: true },
-                { text: "Amazon EKS", explanation: "Yes, managed Kubernetes control plane.", correct: true },
-                { text: "Amazon ECR", explanation: "Registry, not orchestration.", correct: false },
-                { text: "Amazon S3", explanation: "Object storage service.", correct: false }
+                { text: "Poor Bambi", explanation: "Poor Bambi may deserve some sympathy, but that is not the punchline.", correct: false },
+                { text: "No idea", explanation: "'No idea' sounds like 'no-eye deer', making it the classic punchline.", correct: true },
+                { text: "Doe Eyed Deer", explanation: "A doe-eyed deer would presumably still have eyes.", correct: false },
+                { text: "Blind deer", explanation: "This is technically descriptive, but dad jokes demand wordplay.", correct: false }
               ],
-              answer: "<p><b>ECS</b> and <b>EKS</b> are orchestration services.</p>",
-              tip: "<p>Select all that run and orchestrate containers.</p>"
+              answer: "<p>The correct answer is <b>No idea</b>.</p><p>Say it out loud: <b>no-eye deer</b>. No idea.</p>",
+              tip: "<p>Some dad jokes work much better when you say the answer out loud.</p>",
+              reference: "Dad Joke Collection."
+            },
+            {
+              query: "How do you stop bad fish from smelling?",
+              type: "multiple-choice",
+              options: [
+                { text: "Freeze them", explanation: "Freezing fish may reduce odors, but that is far too practical for a dad joke.", correct: false },
+                { text: "Put them in a ziplock bag", explanation: "A sealed bag might contain the smell, but it does not stop the fish from smelling.", correct: false },
+                { text: "Keep them under water", explanation: "Fish already spend quite a lot of time underwater, so this is unlikely to solve the problem.", correct: false },
+                { text: "Cut off their noses", explanation: "Without noses, the fish can no longer smell anything. The joke changes the meaning of 'smelling' from producing an odor to detecting one.", correct: true }
+              ],
+              answer: "<p>The correct answer is <b>Cut off their noses</b>.</p><p>The trick is that the question is not asking how to stop the fish from <i>stinking</i>. It is asking how to stop the fish themselves from being able to smell.</p>",
+              tip: "<p>Think about the two different meanings of the word 'smelling'.</p>",
+              reference: "Dad Joke Collection."
+            },
+            {
+              query: "Why are there no Python jokes in this quiz?",
+              type: "multiple-choice",
+              options: [
+                { text: "Because programming isn't funny", explanation: "Programming can be extremely funny, especially when someone else's code breaks.", correct: false },
+                { text: "Because Python devs are too serious", explanation: "Python developers are perfectly capable of making jokes, indentation permitting.", correct: false },
+                { text: "Because this quiz is about animals", explanation: "There are plenty of animals here, but that is not why Python was excluded.", correct: false },
+                { text: "Because Python is the joke", explanation: "This is the intentionally provocative programming-language punchline.", correct: true }
+              ],
+              answer: "<p>The correct answer is <b>Because Python is a joke</b>.</p><p>Python developers may submit complaints using a properly indented form.</p>",
+              tip: "<p>This question may cause slightly elevated blood pressure among Python developers.</p>",
+              reference: "Dad Joke Collection, Programming Language Division."
+            },
+            {
+              query: "What do you call a deer with no eyes and no legs?",
+              type: "multiple-choice",
+              options: [
+                { text: "Immobile deer", explanation: "Accurate, but far too sensible for this quiz.", correct: false },
+                { text: "Sad deer", explanation: "The deer probably is not thrilled about the situation, but this is not the punchline.", correct: false },
+                { text: "Deer that needs help", explanation: "This deer unquestionably needs help, but dad jokes are rarely concerned with practical assistance.", correct: false },
+                { text: "Still no idea", explanation: "A deer with no eyes is 'no-eye deer', or 'no idea'. With no legs, it is also still.", correct: true }
+              ],
+              answer: "<p>The correct answer is <b>Still no idea</b>.</p><p>A deer with no eyes is <b>no-eye deer</b>, or 'no idea'. A deer with no legs is not going anywhere, so it is <b>still no idea</b>.</p>",
+              tip: "<p>This joke builds on the previous deer joke. Add the consequences of having no legs.</p>",
+              reference: "Dad Joke Collection."
+            },
+            {
+              query: "Why did the two Java methods get a divorce?",
+              type: "multiple-choice",
+              options: [
+                { text: "Their relationship was static", explanation: "Static is certainly a Java keyword and a respectable programming pun, but it is not the intended answer.", correct: false },
+                { text: "They had constant arguments", explanation: "Methods can receive arguments, while couples can have arguments. That makes this the intended programming pun.", correct: true },
+                { text: "They couldn't agree on a return value", explanation: "Return values are important to methods, but disagreement about one is not the intended punchline.", correct: false },
+                { text: "They varied too much", explanation: "Variables may vary, but the joke is specifically about methods and their arguments.", correct: false }
+              ],
+              answer: "<p>The correct answer is <b>They had constant arguments</b>.</p><p>Java methods can take arguments. Married couples can also have arguments. Apparently these two had too many of them.</p>",
+              tip: "<p>Think about a word that means one thing in programming and another thing in a relationship.</p>",
+              reference: "Dad Joke Collection, Java Edition."
+            },
+            {
+              query: "The man who invented Java was:",
+              type: "multiple-choice",
+              options: [
+                { text: "Austrian", explanation: "James Gosling was not born in Austria.", correct: false },
+                { text: "American", explanation: "Java was developed at the American company Sun Microsystems, but James Gosling himself is Canadian.", correct: false },
+                { text: "Canadian", explanation: "James Gosling, widely known as the father of Java, was born in Calgary, Alberta, Canada.", correct: true },
+                { text: "German", explanation: "James Gosling was not born in Germany.", correct: false }
+              ],
+              answer: "<p>The correct answer is <b>Canadian</b>.</p><p>James Gosling, widely known as the father of Java, was born in Calgary, Alberta, Canada.</p><p>And, as everyone knows, all the greatest Americans are Canadian.</p>",
+              tip: "<p>Java came from Sun Microsystems in the United States, but its creator came from a little farther north.</p>",
+              reference: "James Gosling, creator of the Java programming language."
             }
           ];
-          this.ui.el.quizTitleInput.value = "Demo Fight Quiz";
+          this.ui.el.quizTitleInput.value = "Dad Joke Fight Quiz";
           this.ui.el.quizJsonInput.value = JSON.stringify(demo, null, 2);
           this.importDraft.title = this.ui.el.quizTitleInput.value;
           this.importDraft.json = this.ui.el.quizJsonInput.value;
-          this.ui.showImportStatus("Demo quiz loaded into the editor.", false);
+          this.ui.showImportStatus("Built-in dad joke quiz loaded into the editor.", false);
         }
 
         renderQuizLibrary() {
