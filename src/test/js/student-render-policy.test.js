@@ -236,6 +236,16 @@ test("leaderboard and finished views render only on first phase entry", () => {
   );
 });
 
+test("leaderboard view does not render streak prize power controls", () => {
+  const renderSource = StudentUI.prototype.renderLeaderboard.toString();
+
+  assert.doesNotMatch(renderSource, /lbPowerBonusBtn/);
+  assert.doesNotMatch(renderSource, /lbPowerCloakBtn/);
+  assert.doesNotMatch(renderSource, /lbPowerStealthBtn/);
+  assert.doesNotMatch(renderSource, /lbStreakPrizeTargetWrap/);
+  assert.doesNotMatch(renderSource, /final-action-summary/);
+});
+
 test("targeted broadcasts are ignored by every non-target player", () => {
   const controller = makeController();
   const targetedTypes = [

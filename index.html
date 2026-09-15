@@ -484,6 +484,29 @@
       filter: grayscale(0.12);
     }
 
+    .ans-btn.locked:not(.selected) {
+      opacity: 0.45;
+      filter: grayscale(0.35) brightness(0.78);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .ans-btn.locked.selected {
+      opacity: 0.95;
+      filter: saturate(1.05);
+      cursor: default;
+    }
+
+    .ans-btn.locked:hover,
+    .ans-btn.locked:focus-visible {
+      transform: none;
+    }
+
+    .ans-btn.locked:not(.selected):hover,
+    .ans-btn.locked:not(.selected):focus-visible {
+      filter: grayscale(0.35) brightness(0.78);
+    }
+
     .ans-btn.fifty-fifty-removed {
       opacity: 0.42;
       filter: grayscale(0.9) brightness(0.82);
@@ -746,8 +769,7 @@
     .final-results-view .glass,
     .final-results-view .small-note,
     .final-results-view .fw-bold,
-    .final-results-view .stats-empty,
-    .final-results-view .final-action-summary {
+    .final-results-view .stats-empty {
       color: #d6d8e2;
     }
 
@@ -757,8 +779,7 @@
 
     .final-results-view .podium-card,
     .final-results-view .stats-table-wrap,
-    .final-results-view .stats-empty,
-    .final-results-view .final-action-summary {
+    .final-results-view .stats-empty {
       border-color: rgba(214, 216, 226, 0.24);
     }
 
@@ -815,16 +836,6 @@
 
     .leaderboard-view {
       position: relative;
-    }
-
-    .final-action-summary {
-      border-radius: 14px;
-      border: 1px solid rgba(255, 231, 142, 0.58);
-      background: linear-gradient(150deg, rgba(102, 64, 28, 0.44), rgba(62, 36, 53, 0.5));
-      color: #ffeecd;
-      padding: 0.7rem 0.8rem;
-      margin-bottom: 0.7rem;
-      font-weight: 700;
     }
 
     .power-action-card {
@@ -1788,10 +1799,11 @@
             btn.setAttribute("data-opt-id", opt.id);
             btn.setAttribute("aria-label", "Option " + opt.letter + ": " + opt.text);
             btn.innerHTML = "<span class='letter'>" + opt.letter + "</span><span>" + safeText(opt.text) + "</span>";
+            const isSelected = model.selectedIds && model.selectedIds.includes(opt.id);
             if (submitted) btn.classList.add("locked");
             const removed = removedOptionIds.has(String(opt.id));
             if (removed) btn.classList.add("fifty-fifty-removed");
-            if (model.selectedIds && model.selectedIds.includes(opt.id) && !removed) btn.classList.add("selected");
+            if (isSelected && !removed) btn.classList.add("selected");
             btn.disabled = submitted || removed;
             btn.addEventListener("click", () => handlers.onOptionClick(opt.id));
             grid.appendChild(btn);
@@ -2106,25 +2118,6 @@
             wrap.appendChild(masked);
           }
 
-          if (model.phase === PHASES.FINISHED && Number(model.streakPrizeUses || 0) > 0 && model.streakPrizeAction) {
-            const actionCard = document.createElement("div");
-            actionCard.className = "final-action-summary";
-            let icon = "lni-gift";
-            let text = "Streak prize used.";
-            if (model.streakPrizeAction === STREAK_ACTION.MASK) {
-              icon = "lni-lock-alt";
-              text = "Fog Cloak used: your score was hidden for 3 turns.";
-            } else if (model.streakPrizeAction === STREAK_ACTION.STEAL) {
-              icon = "lni-target";
-              text = "Shadow Strike used: 1,000-point strike was queued for the next question.";
-            } else if (model.streakPrizeAction === STREAK_ACTION.BONUS) {
-              icon = "lni-bolt";
-              text = "Smelling Salts used: you gained 2,000 points.";
-            }
-            actionCard.innerHTML = "<i class='lni " + icon + " me-2'></i>" + safeText(text);
-            wrap.appendChild(actionCard);
-          }
-
           const podiumWrap = document.createElement("div");
           podiumWrap.className = "podium mb-3";
           const top3 = scoreRankRows.slice(0, 3);
@@ -2139,33 +2132,6 @@
             podiumWrap.appendChild(card);
           });
           wrap.appendChild(podiumWrap);
-
-          if (model.phase !== PHASES.FINISHED) {
-            const canUseStreakPrize = !!model.streakPrizeAvailable;
-            if (canUseStreakPrize || model.streakPrizeNotice) {
-              const actions = document.createElement("div");
-              actions.className = "power-action-card mb-3";
-
-              let html = "";
-              if (canUseStreakPrize) {
-                const targetOptions = (model.prizeTargets || []).map((t) => {
-                  return "<button class='power-target-option focus-ring' type='button' role='menuitem' data-target-id='" + safeText(t.playerId) + "'>" + safeText(t.playerName) + "</button>";
-                }).join("");
-                html += "<div class='power-rail mt-1'>";
-                html += "<button id='lbPowerBonusBtn' class='power-pill-btn ready focus-ring' type='button'><i class='lni lni-bolt'></i><span>Add 2000</span></button>";
-                html += "<button id='lbPowerCloakBtn' class='power-pill-btn ready focus-ring' type='button'><i class='lni lni-lock-alt'></i><span>Fog Cloak</span></button>";
-                html += "<div class='power-target-control'>";
-                html += "<button id='lbPowerStealthBtn' class='power-pill-btn attack focus-ring' type='button' aria-haspopup='menu' aria-expanded='" + (model.streakTargetPickerOpen ? "true" : "false") + "' aria-controls='lbStreakPrizeTargetWrap'><i class='lni lni-target'></i><span>Stealth Attack</span></button>";
-                html += "<div id='lbStreakPrizeTargetWrap' class='power-target-picker" + (model.streakTargetPickerOpen ? "" : " d-none") + "' role='menu' aria-label='Choose a player to attack'>" + targetOptions + "</div>";
-                html += "</div></div>";
-              }
-
-              html += "<div id='lbStreakPrizeNotice' class='small-note mt-2 power-notice-center'>" + safeText(model.streakPrizeNotice || "") + "</div>";
-
-              actions.innerHTML = html;
-              wrap.appendChild(actions);
-            }
-          }
 
           const details = document.createElement("div");
           let detailsHtml = "";
@@ -2313,16 +2279,6 @@
           }
 
           this.app.appendChild(wrap);
-
-          const lbBonusBtn = document.getElementById("lbPowerBonusBtn");
-          if (lbBonusBtn && typeof model.onClaimStreakPrize === "function") {
-            lbBonusBtn.addEventListener("click", () => model.onClaimStreakPrize(STREAK_ACTION.BONUS, ""));
-          }
-          const lbCloakBtn = document.getElementById("lbPowerCloakBtn");
-          if (lbCloakBtn && typeof model.onClaimStreakPrize === "function") {
-            lbCloakBtn.addEventListener("click", () => model.onClaimStreakPrize(STREAK_ACTION.MASK, ""));
-          }
-          this.bindStealthTargetMenu("lbPowerStealthBtn", "lbStreakPrizeTargetWrap", "lbStreakPrizeNotice", model);
 
           const sortLbNameBtn = document.getElementById("studentSortLbNameBtn");
           if (sortLbNameBtn && typeof model.onSortLeaderboard === "function") {
@@ -2606,9 +2562,16 @@
 
             const removedIds = new Set(Array.isArray(this.game.fiftyFiftyRemovedOptionIds) ? this.game.fiftyFiftyRemovedOptionIds.map(String) : []);
             document.querySelectorAll(".ans-btn[data-opt-id]").forEach((button) => {
-              const removed = removedIds.has(String(button.getAttribute("data-opt-id") || ""));
+              const optionId = String(button.getAttribute("data-opt-id") || "");
+              const removed = removedIds.has(optionId);
+              const selected = Array.isArray(this.game.selectedIds) && this.game.selectedIds.includes(optionId);
               button.classList.toggle("fifty-fifty-removed", removed);
-              if (removed) button.classList.remove("selected");
+              button.classList.toggle("locked", !!this.game.hasSubmitted);
+              if (removed) {
+                button.classList.remove("selected");
+              } else {
+                button.classList.toggle("selected", selected);
+              }
               button.disabled = !!this.game.hasSubmitted || removed;
             });
 
@@ -2705,14 +2668,6 @@
 
             const scoreEl = document.getElementById("leaderboardMyScore");
             if (scoreEl) scoreEl.textContent = formatScore(this.game.playerScore) + " points";
-
-            const streakNoticeEl = document.getElementById("lbStreakPrizeNotice");
-            if (streakNoticeEl) streakNoticeEl.textContent = this.game.streakPrizeNotice || "";
-
-            ["lbPowerBonusBtn", "lbPowerCloakBtn", "lbPowerStealthBtn"].forEach((id) => {
-              const button = document.getElementById(id);
-              if (button) button.disabled = !this.game.streakPrizeAvailable;
-            });
 
             const maskNotice = document.getElementById("leaderboardScoreMaskNotice");
             if (maskNotice) {

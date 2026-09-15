@@ -279,6 +279,18 @@
       animation: pop-in 350ms ease both;
     }
 
+    .player-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.65rem;
+    }
+
+    .player-actions .btn {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
     @keyframes pop-in {
       from { transform: translateY(8px) scale(0.97); opacity: 0; }
       to { transform: translateY(0) scale(1); opacity: 1; }
@@ -2622,12 +2634,12 @@
 
           players.forEach((p) => {
             const col = document.createElement("div");
-            col.className = "col-12 col-md-6";
+            col.className = "col-12";
             const card = document.createElement("div");
             card.className = "player-card";
 
             const top = document.createElement("div");
-            top.className = "d-flex justify-content-between align-items-start gap-2";
+            top.className = "d-flex flex-column";
 
             const left = document.createElement("div");
             const name = document.createElement("div");
@@ -2642,7 +2654,7 @@
             left.appendChild(status);
 
             const right = document.createElement("div");
-            right.className = "d-flex gap-1";
+            right.className = "player-actions";
             const resetBtn = document.createElement("button");
             resetBtn.className = "btn btn-sm outline-moon focus-ring";
             resetBtn.setAttribute("aria-label", "Reset score for " + p.name);
@@ -2787,7 +2799,6 @@
 
           if (game.phase === PHASES.QUESTION) {
             addBtn("End Question", "btn danger-btn focus-ring", handlers.onEndQuestionNow, false);
-            addBtn("Reveal Answer", "btn outline-moon focus-ring", handlers.onEndQuestionNow, false);
             addEndGameButton();
             return;
           }
@@ -2864,10 +2875,9 @@
               html += "<div class='col-12 col-md-6'><div class='q-option'><strong>" + o.letter + "</strong> - " + escapeHtml(o.text) + "</div></div>";
             });
             html += "</div>";
-            html += "<div class='d-flex gap-2'><button id='endQuestionNowBtn' class='btn danger-btn focus-ring'>End Question Now</button><button id='revealNowBtn' class='btn outline-moon focus-ring'>Reveal Answer</button></div>";
+            html += "<div class='d-flex gap-2'><button id='endQuestionNowBtn' class='btn danger-btn focus-ring'>End Question Now</button></div>";
             this.el.stageContent.innerHTML = html;
             document.getElementById("endQuestionNowBtn").addEventListener("click", handlers.onEndQuestionNow);
-            document.getElementById("revealNowBtn").addEventListener("click", handlers.onEndQuestionNow);
             return;
           }
 
