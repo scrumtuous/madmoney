@@ -165,6 +165,25 @@ test("active shield expires when its protected question ends", () => {
   assert.equal(target.pointShieldActiveMode, "NONE");
 });
 
+test("null shield index never blocks first-question strikes", () => {
+  const attacker = makePlayer("attacker");
+  const target = makePlayer("target");
+  attacker.streakPrizeAvailable = true;
+  target.pointShieldQuestionIndex = null;
+  target.pointShieldActiveMode = "REFLECTIVE";
+  const controller = makeController({ attacker, target });
+
+  const claim = controller.claimStreakPrize("attacker", "STEAL_1000", "target");
+  assert.equal(claim.ok, true);
+
+  controller.startQuestion();
+  assert.equal(target.strikeOutcome, "STRUCK");
+  assert.equal(target.score, 4000);
+  assert.equal(attacker.score, 5000);
+  assert.equal(controller.activeGame.currentQuestionPowerSummary.shieldCount, 0);
+  assert.equal(controller.activeGame.currentQuestionPowerSummary.reflectiveShieldCount, 0);
+});
+
 test("player-scoped messages reject a payload identity mismatch", () => {
   const resolve = InstructorApp.prototype.getTrustedPlayerMessage;
   const trusted = resolve.call({}, { senderId: "alice", payload: { playerId: "alice", mode: "NORMAL" } });
