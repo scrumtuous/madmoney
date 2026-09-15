@@ -246,6 +246,120 @@ test("leaderboard view does not render streak prize power controls", () => {
   assert.doesNotMatch(renderSource, /final-action-summary/);
 });
 
+test("leaderboard profile drilldown wiring is present in the student view", () => {
+  const renderSource = StudentUI.prototype.renderLeaderboard.toString();
+  const controllerRenderSource = StudentGameController.prototype.render.toString();
+
+  assert.match(renderSource, /profile-link-btn/);
+  assert.match(renderSource, /profile-overlay/);
+  assert.match(renderSource, /buildPlayerProfileMarkup/);
+  assert.match(renderSource, /onClosePlayerProfile/);
+  assert.match(controllerRenderSource, /onOpenPlayerProfile/);
+  assert.match(controllerRenderSource, /onClosePlayerProfile/);
+  assert.match(controllerRenderSource, /profilePlayerId:\s*this\.profilePlayerId/);
+  assert.equal(typeof StudentUI.prototype.buildPlayerProfileMarkup, "function");
+});
+
+test("student answer flow includes pending submission retry and submission ids", () => {
+  const submitSource = StudentGameController.prototype.submitAnswer.toString();
+  const retrySource = StudentGameController.prototype.retryPendingSubmission.toString();
+  const ackSource = StudentGameController.prototype.handleSubmissionAck.toString();
+
+  assert.match(submitSource, /submissionId/);
+  assert.match(submitSource, /queuePendingSubmissionRetry/);
+  assert.match(retrySource, /ANSWER_SUBMITTED/);
+  assert.match(retrySource, /attemptCount/);
+  assert.match(ackSource, /payload\.accepted/);
+  assert.match(ackSource, /payload\.reason/);
+});
+
+test("power action retry preserves actionId and acknowledgement clears it", () => {
+  const controller = Object.create(StudentGameController.prototype);
+  controller.identity = { playerId: "local-player" };
+  controller.game = { gameId: "GAME", pendingActions: {} };
+  controller.currentConnState = "connected";
+  controller.pendingActionRetryHandle = null;
+  controller.persist = () => {};
+  controller.queuePendingActionRetry = () => {};
+  const sent = [];
+  controller.send = (type, gameId, payload) => {
+    sent.push({ type, gameId, payload });
+    return true;
+  };
+
+  assert.equal(controller.sendReliableAction(MSG.DOUBLE_DOWN_BUY, {}), true);
+  const actionId = sent[0].payload.actionId;
+  controller.retryPendingActions();
+
+  assert.equal(sent.length, 2);
+  assert.equal(sent[1].payload.actionId, actionId);
+  assert.equal(Object.keys(controller.game.pendingActions).length, 1);
+  assert.equal(controller.acknowledgeReliableAction({ playerId: "local-player", actionId }), true);
+  assert.equal(Object.keys(controller.game.pendingActions).length, 0);
+});
+
+test("answer retry continues during the post-question ACK grace period", () => {
+  const controller = Object.create(StudentGameController.prototype);
+  controller.identity = { playerId: "local-player" };
+  controller.game = {
+    gameId: "GAME",
+    phase: PHASES.ANSWER_REVEAL,
+    question: { questionIndex: 2 },
+    pendingSubmission: {
+      submissionId: "submission-2",
+      questionIndex: 2,
+      selectedOptionIds: ["answer-a"],
+      submittedAt: Date.now() - 1000,
+      deadlineAt: Date.now() - 100,
+      attemptCount: 1,
+      status: "pending"
+    }
+  };
+  controller.currentConnState = "connected";
+  controller.persist = () => {};
+  controller.queuePendingSubmissionRetry = () => {};
+  const sent = [];
+  controller.send = (type, gameId, payload) => {
+    sent.push({ type, gameId, payload });
+    return true;
+  };
+
+  controller.retryPendingSubmission();
+
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].type, MSG.ANSWER_SUBMITTED);
+  assert.equal(sent[0].payload.submissionId, "submission-2");
+});
+
+test("all power action entry points use reliable delivery", () => {
+  [
+    StudentGameController.prototype.onFiftyFifty,
+    StudentGameController.prototype.onDoubleDown,
+    StudentGameController.prototype.onBuyDoubleDown,
+    StudentGameController.prototype.onBuyPointShield,
+    StudentGameController.prototype.onClaimStreakPrize
+  ].forEach((method) => assert.match(method.toString(), /sendReliableAction/));
+});
+
+test("player profile displays earned, lost, and running point totals", () => {
+  const markup = StudentUI.prototype.buildPlayerProfileMarkup.call({}, {
+    score: 600,
+    history: [
+      { title: "Correct answer", pointsDelta: 1000, scoreAfter: 1000, questionNumber: 1 },
+      { title: "Bought Point Shield", pointsDelta: -400, scoreAfter: 600, questionNumber: 1 }
+    ]
+  });
+
+  assert.match(markup, /Current Total/);
+  assert.match(markup, /Points Earned/);
+  assert.match(markup, /\+1,000/);
+  assert.match(markup, /Points Lost/);
+  assert.match(markup, /-400/);
+  assert.match(markup, /Correct answer/);
+  assert.match(markup, /Bought Point Shield/);
+  assert.match(markup, /Running total: 600 points/);
+});
+
 test("targeted broadcasts are ignored by every non-target player", () => {
   const controller = makeController();
   const targetedTypes = [

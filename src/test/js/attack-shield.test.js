@@ -234,4 +234,186 @@ test("a wrong double-down answer loses exactly the question value", () => {
   assert.ok(reveal);
   assert.equal(player.score, 4900);
   assert.equal(reveal.playerOutcomes.player.earnedPoints, -100);
+  assert.equal(player.history.at(-1).kind, "QUESTION_RESULT");
+  assert.equal(player.history.at(-1).pointsDelta, -100);
+  assert.equal(player.history.at(-1).scoreBefore, 5000);
+  assert.equal(player.history.at(-1).scoreAfter, 4900);
+});
+
+test("score reset is documented and the complete ledger is sent with leaderboard rows", () => {
+  const player = makePlayer("player", 0);
+  const controller = makeController({ player });
+
+  for (let index = 1; index <= 65; index += 1) {
+    player.score += 1;
+    controller.recordPlayerHistory("player", {
+      kind: "TEST_AWARD",
+      category: "answer",
+      title: "Test award",
+      pointsDelta: 1,
+      scoreBefore: player.score - 1,
+      scoreAfter: player.score
+    });
+  }
+
+  assert.equal(controller.resetScore("player"), true);
+  const history = controller.getPlayerHistory("player");
+  const reset = history.at(-1);
+  const leaderboardPlayer = controller.getLeaderboard().find((row) => row.playerId === "player");
+
+  assert.equal(player.score, 0);
+  assert.equal(history.length, 66);
+  assert.equal(reset.kind, "SCORE_RESET");
+  assert.equal(reset.pointsDelta, -65);
+  assert.equal(reset.scoreBefore, 65);
+  assert.equal(reset.scoreAfter, 0);
+  assert.equal(leaderboardPlayer.history.length, history.length);
+  assert.equal(history.reduce((total, entry) => total + entry.pointsDelta, 0), player.score);
+});
+
+test("same submissionId retries are accepted idempotently", () => {
+  const player = makePlayer("player", 5000);
+  const controller = makeController({ player });
+  controller.activeGame.phase = PHASES.QUESTION;
+  controller.activeGame.questionIndex = 0;
+  controller.activeGame.questionStartedAt = Date.now() - 2000;
+  controller.activeGame.questionEndsAt = Date.now() + 20000;
+
+  const msg = {
+    messageId: "msg-1",
+    payload: {
+      playerId: "player",
+      questionIndex: 0,
+      submissionId: "sub-123",
+      selectedOptionIds: ["a"],
+      submittedAt: Date.now()
+    }
+  };
+
+  const first = controller.acceptSubmission(msg);
+  const replay = controller.acceptSubmission(msg);
+
+  assert.equal(first.ok, true);
+  assert.equal(first.replay, false);
+  assert.equal(replay.ok, true);
+  assert.equal(replay.replay, true);
+  assert.equal(replay.submission.submissionId, "sub-123");
+});
+
+test("accepted submission retry replays after the question closes", () => {
+  const player = makePlayer("player", 5000);
+  const controller = makeController({ player });
+  controller.activeGame.phase = PHASES.QUESTION;
+  controller.activeGame.questionIndex = 0;
+  controller.activeGame.questionStartedAt = Date.now() - 2000;
+  controller.activeGame.questionEndsAt = Date.now() + 20000;
+
+  const msg = {
+    messageId: "msg-closed-retry",
+    payload: {
+      playerId: "player",
+      questionIndex: 0,
+      submissionId: "sub-closed-retry",
+      selectedOptionIds: ["a"],
+      submittedAt: Date.now()
+    }
+  };
+
+  const accepted = controller.acceptSubmission(msg);
+  assert.equal(accepted.ok, true);
+  assert.ok(accepted.acceptedAt > 0);
+  controller.activeGame.phase = PHASES.ANSWER_REVEAL;
+  const replay = controller.acceptSubmission(msg);
+
+  assert.equal(replay.ok, true);
+  assert.equal(replay.replay, true);
+  assert.equal(replay.acceptedAt, accepted.acceptedAt);
+  assert.equal(replay.submission.submissionId, "sub-closed-retry");
+});
+
+test("reliable power action retries do not repeat point mutations", () => {
+  const player = makePlayer("player", 5000);
+  const leader = makePlayer("leader", 6000);
+  player.doubleDownUses = 3;
+  const others = {};
+  for (let index = 0; index < 8; index += 1) {
+    others["other-" + index] = makePlayer("other-" + index, 4000 - index);
+  }
+  const controller = makeController(Object.assign({ player, leader }, others));
+  const msg = {
+    type: "DOUBLE_DOWN_BUY",
+    messageId: "envelope-1",
+    payload: { playerId: "player", actionId: "action-buy-1" }
+  };
+
+  const first = controller.runReliableAction(msg, () => controller.purchaseDoubleDown("player"));
+  msg.messageId = "envelope-2";
+  const replay = controller.runReliableAction(msg, () => controller.purchaseDoubleDown("player"));
+
+  assert.equal(first.result.ok, true);
+  assert.equal(first.replay, false);
+  assert.equal(replay.result.ok, true);
+  assert.equal(replay.replay, true);
+  assert.equal(player.score, 2000);
+  assert.equal(player.doubleDownPurchasedCredits, 1);
+  assert.equal(player.history.filter((entry) => entry.kind === "DOUBLE_DOWN_PURCHASED").length, 1);
+});
+
+test("reliable action failures are replayed without rerunning the operation", () => {
+  const player = makePlayer("player", 0);
+  const controller = makeController({ player });
+  const msg = {
+    type: "POINT_SHIELD_BUY",
+    messageId: "envelope-failure-1",
+    payload: { playerId: "player", actionId: "action-failure-1", mode: "NORMAL" }
+  };
+  let calls = 0;
+  const perform = () => {
+    calls += 1;
+    return controller.purchasePointShield("player", "NORMAL");
+  };
+
+  const first = controller.runReliableAction(msg, perform);
+  msg.messageId = "envelope-failure-2";
+  const replay = controller.runReliableAction(msg, perform);
+
+  assert.equal(first.result.ok, false);
+  assert.equal(replay.result.ok, false);
+  assert.equal(replay.replay, true);
+  assert.equal(calls, 1);
+});
+
+test("different submissionId after accepted answer is rejected as duplicate", () => {
+  const player = makePlayer("player", 5000);
+  const controller = makeController({ player });
+  controller.activeGame.phase = PHASES.QUESTION;
+  controller.activeGame.questionIndex = 0;
+  controller.activeGame.questionStartedAt = Date.now() - 2000;
+  controller.activeGame.questionEndsAt = Date.now() + 20000;
+
+  const accepted = controller.acceptSubmission({
+    messageId: "msg-1",
+    payload: {
+      playerId: "player",
+      questionIndex: 0,
+      submissionId: "sub-123",
+      selectedOptionIds: ["a"],
+      submittedAt: Date.now()
+    }
+  });
+  const duplicate = controller.acceptSubmission({
+    messageId: "msg-2",
+    payload: {
+      playerId: "player",
+      questionIndex: 0,
+      submissionId: "sub-456",
+      selectedOptionIds: ["a"],
+      submittedAt: Date.now()
+    }
+  });
+
+  assert.equal(accepted.ok, true);
+  assert.equal(duplicate.ok, false);
+  assert.equal(duplicate.reason, "Duplicate submission");
+  assert.equal(duplicate.acceptedSubmissionId, "sub-123");
 });
