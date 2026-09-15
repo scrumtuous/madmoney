@@ -77,6 +77,94 @@ test("stealth target picker state survives same-phase updates and does not leak 
   assert.equal(controller.isStreakTargetPickerOpen(PHASES.ANSWER_REVEAL), false);
 });
 
+test("stealth target menu opens names immediately and claims on one name click", () => {
+  function makeEventTarget() {
+    const listeners = {};
+    return {
+      listeners,
+      addEventListener(type, listener) {
+        listeners[type] = listener;
+      }
+    };
+  }
+
+  const button = {
+    ...makeEventTarget(),
+    attributes: {},
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    }
+  };
+  const targetButton = {
+    focused: false,
+    focus() {
+      this.focused = true;
+    },
+    getAttribute(name) {
+      return name === "data-target-id" ? "target-player" : null;
+    },
+    closest(selector) {
+      return selector === ".power-target-option" ? this : null;
+    }
+  };
+  const hiddenClasses = new Set(["d-none"]);
+  const menu = {
+    ...makeEventTarget(),
+    classList: {
+      add(name) {
+        hiddenClasses.add(name);
+      },
+      remove(name) {
+        hiddenClasses.delete(name);
+      }
+    },
+    querySelectorAll(selector) {
+      return selector === ".power-target-option" ? [targetButton] : [];
+    }
+  };
+  const message = { textContent: "" };
+  const documentListeners = {};
+  const claims = [];
+  const pickerStates = [];
+  testDocument.elements = { stealthButton: button, stealthMenu: menu, stealthMessage: message };
+  testDocument.addEventListener = (type, listener) => {
+    documentListeners[type] = listener;
+  };
+  testDocument.removeEventListener = (type, listener) => {
+    if (documentListeners[type] === listener) delete documentListeners[type];
+  };
+
+  try {
+    StudentUI.prototype.bindStealthTargetMenu.call(StudentUI.prototype, "stealthButton", "stealthMenu", "stealthMessage", {
+      onSetStreakTargetPickerOpen(open) {
+        pickerStates.push(open);
+      },
+      onClaimStreakPrize(action, targetId) {
+        claims.push({ action, targetId });
+      }
+    });
+
+    button.listeners.click({ stopPropagation() {} });
+    assert.equal(hiddenClasses.has("d-none"), false);
+    assert.equal(button.attributes["aria-expanded"], "true");
+    assert.equal(targetButton.focused, true);
+    assert.equal(message.textContent, "Choose a player to launch the stealth attack.");
+
+    menu.listeners.click({
+      stopPropagation() {},
+      target: targetButton
+    });
+    assert.equal(hiddenClasses.has("d-none"), true);
+    assert.equal(button.attributes["aria-expanded"], "false");
+    assert.deepEqual(pickerStates, [true, false]);
+    assert.deepEqual(claims, [{ action: "STEAL_1000", targetId: "target-player" }]);
+  } finally {
+    testDocument.elements = {};
+    delete testDocument.addEventListener;
+    delete testDocument.removeEventListener;
+  }
+});
+
 function beforeState(phase, questionIndex, revealKey = null) {
   return {
     phase,
